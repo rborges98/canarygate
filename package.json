@@ -9,6 +9,11 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.7.4",
     "turbo": "^2.8.16",
     "typescript": "5.9.2"

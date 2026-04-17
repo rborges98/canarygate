@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "db:push",
+			"type": "shell",
+			"command": "pnpm --filter @canarygate/database db:push",
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
