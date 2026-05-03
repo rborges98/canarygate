@@ -15,7 +15,9 @@ export function OrgShell({ orgSlug, orgName, children }: OrgShellProps) {
   // /orgs/acme/projects              → ['projects']
   // /orgs/acme/members               → ['members']
   // /orgs/acme/projects/web/flags    → ['projects', 'web', 'flags']
-  const segments = useSelectedLayoutSegments()
+  const segments = useSelectedLayoutSegments().filter(
+    (segment) => !(segment.startsWith('(') && segment.endsWith(')'))
+  )
 
   const isProjectDepth =
     segments[0] === 'projects' && segments.length >= 2 && segments[1] !== 'new'
@@ -27,26 +29,6 @@ export function OrgShell({ orgSlug, orgName, children }: OrgShellProps) {
         <Nav
           org={{ label: orgName, orgSlug }}
           project={{ label: projectSlug, projectSlug }}
-        />
-        <TabNav
-          tabs={[
-            {
-              label: 'Flags',
-              href: `/orgs/${orgSlug}/projects/${projectSlug}/flags`
-            },
-            {
-              label: 'History',
-              href: `/orgs/${orgSlug}/projects/${projectSlug}/history`
-            },
-            {
-              label: 'Members',
-              href: `/orgs/${orgSlug}/projects/${projectSlug}/members`
-            },
-            {
-              label: 'Settings',
-              href: `/orgs/${orgSlug}/projects/${projectSlug}/settings`
-            }
-          ]}
         />
         <div className="relative z-10 flex-1 overflow-y-auto">{children}</div>
       </>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useRef, useState, useEffect } from 'react'
 import { cn } from '@/shared/utils'
 
 type Tab = {
@@ -16,9 +17,35 @@ type TabNavProps = {
 
 export function TabNav({ tabs, className }: TabNavProps) {
   const pathname = usePathname()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
+  const [indicator, setIndicator] = useState<{
+    left: number
+    width: number
+  } | null>(null)
+
+  const activeHref = tabs.find(
+    (t) => pathname === t.href || pathname.startsWith(t.href + '/')
+  )?.href
+
+  useEffect(() => {
+    const el = activeHref ? linkRefs.current[activeHref] : null
+    const container = containerRef.current
+    if (!el || !container) {
+      return
+    }
+
+    const containerLeft = container.getBoundingClientRect().left
+    const rect = el.getBoundingClientRect()
+    setIndicator({
+      left: rect.left - containerLeft + container.scrollLeft,
+      width: rect.width
+    })
+  }, [activeHref, tabs])
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         'border-cg-bg-100 relative z-10 flex overflow-x-auto border-b px-4 sm:px-8',
         className
@@ -31,17 +58,27 @@ export function TabNav({ tabs, className }: TabNavProps) {
           <Link
             key={tab.href}
             href={tab.href}
+            ref={(el) => {
+              linkRefs.current[tab.href] = el
+            }}
             className={cn(
-              'cursor-pointer whitespace-nowrap border-b-2 px-4 py-[10px] text-[13px] transition-colors',
+              'cursor-pointer whitespace-nowrap px-4 py-2.5 text-[13px] transition-colors duration-200',
               isActive
-                ? 'border-cg-indigo-300 text-white'
-                : 'text-cg-neutral-400 hover:text-cg-neutral-300 border-transparent'
+                ? 'text-white'
+                : 'text-cg-neutral-400 hover:text-cg-neutral-300'
             )}
           >
             {tab.label}
           </Link>
         )
       })}
+
+      {indicator && (
+        <span
+          className="bg-cg-indigo-300 absolute bottom-0 h-0.5 transition-all duration-300 ease-in-out"
+          style={{ left: indicator.left, width: indicator.width }}
+        />
+      )}
     </div>
   )
 }

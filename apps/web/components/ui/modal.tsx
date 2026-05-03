@@ -2,7 +2,7 @@
 
 import { cn } from '@/shared/utils'
 
-interface ModalProps {
+type ModalProps = {
   open: boolean
   onClose: () => void
   children: React.ReactNode
@@ -10,7 +10,9 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, children, className }: ModalProps) {
-  if (!open) return null
+  if (!open) {
+    return null
+  }
 
   return (
     <div

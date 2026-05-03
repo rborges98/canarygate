@@ -41,7 +41,10 @@ export function AutoRolloutCard() {
   const handleToggleAttempt = () => {
     if (!isRolloutType) {
       setShowTooltip(true)
-      if (tooltipTimer.current) clearTimeout(tooltipTimer.current)
+      if (tooltipTimer.current) {
+        clearTimeout(tooltipTimer.current)
+      }
+
       tooltipTimer.current = setTimeout(() => setShowTooltip(false), 2500)
       return
     }

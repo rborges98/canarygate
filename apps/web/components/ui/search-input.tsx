@@ -1,6 +1,6 @@
 import { cn } from '@/shared/utils'
 
-interface SearchInputProps {
+type SearchInputProps = {
   value: string
   onChange: (value: string) => void
   placeholder?: string
@@ -33,7 +33,7 @@ export function SearchInput({
         <path d="M10 10l3 3" />
       </svg>
       <input
-        className="text-cg-neutral-100 placeholder:text-cg-neutral-600 flex-1 bg-transparent font-mono text-[12px] outline-none"
+        className="text-cg-neutral-100 placeholder:text-cg-neutral-600 flex-1 bg-transparent font-sans text-[12px] outline-none"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}

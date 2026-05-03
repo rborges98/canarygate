@@ -1,14 +1,14 @@
 import { cn } from '@/shared/utils'
 
-interface SelectOption {
+type SelectOption = {
   value: string
   label: string
 }
 
-interface SelectProps extends Omit<
+type SelectProps = Omit<
   React.SelectHTMLAttributes<HTMLSelectElement>,
   'children'
-> {
+> & {
   options: SelectOption[]
   variant?: 'form' | 'compact'
   containerClassName?: string
@@ -28,7 +28,7 @@ export function Select({
           'scheme-dark w-full cursor-pointer appearance-none rounded-lg border outline-none transition-colors',
           variant === 'form'
             ? 'border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-100 focus:border-cg-indigo-300 px-3.5 py-2.5 pr-9 text-[13px]'
-            : 'border-cg-bg-100 bg-cg-bg-100 text-cg-neutral-400 px-3 py-2 pr-7 font-mono text-[11px]',
+            : 'border-cg-bg-100 bg-cg-bg-100 text-cg-neutral-400 px-3 py-2 pr-7 font-sans text-[11px]',
           className
         )}
         {...props}

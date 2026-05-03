@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/input-otp'
 
 type Props = {
-  email?: string
+  email: string
 }
 
 type FormValues = {
@@ -41,7 +41,10 @@ export function VerifyForm({ email }: Props) {
   }
 
   async function handleResend() {
-    if (!email) return
+    if (!email) {
+      return
+    }
+
     await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
   }
 
@@ -57,7 +60,7 @@ export function VerifyForm({ email }: Props) {
       <p className="text-cg-neutral-300 mb-1 text-[12px]">
         We sent a 6-digit code to
       </p>
-      <p className="text-cg-neutral-300 mb-6 font-mono text-[13px]">
+      <p className="text-cg-neutral-300 mb-6 font-sans text-[13px]">
         {email ?? 'your email'}
       </p>
 
@@ -93,7 +96,7 @@ export function VerifyForm({ email }: Props) {
         )}
 
         <div className="bg-cg-white-300 border-cg-bg-100 mb-6 mt-6 w-full rounded-lg border px-4 py-3">
-          <p className="text-cg-neutral-400 font-mono text-[11px]">
+          <p className="text-cg-neutral-400 font-sans text-[11px]">
             ⏱ Expires in 5 minutes
           </p>
         </div>

@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { logServerError } from '@/lib/server-log'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -23,7 +24,9 @@ export async function createProject(
   data: { name: string; slug: string }
 ) {
   const parsed = projectSchema.safeParse(data)
-  if (!parsed.success) return null
+  if (!parsed.success) {
+    return null
+  }
 
   try {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}/projects`, {
@@ -31,10 +34,13 @@ export async function createProject(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed.data)
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      return null
+    }
+
     return res.json() as Promise<{ id: string; name: string; slug: string }>
   } catch (error) {
-    console.error('[createProject] Failed:', error)
+    logServerError('createProject falhou', error, { orgId })
     return null
   }
 }
@@ -45,7 +51,9 @@ export async function updateProject(
   data: { name: string; slug: string }
 ) {
   const parsed = projectSchema.safeParse(data)
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
     const res = await apiFetch(
@@ -58,7 +66,7 @@ export async function updateProject(
     )
     return res.ok
   } catch (error) {
-    console.error('[updateProject] Failed:', error)
+    logServerError('updateProject falhou', error, { orgId, projectId })
     return false
   }
 }
@@ -71,8 +79,26 @@ export async function deleteProject(orgId: string, projectId: string) {
     )
     return res.ok
   } catch (error) {
-    console.error('[deleteProject] Failed:', error)
+    logServerError('deleteProject falhou', error, { orgId, projectId })
     return false
+  }
+}
+
+export async function toggleProjectActive(orgId: string, projectId: string) {
+  try {
+    const res = await apiFetch(
+      `${API_BASE}/orgs/${orgId}/projects/${projectId}/toggle`,
+      { method: 'PATCH' }
+    )
+    if (!res.ok) {
+      return null
+    }
+
+    const data: { active: boolean } = await res.json()
+    return { active: data.active }
+  } catch (error) {
+    logServerError('toggleProjectActive falhou', error, { orgId, projectId })
+    return null
   }
 }
 
@@ -82,11 +108,14 @@ export async function regenerateApiKey(orgId: string, projectId: string) {
       `${API_BASE}/orgs/${orgId}/projects/${projectId}/api-key/regenerate`,
       { method: 'POST' }
     )
-    if (!res.ok) return null
+    if (!res.ok) {
+      return null
+    }
+
     const data: { apiKey: string } = await res.json()
     return data.apiKey
   } catch (error) {
-    console.error('[regenerateApiKey] Failed:', error)
+    logServerError('regenerateApiKey falhou', error, { orgId, projectId })
     return null
   }
 }
@@ -97,7 +126,9 @@ export async function updateWebhook(
   webhookUrl: string | null
 ) {
   const parsed = webhookSchema.safeParse({ webhookUrl })
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
     const res = await apiFetch(
@@ -110,7 +141,7 @@ export async function updateWebhook(
     )
     return res.ok
   } catch (error) {
-    console.error('[updateWebhook] Failed:', error)
+    logServerError('updateWebhook falhou', error, { orgId, projectId })
     return false
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeColor } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
 import { cn } from '@/shared/utils'
 import type { FlagItem } from '@/server/flags/queries'
@@ -15,13 +15,34 @@ const dotColor: Record<FlagItem['status'], string> = {
   rollout: 'bg-cg-yellow-200 shadow-[0_0_6px_rgba(234,179,8,0.5)]'
 }
 
+const FLAG_STATUS_BADGE_COLOR: Record<FlagItem['status'], BadgeColor> = {
+  enabled: 'green',
+  disabled: 'red',
+  rollout: 'yellow'
+}
+
 type Props = {
   flags: FlagItem[]
   orgSlug: string
   projectSlug: string
+  currentEnv?: string
 }
 
-export function FlagsList({ flags, orgSlug, projectSlug }: Props) {
+function buildFlagHref(
+  orgSlug: string,
+  projectSlug: string,
+  flagKey: string,
+  currentEnv?: string
+) {
+  const encodedFlagKeyPath = flagKey
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')
+
+  return `/orgs/${orgSlug}/projects/${projectSlug}/flags/${encodedFlagKeyPath}${currentEnv ? `?env=${currentEnv}` : ''}`
+}
+
+export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterTab>('all')
 
@@ -29,9 +50,7 @@ export function FlagsList({ flags, orgSlug, projectSlug }: Props) {
     const matchesSearch =
       f.key.toLowerCase().includes(search.toLowerCase()) ||
       f.description.toLowerCase().includes(search.toLowerCase())
-
     const matchesFilter = filter === 'all' || f.status === filter
-
     return matchesSearch && matchesFilter
   })
 
@@ -75,16 +94,16 @@ export function FlagsList({ flags, orgSlug, projectSlug }: Props) {
         {filtered.map((flag) => (
           <Link
             key={flag.key}
-            href={`/orgs/${orgSlug}/projects/${projectSlug}/flags/${flag.flagId}`}
+            href={buildFlagHref(orgSlug, projectSlug, flag.key, currentEnv)}
             className="border-cg-bg-100 bg-cg-white-300 hover:border-cg-neutral-700 hover:bg-cg-white-100 grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3.5 rounded-lg border px-4 py-3 transition-all"
           >
             <div
               className={cn(
                 'h-2 w-2 shrink-0 rounded-full',
-                dotColor[flag.status]
+                dotColor[flag.status],
+                flag.status === 'enabled' && 'animate-pulse'
               )}
             />
-
             <div>
               <div className="font-mono text-[13px] font-semibold text-white">
                 {flag.key}
@@ -93,7 +112,6 @@ export function FlagsList({ flags, orgSlug, projectSlug }: Props) {
                 {flag.description}
               </div>
             </div>
-
             {flag.status === 'rollout' && flag.rollout !== undefined ? (
               <div className="flex items-center gap-2">
                 <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full">
@@ -107,10 +125,18 @@ export function FlagsList({ flags, orgSlug, projectSlug }: Props) {
                 </span>
               </div>
             ) : (
-              <Badge variant={flag.status}>{flag.status}</Badge>
+              <Badge color={FLAG_STATUS_BADGE_COLOR[flag.status]}>
+                {flag.status}
+              </Badge>
             )}
           </Link>
         ))}
+
+        {filtered.length === 0 && (
+          <p className="text-cg-neutral-500 py-8 text-center font-sans text-[12px]">
+            No flags found
+          </p>
+        )}
       </div>
     </div>
   )

@@ -7,18 +7,18 @@ export function OwnerDetail({ member }: { member: Member }) {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <UserAvatar initial={member.initial} isOwner size="lg" />
+        <UserAvatar initial={member.initial} variant="filled" size="lg" />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[15px] font-bold text-white">{member.email}</p>
-            <Badge variant="owner">OWNER</Badge>
+            <Badge color="indigo">OWNER</Badge>
           </div>
         </div>
       </div>
 
       {/* Owner permissions box */}
       <div className="border-cg-indigo-800 bg-cg-indigo-950 rounded-xl border p-4">
-        <p className="text-cg-neutral-400 mb-3 font-mono text-[11px] uppercase tracking-wider">
+        <p className="text-cg-neutral-400 mb-3 font-sans text-[11px] uppercase tracking-wider">
           Owner permissions
         </p>
         <div className="flex flex-col gap-2">
@@ -37,7 +37,7 @@ export function OwnerDetail({ member }: { member: Member }) {
       </div>
 
       {/* Multiple owners note */}
-      <p className="text-cg-neutral-500 font-mono text-[11px]">
+      <p className="text-cg-neutral-500 font-sans text-[11px]">
         An org can have multiple owners.
       </p>
     </div>

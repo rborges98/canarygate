@@ -2,10 +2,9 @@
 
 import { useFormContext, useWatch, Controller } from 'react-hook-form'
 import { cn } from '@/shared/utils'
-import { ToggleLeft, BarChart2, Rocket } from 'lucide-react'
+import { ToggleLeft, BarChart2, Rocket, SlidersHorizontal } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
-import { SectionLabel } from './shared'
 import type { FlagFormData, FlagType } from './shared'
 
 export function ConfigurationCard() {
@@ -18,12 +17,19 @@ export function ConfigurationCard() {
 
   const handleTypeChange = (v: FlagType) => {
     setValue('type', v)
-    if (v !== 'rollout') setValue('autoRolloutEnabled', false)
+    if (v !== 'rollout') {
+      setValue('autoRolloutEnabled', false)
+    }
   }
 
   return (
     <div className="border-cg-bg-100 bg-cg-white-300 col-span-1 rounded-xl border p-5 md:col-span-3 md:row-start-1">
-      <SectionLabel>Configuration</SectionLabel>
+      <div className="mb-4 flex items-center gap-2">
+        <SlidersHorizontal size={14} className="text-cg-neutral-300" />
+        <span className="text-[13px] font-semibold text-white">
+          Configuration
+        </span>
+      </div>
 
       {/* Type picker */}
       <div className="mb-4 grid grid-cols-2 gap-3">
@@ -72,7 +78,7 @@ export function ConfigurationCard() {
                 >
                   {label}
                 </p>
-                <p className="text-cg-neutral-300 font-mono text-[11px] leading-relaxed">
+                <p className="text-cg-neutral-300 font-sans text-[11px] leading-relaxed">
                   {desc}
                 </p>
               </div>

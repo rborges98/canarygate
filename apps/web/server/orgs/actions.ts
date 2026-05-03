@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { logServerError } from '@/lib/server-log'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -16,7 +17,9 @@ const orgSchema = z.object({
 
 export async function createOrg(data: { name: string; slug: string }) {
   const parsed = orgSchema.safeParse(data)
-  if (!parsed.success) return null
+  if (!parsed.success) {
+    return null
+  }
 
   try {
     const res = await apiFetch(`${API_BASE}/orgs`, {
@@ -24,10 +27,13 @@ export async function createOrg(data: { name: string; slug: string }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed.data)
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      return null
+    }
+
     return res.json() as Promise<{ id: string; name: string; slug: string }>
   } catch (error) {
-    console.error('[createOrg] Failed:', error)
+    logServerError('createOrg falhou', error)
     return null
   }
 }
@@ -37,7 +43,9 @@ export async function updateOrg(
   data: { name: string; slug: string }
 ) {
   const parsed = orgSchema.safeParse(data)
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}`, {
@@ -47,7 +55,7 @@ export async function updateOrg(
     })
     return res.ok
   } catch (error) {
-    console.error('[updateOrg] Failed:', error)
+    logServerError('updateOrg falhou', error, { orgId })
     return false
   }
 }
@@ -59,7 +67,7 @@ export async function deleteOrg(orgId: string) {
     })
     return res.ok
   } catch (error) {
-    console.error('[deleteOrg] Failed:', error)
+    logServerError('deleteOrg falhou', error, { orgId })
     return false
   }
 }

@@ -21,7 +21,11 @@ export function UserMenu() {
         setOpen(false)
       }
     }
-    if (open) document.addEventListener('mousedown', handleClickOutside)
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [open])
 
@@ -37,14 +41,19 @@ export function UserMenu() {
         className="rounded-full focus:outline-none"
         aria-label="User menu"
       >
-        <UserAvatar initial={initial} size="md" isOwner className="bg-cg-indigo-300 border-cg-indigo-200 text-white" />
+        <UserAvatar
+          initial={initial}
+          size="md"
+          variant="filled"
+          className="bg-cg-indigo-300 border-cg-indigo-200 text-white"
+        />
       </button>
 
       {open && (
         <>
           {/* arrow */}
           <div
-            className="absolute right-[14px] z-[101]"
+            className="z-101 absolute right-3.5"
             style={{
               top: 'calc(100% + 7px)',
               width: '10px',
@@ -57,7 +66,7 @@ export function UserMenu() {
           />
           {/* dropdown */}
           <div
-            className="absolute right-0 z-[100] w-52 rounded-xl border"
+            className="z-100 absolute right-0 w-52 rounded-xl border"
             style={{
               top: 'calc(100% + 12px)',
               backgroundColor: '#141414',
@@ -65,15 +74,18 @@ export function UserMenu() {
               boxShadow: '0 8px 24px #000'
             }}
           >
-            <div className="border-b px-4 py-3" style={{ borderColor: '#1a1a1a' }}>
-              <p className="text-cg-neutral-500 truncate font-mono text-[11px]">
+            <div
+              className="border-b px-4 py-3"
+              style={{ borderColor: '#1a1a1a' }}
+            >
+              <p className="text-cg-neutral-500 truncate font-sans text-[11px]">
                 {email}
               </p>
             </div>
             <div className="p-1.5">
               <button
                 onClick={handleSignOut}
-                className="text-cg-neutral-300 hover:bg-cg-bg-100 hover:text-cg-red-100 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 font-mono text-[12px] transition-colors"
+                className="text-cg-neutral-300 hover:bg-cg-bg-100 hover:text-cg-red-100 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 font-sans text-[12px] transition-colors"
               >
                 <LogOut size={13} />
                 Sign out

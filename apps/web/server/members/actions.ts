@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { Resend } from 'resend'
+import { logServerError } from '@/lib/server-log'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -29,7 +30,7 @@ export async function makeOwner(orgId: string, userId: string) {
     )
     return res.ok
   } catch (error) {
-    console.error('[makeOwner] Failed:', error)
+    logServerError('makeOwner falhou', error, { orgId, userId })
     return false
   }
 }
@@ -41,7 +42,7 @@ export async function removeMember(orgId: string, userId: string) {
     })
     return res.ok
   } catch (error) {
-    console.error('[removeMember] Failed:', error)
+    logServerError('removeMember falhou', error, { orgId, userId })
     return false
   }
 }
@@ -52,7 +53,9 @@ export async function addProjectAccess(
   data: { projectId: string; role: 'ADMIN' | 'MEMBER' }
 ) {
   const parsed = projectAccessSchema.safeParse(data)
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
     const res = await apiFetch(
@@ -65,7 +68,7 @@ export async function addProjectAccess(
     )
     return res.ok
   } catch (error) {
-    console.error('[addProjectAccess] Failed:', error)
+    logServerError('addProjectAccess falhou', error, { orgId, userId })
     return false
   }
 }
@@ -87,7 +90,11 @@ export async function updateProjectAccess(
     )
     return res.ok
   } catch (error) {
-    console.error('[updateProjectAccess] Failed:', error)
+    logServerError('updateProjectAccess falhou', error, {
+      orgId,
+      userId,
+      projectId
+    })
     return false
   }
 }
@@ -104,7 +111,11 @@ export async function removeProjectAccess(
     )
     return res.ok
   } catch (error) {
-    console.error('[removeProjectAccess] Failed:', error)
+    logServerError('removeProjectAccess falhou', error, {
+      orgId,
+      userId,
+      projectId
+    })
     return false
   }
 }
@@ -119,7 +130,9 @@ export async function sendInvite(
   }
 ) {
   const parsed = inviteSchema.safeParse(data)
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}/invites`, {
@@ -128,7 +141,9 @@ export async function sendInvite(
       body: JSON.stringify(parsed.data)
     })
 
-    if (!res.ok) return false
+    if (!res.ok) {
+      return false
+    }
 
     const invite = (await res.json()) as { token: string }
     const inviteUrl = `${APP_URL}/invite/${invite.token}`
@@ -142,7 +157,10 @@ export async function sendInvite(
 
     return true
   } catch (error) {
-    console.error('[sendInvite] Failed:', error)
+    logServerError('sendInvite falhou', error, {
+      orgId,
+      email: parsed.data.email
+    })
     return false
   }
 }
@@ -154,7 +172,7 @@ export async function acceptInvite(token: string) {
     })
     return res.ok
   } catch (error) {
-    console.error('[acceptInvite] Failed:', error)
+    logServerError('acceptInvite falhou', error, { tokenPresent: true })
     return false
   }
 }
@@ -166,7 +184,7 @@ export async function declineInvite(token: string) {
     })
     return res.ok
   } catch (error) {
-    console.error('[declineInvite] Failed:', error)
+    logServerError('declineInvite falhou', error, { tokenPresent: true })
     return false
   }
 }

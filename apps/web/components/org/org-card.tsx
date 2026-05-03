@@ -43,9 +43,12 @@ export function OrgCard({
             </div>
           </div>
         </div>
-        <div className="text-cg-neutral-500 font-mono text-[11px]">
-          {projects} {projects === 1 ? 'project' : 'projects'} · {members}{' '}
-          members
+        <div className="text-cg-neutral-500 flex flex-wrap items-center gap-x-2 font-sans text-[11px]">
+          <span>{projects}</span>
+          <span>{projects === 1 ? 'project' : 'projects'}</span>
+          <span>•</span>
+          <span>{members}</span>
+          <span>{members === 1 ? 'member' : 'members'}</span>
         </div>
       </div>
     </Link>

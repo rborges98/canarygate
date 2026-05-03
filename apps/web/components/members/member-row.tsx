@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import type { Member } from './types'
 
-interface MemberRowProps {
+type MemberRowProps = {
   member: Member
   isSelected: boolean
   onSelect: () => void
@@ -20,7 +20,11 @@ export function MemberRow({ member, isSelected, onSelect }: MemberRowProps) {
           : 'bg-cg-white-300 border-cg-bg-100 hover:border-cg-indigo-800 hover:bg-cg-white-200'
       )}
     >
-      <UserAvatar initial={member.initial} isOwner={member.isOwner} size="md" />
+      <UserAvatar
+        initial={member.initial}
+        variant={member.isOwner ? 'filled' : 'muted'}
+        size="md"
+      />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-white">
@@ -35,7 +39,7 @@ export function MemberRow({ member, isSelected, onSelect }: MemberRowProps) {
         </p>
       </div>
 
-      {member.isOwner && <Badge variant="owner">OWNER</Badge>}
+      {member.isOwner && <Badge color="indigo">OWNER</Badge>}
     </button>
   )
 }

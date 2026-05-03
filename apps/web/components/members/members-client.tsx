@@ -9,6 +9,7 @@ import { OwnerDetail } from '@/components/members/owner-detail'
 import { MemberDetail } from '@/components/members/member-detail'
 import type { Member } from '@/components/members/types'
 import { makeOwner, removeMember, sendInvite } from '@/server/members/actions'
+import { toast } from 'sonner'
 
 interface Props {
   orgId: string
@@ -49,33 +50,62 @@ export function MembersClient({
     filteredMembers.find((m) => m.id === selectedId) ?? filteredMembers[0]
 
   const confirmMakeOwner = async () => {
-    if (!makeOwnerTarget) return
-    await makeOwner(orgId, makeOwnerTarget.id)
+    if (!makeOwnerTarget) {
+      return
+    }
+
+    const ok = await makeOwner(orgId, makeOwnerTarget.id)
+    if (!ok) {
+      toast.error('Failed to make owner')
+      setMakeOwnerTarget(null)
+      return
+    }
     setMembers((prev) =>
       prev.map((m) =>
         m.id === makeOwnerTarget.id ? { ...m, isOwner: true } : m
       )
     )
+    toast.success('Member is now an owner')
     setMakeOwnerTarget(null)
   }
 
   const confirmRemove = async () => {
-    if (!removeTarget) return
-    await removeMember(orgId, removeTarget.id)
+    if (!removeTarget) {
+      return
+    }
+
+    const ok = await removeMember(orgId, removeTarget.id)
+    if (!ok) {
+      toast.error('Failed to remove member')
+      setRemoveTarget(null)
+      return
+    }
     const remaining = members.filter((m) => m.id !== removeTarget.id)
     setMembers(remaining)
     setSelectedId(remaining[0]?.id ?? '')
+    toast.success('Member removed')
     setRemoveTarget(null)
   }
 
   const handleSendInvite = async () => {
-    if (!inviteEmail.trim()) return
+    if (!inviteEmail.trim()) {
+      return
+    }
+
     setInviting(true)
-    await sendInvite(orgId, { email: inviteEmail.trim(), orgRole: inviteRole })
+    const ok = await sendInvite(orgId, {
+      email: inviteEmail.trim(),
+      orgRole: inviteRole
+    })
     setInviting(false)
+    if (!ok) {
+      toast.error('Failed to send invite')
+      return
+    }
     setInviteEmail('')
     setInviteRole('MEMBER')
     setInviteOpen(false)
+    toast.success('Invite sent')
   }
 
   return (
@@ -138,7 +168,7 @@ export function MembersClient({
             )
           ) : (
             <div className="flex h-full items-center justify-center">
-              <p className="text-cg-neutral-600 font-mono text-[11px]">
+              <p className="text-cg-neutral-600 font-sans text-[11px]">
                 Select a member
               </p>
             </div>
@@ -185,7 +215,7 @@ export function MembersClient({
               </div>
             ))}
           </div>
-          <div className="border-cg-indigo-800 bg-cg-indigo-950 text-cg-indigo-200 rounded-lg border px-3 py-2 font-mono text-[11px]">
+          <div className="border-cg-indigo-800 bg-cg-indigo-950 text-cg-indigo-200 rounded-lg border px-3 py-2 font-sans text-[11px]">
             You&apos;ll remain an Owner. An org can have multiple owners.
           </div>
         </div>
@@ -263,7 +293,7 @@ export function MembersClient({
 
         <div className="flex flex-col gap-3 px-6 py-4">
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Email
             </label>
             <input
@@ -275,7 +305,7 @@ export function MembersClient({
             />
           </div>
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Org role
             </label>
             <Select

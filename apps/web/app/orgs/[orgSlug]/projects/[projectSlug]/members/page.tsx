@@ -2,6 +2,7 @@ import { getMembers } from '@/server/members/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { ProjectMembersClient } from '@/components/project/project-members-client'
+import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -10,10 +11,16 @@ type Props = {
 
 export default async function ProjectMembersPage({ params }: Props) {
   const { orgSlug, projectSlug } = await params
+  await getSessionOrRedirect()
   const org = await getOrgBySlug(orgSlug)
-  if (!org) notFound()
+  if (!org) {
+    notFound()
+  }
+
   const project = await getProjectBySlug(org.id, projectSlug)
-  if (!project) notFound()
+  if (!project) {
+    notFound()
+  }
 
   const members = await getMembers(org.id)
   return (

@@ -5,5 +5,6 @@ declare module 'fastify' {
     userId: string
     userEmail: string
     orgRole: 'OWNER' | 'MEMBER'
+    projectRole: 'ADMIN' | 'MEMBER' | null
   }
 }

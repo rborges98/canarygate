@@ -2,14 +2,16 @@ import { notFound } from 'next/navigation'
 import { getInvite } from '@/server/invites/queries'
 import { InviteActions } from '@/components/invite-actions'
 
-interface Props {
+type Props = {
   params: Promise<{ token: string }>
 }
 
 export default async function InvitePage({ params }: Props) {
   const { token } = await params
   const invite = await getInvite(token)
-  if (!invite) notFound()
+  if (!invite) {
+    notFound()
+  }
 
   return (
     <div className="grad-border-inner flex flex-col items-center p-6 text-center md:p-8">

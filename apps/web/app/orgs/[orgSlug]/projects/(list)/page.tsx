@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ProjectCard } from '@/components/org/project-card'
 import { getProjects } from '@/server/projects/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
+import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -10,8 +11,11 @@ type Props = {
 
 export default async function OrgProjectsPage({ params }: Props) {
   const { orgSlug } = await params
+  await getSessionOrRedirect()
   const org = await getOrgBySlug(orgSlug)
-  if (!org) notFound()
+  if (!org) {
+    notFound()
+  }
 
   const projects = await getProjects(org.id)
 

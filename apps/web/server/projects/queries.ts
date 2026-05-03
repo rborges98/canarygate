@@ -8,6 +8,7 @@ type ApiProject = {
   slug: string
   flagCount: number
   active: boolean
+  projectRole?: 'ADMIN' | 'MEMBER'
 }
 
 export type ProjectItem = {
@@ -22,11 +23,16 @@ export type ProjectDetail = {
   id: string
   name: string
   slug: string
+  active: boolean
+  projectRole: 'ADMIN' | 'MEMBER'
 }
 
 export async function getProjects(orgId: string): Promise<ProjectItem[]> {
   const res = await apiFetch(`${API_BASE}/orgs/${orgId}/projects`)
-  if (!res.ok) return []
+  if (!res.ok) {
+    return []
+  }
+
   const data: ApiProject[] = await res.json()
   return data.map((p) => ({
     projectId: p.id,
@@ -44,9 +50,18 @@ export async function getProjectBySlug(
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/slug/${projectSlug}`
   )
-  if (!res.ok) return null
+  if (!res.ok) {
+    return null
+  }
+
   const data: ApiProject = await res.json()
-  return { id: data.id, name: data.name, slug: data.slug }
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    active: data.active,
+    projectRole: data.projectRole ?? 'MEMBER'
+  }
 }
 
 export async function getApiKey(
@@ -56,7 +71,10 @@ export async function getApiKey(
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/${projectId}/api-key`
   )
-  if (!res.ok) return null
+  if (!res.ok) {
+    return null
+  }
+
   const data: { apiKey: string } = await res.json()
   return data.apiKey
 }
@@ -68,7 +86,10 @@ export async function getWebhook(
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/${projectId}/webhook`
   )
-  if (!res.ok) return null
+  if (!res.ok) {
+    return null
+  }
+
   const data: { webhookUrl: string | null } = await res.json()
   return data.webhookUrl
 }

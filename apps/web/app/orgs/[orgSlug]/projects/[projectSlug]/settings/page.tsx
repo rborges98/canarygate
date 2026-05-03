@@ -5,6 +5,7 @@ import {
 } from '@/server/projects/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { ProjectSettingsForm } from '@/components/project/project-settings-form'
+import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -13,10 +14,16 @@ type Props = {
 
 export default async function ProjectSettingsPage({ params }: Props) {
   const { orgSlug, projectSlug } = await params
+  await getSessionOrRedirect()
   const org = await getOrgBySlug(orgSlug)
-  if (!org) notFound()
+  if (!org) {
+    notFound()
+  }
+
   const project = await getProjectBySlug(org.id, projectSlug)
-  if (!project) notFound()
+  if (!project) {
+    notFound()
+  }
 
   const [apiKey, webhookUrl] = await Promise.all([
     getApiKey(org.id, project.id),
@@ -30,6 +37,7 @@ export default async function ProjectSettingsPage({ params }: Props) {
       orgSlug={orgSlug}
       initialName={project.name}
       initialSlug={project.slug}
+      initialActive={project.active}
       initialApiKey={apiKey ?? ''}
       initialWebhookUrl={webhookUrl ?? ''}
     />

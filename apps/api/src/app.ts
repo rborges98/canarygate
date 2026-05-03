@@ -1,5 +1,6 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
@@ -12,27 +13,37 @@ import flagsRoutes from './routes/flags.ts'
 import historyRoutes from './routes/history.ts'
 import invitesRoutes from './routes/invites.ts'
 import sdkRoutes from './routes/sdk.ts'
+import { getRequiredUrl, IS_PRODUCTION } from './utils/env.ts'
+import { fastifyLogger } from './utils/logger.ts'
+
+const AUTH_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 
 export function buildApp() {
+  const webUrl = getRequiredUrl('WEB_URL', 'http://localhost:3000', 'api app')
+
   const app = Fastify({
-    logger:
-      process.env.NODE_ENV === 'production'
-        ? true
-        : {
-            transport: {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                translateTime: 'HH:MM:ss',
-                ignore: 'pid,hostname'
-              }
-            }
-          }
+    logger: fastifyLogger
   })
 
   app.register(cors, {
-    origin: process.env.WEB_URL ?? 'http://localhost:3000',
+    origin: webUrl,
     credentials: true
+  })
+
+  app.register(helmet, {
+    global: true,
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    frameguard: { action: 'deny' },
+    hidePoweredBy: true,
+    hsts: IS_PRODUCTION
+      ? {
+          maxAge: 15_552_000,
+          includeSubDomains: true
+        }
+      : false,
+    noSniff: true,
+    referrerPolicy: { policy: 'no-referrer' }
   })
 
   app.register(rateLimit, {
@@ -40,7 +51,7 @@ export function buildApp() {
     timeWindow: '1 minute'
   })
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!IS_PRODUCTION) {
     app.register(swagger, {
       openapi: {
         info: {
@@ -79,30 +90,45 @@ export function buildApp() {
   }
 
   app.setErrorHandler((error, request, reply) => {
-    request.log.error(error)
-    reply.status(error.statusCode ?? 500).send({
-      message:
-        process.env.NODE_ENV === 'production'
-          ? 'Internal Server Error'
-          : error.message
-    })
+    const appError = error as { statusCode?: number }
+    const statusCode =
+      typeof appError.statusCode === 'number' ? appError.statusCode : 500
+    const message =
+      !IS_PRODUCTION && error instanceof Error
+        ? error.message
+        : 'Internal Server Error'
+
+    request.log.error(
+      {
+        statusCode,
+        route: request.routeOptions.url,
+        method: request.method,
+        errorName: error.name,
+        errorMessage: error.message
+      },
+      'Request failed'
+    )
+    reply.status(statusCode).send({ message })
   })
 
   // Better Auth handler — captura tudo sob /api/auth/*
-  app.all('/api/auth/*', async (request, reply) => {
-    const { auth } = await import('./auth.ts')
-    const url = `${request.protocol}://${request.hostname}:${request.port ?? 3001}${request.url}`
-    const webRequest = new Request(url, {
-      method: request.method,
-      headers: request.headers as HeadersInit,
-      body: ['GET', 'HEAD'].includes(request.method)
-        ? undefined
-        : JSON.stringify(request.body)
-    })
-    const response = await auth.handler(webRequest)
-    reply.status(response.status)
-    response.headers.forEach((value, key) => reply.header(key, value))
-    return reply.send(await response.text())
+  app.all('/api/auth/*', {
+    config: { rateLimit: AUTH_RATE_LIMIT },
+    handler: async (request, reply) => {
+      const { auth } = await import('./auth.ts')
+      const url = `${request.protocol}://${request.hostname}:${request.port ?? 3001}${request.url}`
+      const webRequest = new Request(url, {
+        method: request.method,
+        headers: request.headers as HeadersInit,
+        body: ['GET', 'HEAD'].includes(request.method)
+          ? undefined
+          : JSON.stringify(request.body)
+      })
+      const response = await auth.handler(webRequest)
+      reply.status(response.status)
+      response.headers.forEach((value, key) => reply.header(key, value))
+      return reply.send(await response.text())
+    }
   })
 
   app.register(orgsRoutes)

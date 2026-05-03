@@ -1,42 +1,50 @@
 import { cn } from '@/shared/utils'
 
-type BadgeVariant =
-  | 'enabled'
-  | 'disabled'
-  | 'canary'
-  | 'owner'
-  | 'member'
-  | 'admin'
-  | 'created'
-  | 'deleted'
-  | 'rollout'
+export type BadgeColor = 'green' | 'red' | 'yellow' | 'indigo' | 'neutral'
+export type BadgeSize = 'sm' | 'md'
+export type BadgeRadius = 'full' | 'md'
 
-const variantStyles: Record<BadgeVariant, string> = {
-  enabled: 'bg-cg-green-300 text-cg-green-100 border border-cg-green-200',
-  disabled: 'bg-cg-red-300 text-cg-red-100 border border-cg-red-200',
-  canary:
-    'bg-cg-yellow-400 text-cg-yellow-200 border border-[rgba(234,179,8,0.22)]',
-  owner: 'bg-cg-indigo-950 text-cg-indigo-100 border border-cg-indigo-600',
-  member: 'bg-cg-indigo-950 text-cg-indigo-100 border border-cg-indigo-600',
-  admin: 'bg-cg-indigo-950 text-cg-indigo-100 border border-cg-indigo-600',
-  created: 'bg-cg-indigo-950 text-cg-indigo-100 border border-cg-indigo-600',
-  deleted: 'bg-cg-red-300 text-cg-red-100 border border-cg-red-200',
-  rollout:
-    'bg-cg-yellow-400 text-cg-yellow-200 border border-[rgba(234,179,8,0.22)]'
+const colorStyles: Record<BadgeColor, string> = {
+  green: 'border border-cg-green-200 bg-cg-green-300 text-cg-green-100',
+  red: 'border border-cg-red-200 bg-cg-red-300 text-cg-red-100',
+  yellow:
+    'border border-[rgba(234,179,8,0.22)] bg-cg-yellow-400 text-cg-yellow-200',
+  indigo: 'border border-cg-indigo-600 bg-cg-indigo-950 text-cg-indigo-100',
+  neutral: 'border border-cg-bg-200 bg-cg-bg-100 text-cg-neutral-300'
 }
 
-interface BadgeProps {
-  variant: BadgeVariant
+const sizeStyles: Record<BadgeSize, string> = {
+  sm: 'px-2.5 py-1 text-[10px] font-semibold',
+  md: 'px-3 py-1.5 text-[11px] font-semibold'
+}
+
+const radiusStyles: Record<BadgeRadius, string> = {
+  full: 'rounded-full',
+  md: 'rounded-md'
+}
+
+type BadgeProps = {
+  color?: BadgeColor
+  size?: BadgeSize
+  radius?: BadgeRadius
   children: React.ReactNode
   className?: string
 }
 
-export function Badge({ variant, children, className }: BadgeProps) {
+export function Badge({
+  color = 'indigo',
+  size = 'sm',
+  radius = 'full',
+  children,
+  className
+}: BadgeProps) {
   return (
     <span
       className={cn(
-        'rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold',
-        variantStyles[variant],
+        'inline-flex items-center border font-sans leading-none',
+        colorStyles[color],
+        sizeStyles[size],
+        radiusStyles[radius],
         className
       )}
     >

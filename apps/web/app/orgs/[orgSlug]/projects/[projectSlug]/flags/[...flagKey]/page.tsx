@@ -2,24 +2,39 @@ import { notFound } from 'next/navigation'
 import { getFlag } from '@/server/flags/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
-import type { FlagFormData } from '@/components/project/flag-form'
 import { FlagForm } from '@/components/project/flag-form'
+import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
 
 type Props = {
-  params: Promise<{ orgSlug: string; projectSlug: string; flagId: string }>
+  params: Promise<{ orgSlug: string; projectSlug: string; flagKey: string[] }>
+  searchParams: Promise<{ env?: string }>
 }
 
-export default async function EditFlagPage({ params }: Props) {
-  const { orgSlug, projectSlug, flagId } = await params
+export default async function EditFlagPage({ params, searchParams }: Props) {
+  const { orgSlug, projectSlug, flagKey } = await params
+  const { env } = await searchParams
+
+  await getSessionOrRedirect()
+
   const org = await getOrgBySlug(orgSlug)
-  if (!org) notFound()
+  if (!org) {
+    notFound()
+  }
+
   const project = await getProjectBySlug(org.id, projectSlug)
-  if (!project) notFound()
+  if (!project) {
+    notFound()
+  }
 
-  const flag = await getFlag(org.id, project.id, flagId)
-  if (!flag) notFound()
+  const currentSlug = env ?? 'production'
+  const resolvedFlagKey = flagKey.join('/')
 
-  const initialData: Partial<FlagFormData> = {
+  const flag = await getFlag(org.id, project.id, resolvedFlagKey, currentSlug)
+  if (!flag) {
+    notFound()
+  }
+
+  const initialData = {
     name: flag.name,
     key: flag.key,
     description: flag.description,
@@ -44,7 +59,8 @@ export default async function EditFlagPage({ params }: Props) {
       projectId={project.id}
       orgSlug={orgSlug}
       projectSlug={projectSlug}
-      flagId={flagId}
+      environmentSlug={currentSlug}
+      flagId={flag.id}
       initialData={initialData}
     />
   )

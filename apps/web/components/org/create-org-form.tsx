@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { Nav } from '@/components/nav'
 import { createOrg } from '@/server/orgs/actions'
 
@@ -40,15 +41,13 @@ export function CreateOrgForm() {
     const org = await createOrg({ name: name.trim(), slug: finalSlug })
     if (org) {
       router.push(`/orgs/${org.id}/projects`)
+    } else {
+      toast.error('Failed to create organization')
     }
   }
 
   return (
     <div className="bg-cg-bg-400 relative flex min-h-screen flex-col overflow-hidden">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,var(--color-cg-indigo-900)_0%,transparent_70%)]" />
-      <div className="pointer-events-none absolute bottom-0 left-1/4 h-64 w-64 rounded-full bg-[radial-gradient(circle,var(--color-cg-indigo-950)_0%,transparent_70%)]" />
-
       <Nav />
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-12">
@@ -60,7 +59,7 @@ export function CreateOrgForm() {
             <h2 className="mb-1 text-[20px] font-bold text-white">
               Create organization
             </h2>
-            <p className="text-cg-neutral-300 mb-7 font-mono text-[12px]">
+            <p className="text-cg-neutral-300 mb-7 font-sans text-[12px]">
               Set up a new workspace for your team
             </p>
 
@@ -71,7 +70,7 @@ export function CreateOrgForm() {
                   {initial}
                 </span>
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="font-mono text-[9px] text-white">
+                  <span className="font-sans text-[9px] text-white">
                     upload
                   </span>
                 </div>
@@ -80,7 +79,7 @@ export function CreateOrgForm() {
 
             {/* Name */}
             <div className="mb-4">
-              <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+              <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
                 Organization name
               </label>
               <input
@@ -93,7 +92,7 @@ export function CreateOrgForm() {
 
             {/* Slug */}
             <div className="mb-7">
-              <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+              <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
                 Slug
               </label>
               <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">

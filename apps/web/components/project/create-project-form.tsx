@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { createProject } from '@/server/projects/actions'
 
 function deriveSlug(name: string) {
@@ -46,6 +47,8 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
     })
     if (project) {
       router.push(`/orgs/${orgSlug}/projects/${project.slug}/flags`)
+    } else {
+      toast.error('Failed to create project')
     }
   }
 
@@ -59,13 +62,13 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
           <h2 className="mb-1 text-[20px] font-bold text-white">
             Create project
           </h2>
-          <p className="text-cg-neutral-300 mb-7 font-mono text-[12px]">
+          <p className="text-cg-neutral-300 mb-7 font-sans text-[12px]">
             Add a new project to your organization
           </p>
 
           {/* Name */}
           <div className="mb-4">
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Project name
             </label>
             <input
@@ -78,7 +81,7 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
 
           {/* Slug */}
           <div className="mb-7">
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Slug
             </label>
             <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">

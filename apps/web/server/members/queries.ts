@@ -28,7 +28,10 @@ export type MemberItem = {
 
 export async function getMembers(orgId: string): Promise<MemberItem[]> {
   const res = await apiFetch(`${API_BASE}/orgs/${orgId}/members`)
-  if (!res.ok) return []
+  if (!res.ok) {
+    return []
+  }
+
   const data: ApiMember[] = await res.json()
   return data.map((m) => ({
     id: m.userId,

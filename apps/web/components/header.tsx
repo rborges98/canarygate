@@ -14,7 +14,7 @@ export function Header({
   return (
     <nav
       className={cn(
-        'relative z-10 flex items-center justify-between border-b border-[#1a1a1a] px-8 py-4',
+        'relative z-10 flex items-center justify-between px-8 py-4',
         className
       )}
     >

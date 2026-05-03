@@ -1,5 +1,6 @@
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { OrgSettingsForm } from '@/components/org/org-settings-form'
+import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -8,8 +9,11 @@ type Props = {
 
 export default async function OrgSettingsPage({ params }: Props) {
   const { orgSlug } = await params
+  await getSessionOrRedirect()
   const org = await getOrgBySlug(orgSlug)
-  if (!org) notFound()
+  if (!org) {
+    notFound()
+  }
 
   return (
     <OrgSettingsForm

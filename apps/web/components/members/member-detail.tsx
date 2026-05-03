@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import type { Member, ProjectAccess } from './types'
 import { ProjectRow } from './project-row'
 import { AddProjectRow } from './add-project-row'
@@ -36,12 +37,16 @@ export function MemberDetail({
   }
 
   const saveEdit = async (data: ProjectFormState) => {
-    await updateProjectAccess(
+    const ok = await updateProjectAccess(
       orgId,
       member.id,
       data.selectedProjectId,
       data.isAdmin ? 'ADMIN' : 'MEMBER'
     )
+    if (!ok) {
+      toast.error('Failed to update project access')
+      return
+    }
     setProjects((prev) =>
       prev.map((p) =>
         p.projectId === data.selectedProjectId
@@ -53,7 +58,11 @@ export function MemberDetail({
   }
 
   const removeProject = async (projectId: string) => {
-    await removeProjectAccess(orgId, member.id, projectId)
+    const ok = await removeProjectAccess(orgId, member.id, projectId)
+    if (!ok) {
+      toast.error('Failed to remove project access')
+      return
+    }
     setProjects((prev) => prev.filter((p) => p.projectId !== projectId))
   }
 
@@ -63,10 +72,14 @@ export function MemberDetail({
   }
 
   const saveAdd = async (data: ProjectFormState) => {
-    await addProjectAccess(orgId, member.id, {
+    const ok = await addProjectAccess(orgId, member.id, {
       projectId: data.selectedProjectId,
       role: data.isAdmin ? 'ADMIN' : 'MEMBER'
     })
+    if (!ok) {
+      toast.error('Failed to add project access')
+      return
+    }
     setProjects((prev) => [
       ...prev,
       {
@@ -99,7 +112,7 @@ export function MemberDetail({
       {/* Projects section */}
       <div className="flex-1">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-cg-neutral-500 font-mono text-[10px] uppercase tracking-wider">
+          <p className="text-cg-neutral-500 font-sans text-[10px] uppercase tracking-wider">
             Projects
             {projects.length > 0 && (
               <span className="text-cg-neutral-600 ml-1.5">
@@ -112,10 +125,10 @@ export function MemberDetail({
         <div className="mb-3 flex flex-col gap-1">
           {projects.length === 0 && !isAdding ? (
             <div className="border-cg-bg-100 rounded-lg border border-dashed px-4 py-5 text-center">
-              <p className="text-cg-neutral-600 font-mono text-[11px]">
+              <p className="text-cg-neutral-600 font-sans text-[11px]">
                 No projects assigned
               </p>
-              <p className="text-cg-neutral-700 mt-1 font-mono text-[10px]">
+              <p className="text-cg-neutral-700 mt-1 font-sans text-[10px]">
                 Add a project to grant access
               </p>
             </div>
@@ -153,7 +166,7 @@ export function MemberDetail({
 
         {!isAdding && unusedProjects.length > 0 && (
           <button
-            className="text-cg-indigo-100 font-mono text-[11px] transition-colors hover:text-white"
+            className="text-cg-indigo-100 font-sans text-[11px] transition-colors hover:text-white"
             onClick={startAdd}
           >
             + Add project
@@ -164,13 +177,13 @@ export function MemberDetail({
       {/* Footer actions */}
       <div className="border-cg-bg-100 mt-6 flex items-center border-t pt-4">
         <button
-          className="text-cg-indigo-200 font-mono text-[11px] transition-colors hover:text-white"
+          className="text-cg-indigo-200 font-sans text-[11px] transition-colors hover:text-white"
           onClick={onMakeOwner}
         >
           Make owner
         </button>
         <button
-          className="text-cg-red-100 ml-auto font-mono text-[11px] transition-colors hover:text-white"
+          className="text-cg-red-100 ml-auto font-sans text-[11px] transition-colors hover:text-white"
           onClick={onRemoveFromOrg}
         >
           Remove from org

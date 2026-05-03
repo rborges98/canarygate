@@ -48,7 +48,7 @@ export function ProjectAccessForm({
           <Select
             autoFocus
             containerClassName="flex-1"
-            className="border-cg-indigo-700 bg-cg-bg-200 text-cg-indigo-100 focus:border-cg-indigo-500 rounded-md px-2 py-1.5 font-mono text-[11px]"
+            className="border-cg-indigo-700 bg-cg-bg-200 text-cg-indigo-100 focus:border-cg-indigo-500 rounded-md px-2 py-1.5 font-sans text-[11px]"
             options={availableProjects.map((p) => ({
               value: p.projectId,
               label: p.name
@@ -70,7 +70,7 @@ export function ProjectAccessForm({
               checked={field.value}
               onChange={(e) => field.onChange(e.target.checked)}
             />
-            <span className="text-cg-neutral-400 font-mono text-[11px]">
+            <span className="text-cg-neutral-400 font-sans text-[11px]">
               Admin
             </span>
           </label>
@@ -80,13 +80,13 @@ export function ProjectAccessForm({
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="submit"
-          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-md px-3 py-1 font-mono text-[11px] font-semibold text-white transition-colors"
+          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-md px-3 py-1 font-sans text-[11px] font-semibold text-white transition-colors"
         >
           {confirmLabel}
         </button>
         <button
           type="button"
-          className="text-cg-neutral-500 font-mono text-[11px] transition-colors hover:text-white"
+          className="text-cg-neutral-500 font-sans text-[11px] transition-colors hover:text-white"
           onClick={onCancel}
         >
           Cancel

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { cn } from '@/shared/utils'
+import { Info } from 'lucide-react'
 import { inputCls, labelCls } from './shared'
 import type { FlagFormData } from './shared'
 
@@ -37,9 +38,10 @@ export function GeneralInfoCard({ initialKeyTouched = false }: Props) {
 
   return (
     <div className="border-cg-bg-100 bg-cg-white-300 col-span-1 flex flex-col rounded-xl border p-5 md:col-span-2 md:row-start-1">
-      <p className="text-cg-indigo-300 mb-4 font-mono text-[10px] uppercase tracking-widest">
-        General Info
-      </p>
+      <div className="mb-4 flex items-center gap-2">
+        <Info size={14} className="text-cg-neutral-300" />
+        <span className="text-[13px] font-semibold text-white">General Info</span>
+      </div>
       <div className="flex flex-1 flex-col gap-3">
         <div>
           <label className={labelCls}>Flag name</label>

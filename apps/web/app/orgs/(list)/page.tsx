@@ -9,15 +9,13 @@ export default async function OrgsPage() {
   const orgs = await getOrgs()
   return (
     <div className="bg-cg-bg-400 relative min-h-screen">
-      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,var(--color-cg-indigo-900)_0%,transparent_70%)]" />
-
       <Nav />
 
       <div className="relative z-10 px-4 py-5 sm:px-8 sm:py-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-[20px] font-bold text-white">Organizations</h2>
-            <p className="text-cg-neutral-400 mt-0.5 font-mono text-[12px]">
+            <p className="text-cg-neutral-400 mt-0.5 font-sans text-[12px]">
               Your workspaces
             </p>
           </div>

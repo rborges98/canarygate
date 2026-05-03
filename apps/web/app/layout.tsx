@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/shared/utils'
+import { Toaster } from '@/components/ui/sonner'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -26,7 +27,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={cn('dark font-mono', jetbrains.variable)}>
+    <html
+      lang="en"
+      className={cn('dark', jakarta.variable, jetbrains.variable)}
+    >
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#6366f1" />
@@ -38,8 +42,11 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-title" content="CanaryGate" />
       </head>
-      <body className={`${jakarta.variable} ${jetbrains.variable} antialiased`}>
+      <body
+        className={`${jakarta.variable} ${jetbrains.variable} font-sans antialiased`}
+      >
         {children}
+        <Toaster />
       </body>
     </html>
   )

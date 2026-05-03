@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { logServerError } from '@/lib/server-log'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -10,14 +11,34 @@ const createFlagSchema = z.object({
   key: z.string().min(1).max(100),
   description: z.string().max(500),
   type: z.enum(['boolean', 'rollout']),
-  rolloutPercent: z.number().min(0).max(100)
+  enabled: z.boolean().default(false),
+  rolloutPercent: z.number().min(0).max(100),
+  scheduleEnabled: z.boolean().optional(),
+  scheduleDate: z.string().nullable().optional(),
+  scheduleAction: z.enum(['enable', 'disable', 'rollout']).optional(),
+  scheduleRolloutPercent: z.number().min(0).max(100).optional(),
+  autoRolloutEnabled: z.boolean().optional(),
+  autoRolloutIncreaseBy: z.number().min(1).max(100).optional(),
+  autoRolloutEveryValue: z.number().int().min(1).optional(),
+  autoRolloutEveryUnit: z.enum(['hours', 'days', 'weeks']).optional(),
+  autoRolloutUntilMax: z.number().min(1).max(100).optional(),
+  environments: z.array(z.string().min(1)).min(1).optional()
 })
 
 const updateFlagSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500),
   enabled: z.boolean(),
-  rolloutPercent: z.number().min(0).max(100)
+  rolloutPercent: z.number().min(0).max(100),
+  scheduleEnabled: z.boolean().optional(),
+  scheduleDate: z.string().nullable().optional(),
+  scheduleAction: z.enum(['enable', 'disable', 'rollout']).optional(),
+  scheduleRolloutPercent: z.number().min(0).max(100).optional(),
+  autoRolloutEnabled: z.boolean().optional(),
+  autoRolloutIncreaseBy: z.number().min(1).max(100).optional(),
+  autoRolloutEveryValue: z.number().int().min(1).optional(),
+  autoRolloutEveryUnit: z.enum(['hours', 'days', 'weeks']).optional(),
+  autoRolloutUntilMax: z.number().min(1).max(100).optional()
 })
 
 export async function createFlag(
@@ -28,25 +49,39 @@ export async function createFlag(
     key: string
     description: string
     type: 'boolean' | 'rollout'
+    enabled?: boolean
     rolloutPercent: number
+    scheduleEnabled?: boolean
+    scheduleDate?: string | null
+    scheduleAction?: 'enable' | 'disable' | 'rollout'
+    scheduleRolloutPercent?: number
+    autoRolloutEnabled?: boolean
+    autoRolloutIncreaseBy?: number
+    autoRolloutEveryValue?: number
+    autoRolloutEveryUnit?: 'hours' | 'days' | 'weeks'
+    autoRolloutUntilMax?: number
+    environments?: string[]
   }
 ) {
   const parsed = createFlagSchema.safeParse(data)
-  if (!parsed.success) return null
+  if (!parsed.success) {
+    return null
+  }
 
   try {
-    const res = await apiFetch(
-      `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data)
-      }
-    )
-    if (!res.ok) return null
+    const url = new URL(`${API_BASE}/orgs/${orgId}/projects/${projectId}/flags`)
+    const res = await apiFetch(url.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed.data)
+    })
+    if (!res.ok) {
+      return null
+    }
+
     return res.json() as Promise<{ id: string }>
   } catch (error) {
-    console.error('[createFlag] Failed:', error)
+    logServerError('createFlag falhou', error, { orgId, projectId })
     return null
   }
 }
@@ -60,23 +95,44 @@ export async function updateFlag(
     description: string
     enabled: boolean
     rolloutPercent: number
-  }
+    scheduleEnabled?: boolean
+    scheduleDate?: string | null
+    scheduleAction?: 'enable' | 'disable' | 'rollout'
+    scheduleRolloutPercent?: number
+    autoRolloutEnabled?: boolean
+    autoRolloutIncreaseBy?: number
+    autoRolloutEveryValue?: number
+    autoRolloutEveryUnit?: 'hours' | 'days' | 'weeks'
+    autoRolloutUntilMax?: number
+  },
+  environmentSlug?: string
 ) {
   const parsed = updateFlagSchema.safeParse(data)
-  if (!parsed.success) return false
+  if (!parsed.success) {
+    return false
+  }
 
   try {
-    const res = await apiFetch(
-      `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed.data)
-      }
+    const url = new URL(
+      `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`
     )
+    if (environmentSlug) {
+      url.searchParams.set('environmentSlug', environmentSlug)
+    }
+
+    const res = await apiFetch(url.toString(), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parsed.data)
+    })
     return res.ok
   } catch (error) {
-    console.error('[updateFlag] Failed:', error)
+    logServerError('updateFlag falhou', error, {
+      orgId,
+      projectId,
+      flagId,
+      environmentSlug
+    })
     return false
   }
 }
@@ -93,7 +149,7 @@ export async function deleteFlag(
     )
     return res.ok
   } catch (error) {
-    console.error('[deleteFlag] Failed:', error)
+    logServerError('deleteFlag falhou', error, { orgId, projectId, flagId })
     return false
   }
 }

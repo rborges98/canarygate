@@ -29,7 +29,7 @@ export function LoginForm() {
       })
       return
     }
-    router.push('/verify?email=' + encodeURIComponent(email))
+    router.push('/verify?e=' + btoa(email))
   }
 
   return (
@@ -39,7 +39,7 @@ export function LoginForm() {
         No password. Just email.
       </p>
 
-      <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+      <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
         Email address
       </label>
       <input
@@ -71,9 +71,10 @@ export function LoginForm() {
           <div className="border-cg-bg-100 flex-1 border-t" />
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
           <OAuthButton
             provider="google"
+            iconOnly
             disabled={isSubmitting}
             icon={
               <svg
@@ -104,6 +105,7 @@ export function LoginForm() {
           />
           <OAuthButton
             provider="github"
+            iconOnly
             disabled={isSubmitting}
             icon={
               <svg
@@ -119,6 +121,7 @@ export function LoginForm() {
           />
           <OAuthButton
             provider="microsoft"
+            iconOnly
             disabled={isSubmitting}
             icon={
               <svg

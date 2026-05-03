@@ -9,8 +9,9 @@ import { UserAvatar } from '@/components/ui/user-avatar'
 import { cn } from '@/shared/utils'
 import type { MemberItem } from '@/server/members/queries'
 import { sendInvite } from '@/server/members/actions'
+import { toast } from 'sonner'
 
-interface Props {
+type Props = {
   orgId: string
   projectId: string
   members: MemberItem[]
@@ -49,18 +50,26 @@ export function ProjectMembersClient({
   }, [members, projectId, search, roleFilter])
 
   const handleSendInvite = async () => {
-    if (!inviteEmail.trim()) return
+    if (!inviteEmail.trim()) {
+      return
+    }
+
     setInviting(true)
-    await sendInvite(orgId, {
+    const ok = await sendInvite(orgId, {
       email: inviteEmail.trim(),
       orgRole: 'MEMBER',
       projectId,
       projectRole: inviteRole
     })
     setInviting(false)
+    if (!ok) {
+      toast.error('Failed to send invite')
+      return
+    }
     setInviteEmail('')
     setInviteRole('MEMBER')
     setInviteOpen(false)
+    toast.success('Invite sent')
   }
 
   return (
@@ -115,7 +124,7 @@ export function ProjectMembersClient({
             >
               <UserAvatar
                 initial={member.initial}
-                isOwner={member.isOwner}
+                variant={member.isOwner ? 'filled' : 'muted'}
                 size="md"
               />
               <div className="min-w-0 flex-1">
@@ -123,17 +132,7 @@ export function ProjectMembersClient({
                   {member.email}
                 </p>
               </div>
-              <Badge
-                variant={
-                  member.isOwner
-                    ? 'owner'
-                    : projectAccess?.role === 'ADMIN'
-                      ? 'admin'
-                      : 'member'
-                }
-              >
-                {roleLabel.toUpperCase()}
-              </Badge>
+              <Badge color="indigo">{roleLabel.toUpperCase()}</Badge>
             </div>
           )
         })}
@@ -167,7 +166,7 @@ export function ProjectMembersClient({
 
         <div className="flex flex-col gap-3 px-6 py-4">
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Email
             </label>
             <input
@@ -179,7 +178,7 @@ export function ProjectMembersClient({
             />
           </div>
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-mono text-[11px]">
+            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Project role
             </label>
             <Select

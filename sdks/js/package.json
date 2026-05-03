@@ -1,0 +1,18 @@
+{
+  "name": "@canarygate/sdk",
+  "version": "0.1.0",
+  "description": "CanaryGate SDK — feature flags with real-time SSE streaming",
+  "exports": {
+    "./js": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist",
+    "check-types": "tsc --noEmit"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5"
+  }
+}

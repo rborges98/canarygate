@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
+import { isLocalAuthBypassEnabled } from './lib/is-local-auth-bypass-enabled'
 
 const PUBLIC_PATHS = ['/login', '/verify', '/invite', '/api/auth']
 
 export function proxy(request: NextRequest) {
-  if (process.env.NODE_ENV !== 'production' && process.env.BYPASS_AUTH === 'true') return NextResponse.next()
+  if (isLocalAuthBypassEnabled()) {
+    return NextResponse.next()
+  }
 
   const { pathname } = request.nextUrl
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
-  if (isPublic) return NextResponse.next()
+  if (isPublic) {
+    return NextResponse.next()
+  }
 
   const sessionCookie = getSessionCookie(request)
 
@@ -21,5 +26,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)']
 }

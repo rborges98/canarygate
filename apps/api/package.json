@@ -6,13 +6,16 @@
     "dev": "tsx watch --env-file=.env.local src/index.ts",
     "build": "tsup src/index.ts --format cjs --out-dir dist",
     "lint": "eslint .",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "license": "ISC",
   "dependencies": {
     "@canarygate/database": "workspace:^",
     "@fastify/cors": "^11.2.0",
     "@fastify/env": "^6.0.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.2.1",
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
     "better-auth": "^1.6.2",
