@@ -2,12 +2,16 @@
 
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/services/auth/client'
 import { OAuthButton } from '@/components/ui/oauth-button'
 
 type FormValues = {
   email: string
 }
+
+const OTP_FETCH_OPTIONS = {
+  retry: 0
+} as const
 
 export function LoginForm() {
   const router = useRouter()
@@ -21,7 +25,8 @@ export function LoginForm() {
   async function onSubmit({ email }: FormValues) {
     const { error } = await authClient.emailOtp.sendVerificationOtp({
       email,
-      type: 'sign-in'
+      type: 'sign-in',
+      fetchOptions: OTP_FETCH_OPTIONS
     })
     if (error) {
       setError('email', {
@@ -46,7 +51,7 @@ export function LoginForm() {
         type="email"
         placeholder="you@email.com"
         disabled={isSubmitting}
-        className="placeholder:text-cg-neutral-300 text-cg-neutral-100 bg-cg-white-200 border-cg-bg-100 focus:border-cg-indigo-300 mb-4 w-full rounded-lg border px-4 py-3 text-[12px] outline-none transition-colors disabled:opacity-50"
+        className="placeholder:text-cg-neutral-300 text-cg-neutral-100 bg-cg-white-200 border-cg-bg-100 focus:border-cg-indigo-300 mb-4 w-full rounded-lg border px-4 py-3 text-[12px] transition-colors outline-none disabled:opacity-50"
         {...register('email', { required: true })}
       />
 

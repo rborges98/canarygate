@@ -2,14 +2,15 @@ import Link from 'next/link'
 import { OrgCard } from '@/components/org/org-card'
 import { Nav } from '@/components/nav'
 import { getOrgs } from '@/server/orgs/queries'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 
 export default async function OrgsPage() {
-  await getSessionOrRedirect()
+  const session = await getSessionOrRedirect()
   const orgs = await getOrgs()
+
   return (
     <div className="bg-cg-bg-400 relative min-h-screen">
-      <Nav />
+      <Nav user={session.user} />
 
       <div className="relative z-10 px-4 py-5 sm:px-8 sm:py-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -3,14 +3,16 @@
 import { useSelectedLayoutSegments } from 'next/navigation'
 import { Nav } from '@/components/nav'
 import { TabNav } from '@/components/tab-nav'
+import type { SessionUser } from '@/shared/auth'
 
 type OrgShellProps = {
   orgSlug: string
   orgName: string
   children: React.ReactNode
+  user?: SessionUser | null
 }
 
-export function OrgShell({ orgSlug, orgName, children }: OrgShellProps) {
+export function OrgShell({ orgSlug, orgName, children, user }: OrgShellProps) {
   // Called from [orgSlug]/layout — segments are relative to that level:
   // /orgs/acme/projects              → ['projects']
   // /orgs/acme/members               → ['members']
@@ -29,6 +31,7 @@ export function OrgShell({ orgSlug, orgName, children }: OrgShellProps) {
         <Nav
           org={{ label: orgName, orgSlug }}
           project={{ label: projectSlug, projectSlug }}
+          user={user}
         />
         <div className="relative z-10 flex-1 overflow-y-auto">{children}</div>
       </>
@@ -37,7 +40,7 @@ export function OrgShell({ orgSlug, orgName, children }: OrgShellProps) {
 
   return (
     <>
-      <Nav org={{ label: orgName, orgSlug }} />
+      <Nav org={{ label: orgName, orgSlug }} user={user} />
       <TabNav
         tabs={[
           { label: 'Projects', href: `/orgs/${orgSlug}/projects` },

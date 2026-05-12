@@ -2,14 +2,16 @@ import Link from 'next/link'
 import { cn } from '@/shared/utils'
 import { Logo } from '@/components/ui/logo'
 import { UserMenu } from '@/components/ui/user-menu'
+import type { SessionUser } from '@/shared/auth'
 
 type NavProps = {
   org?: { label: string; orgSlug: string }
   project?: { label: string; projectSlug: string }
   className?: string
+  user?: SessionUser | null
 }
 
-export function Nav({ org, project, className }: NavProps) {
+export function Nav({ org, project, className, user }: NavProps) {
   return (
     <nav
       className={cn(
@@ -50,7 +52,7 @@ export function Nav({ org, project, className }: NavProps) {
         )}
       </div>
 
-      <UserMenu />
+      <UserMenu initialUser={user} />
     </nav>
   )
 }

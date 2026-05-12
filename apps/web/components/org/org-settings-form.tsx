@@ -32,12 +32,14 @@ export function OrgSettingsForm({ orgId, initialName, initialSlug }: Props) {
   const name = useWatch({ control, name: 'name' }) ?? ''
 
   async function onSubmit(data: FormValues) {
-    const ok = await updateOrg(orgId, { name: data.name, slug: data.slug })
-    if (!ok) {
+    const org = await updateOrg(orgId, { name: data.name, slug: data.slug })
+    if (!org) {
       toast.error('Failed to save organization')
       return
     }
+
     toast.success('Organization saved')
+    router.replace(`/orgs/${org.slug}/settings`)
     router.refresh()
   }
 

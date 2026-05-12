@@ -1,9 +1,20 @@
 import type { FastifyInstance } from 'fastify'
 import { and, eq, isNotNull, lte } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
-import { flags, flagEnvironments } from '@canarygate/database/schema'
-import { emitFlagEvent } from '../sse/flag-emitter.ts'
-import { calcIntervalMs } from '../utils/time.ts'
+import {
+  environments,
+  flags,
+  flagEnvironments
+} from '@canarygate/database/schema'
+import {
+  SCHEDULE_SCAN_INTERVAL_MS,
+  type AutoRolloutJobData,
+  type ScheduleJobData
+} from '@canarygate/messaging-utils'
+import {
+  enqueueAutoRolloutJob,
+  enqueueScheduleJob
+} from '../queues/flag-jobs.ts'
 
 type AppLogger = FastifyInstance['log']
 
@@ -11,18 +22,23 @@ async function processSchedules(logger: AppLogger): Promise<void> {
   const now = new Date()
 
   let scheduled: (typeof flagEnvironments.$inferSelect & {
+    flagId: string
     flagKey: string
     projectId: string
+    environmentSlug: string
   })[]
   try {
     const rows = await db
       .select({
         fe: flagEnvironments,
+        flagId: flags.id,
         flagKey: flags.key,
-        projectId: flags.projectId
+        projectId: flags.projectId,
+        environmentSlug: environments.slug
       })
       .from(flagEnvironments)
       .innerJoin(flags, eq(flags.id, flagEnvironments.flagId))
+      .innerJoin(environments, eq(environments.id, flagEnvironments.environmentId))
       .where(
         and(
           eq(flagEnvironments.scheduleEnabled, true),
@@ -32,8 +48,10 @@ async function processSchedules(logger: AppLogger): Promise<void> {
       )
     scheduled = rows.map((r) => ({
       ...r.fe,
+      flagId: r.flagId,
       flagKey: r.flagKey,
-      projectId: r.projectId
+      projectId: r.projectId,
+      environmentSlug: r.environmentSlug
     }))
   } catch (err) {
     logger.error(
@@ -47,49 +65,52 @@ async function processSchedules(logger: AppLogger): Promise<void> {
     return
   }
 
+  let enqueuedCount = 0
+
   for (const fe of scheduled) {
+    if (!fe.scheduleDate) {
+      continue
+    }
+
+    const jobData: ScheduleJobData = {
+      flagEnvironmentId: fe.id,
+      flagId: fe.flagId,
+      projectId: fe.projectId,
+      environmentId: fe.environmentId,
+      environmentSlug: fe.environmentSlug,
+      flagKey: fe.flagKey,
+      dueAt: fe.scheduleDate.toISOString()
+    }
+
     try {
-      let newEnabled = fe.enabled
-      if (fe.scheduleAction === 'enable') {
-        newEnabled = true
-      } else if (fe.scheduleAction === 'disable') {
-        newEnabled = false
-      }
-
-      let newRolloutPercent = fe.rolloutPercent
-      if (fe.scheduleAction === 'rollout') {
-        newRolloutPercent = fe.scheduleRolloutPercent
-      }
-
-      await db
-        .update(flagEnvironments)
-        .set({
-          enabled: newEnabled,
-          rolloutPercent: newRolloutPercent,
-          scheduleEnabled: false,
-          updatedAt: now
-        })
-        .where(eq(flagEnvironments.id, fe.id))
-
-      emitFlagEvent(`${fe.projectId}:${fe.environmentId}`, 'flag-updated', {
-        key: fe.flagKey,
-        enabled: newEnabled,
-        rolloutPercent: newRolloutPercent
-      })
+      await enqueueScheduleJob(jobData, logger)
+      enqueuedCount += 1
     } catch (err) {
       logger.error(
         {
           err,
           operation: 'schedule-processor',
-          step: 'apply-scheduled-flag',
+          step: 'enqueue-scheduled-flag',
           flagEnvironmentId: fe.id,
           flagKey: fe.flagKey,
           projectId: fe.projectId,
-          environmentId: fe.environmentId
+          environmentSlug: fe.environmentSlug,
+          dueAt: jobData.dueAt
         },
         'Schedule processor failed'
       )
     }
+  }
+
+  if (enqueuedCount > 0) {
+    logger.info(
+      {
+        operation: 'schedule-processor',
+        step: 'enqueue-scheduled-flags',
+        count: enqueuedCount
+      },
+      'Enqueued due schedule jobs'
+    )
   }
 }
 
@@ -97,18 +118,23 @@ async function processAutoRollouts(logger: AppLogger): Promise<void> {
   const now = new Date()
 
   let pending: (typeof flagEnvironments.$inferSelect & {
+    flagId: string
     flagKey: string
     projectId: string
+    environmentSlug: string
   })[]
   try {
     const rows = await db
       .select({
         fe: flagEnvironments,
+        flagId: flags.id,
         flagKey: flags.key,
-        projectId: flags.projectId
+        projectId: flags.projectId,
+        environmentSlug: environments.slug
       })
       .from(flagEnvironments)
       .innerJoin(flags, eq(flags.id, flagEnvironments.flagId))
+      .innerJoin(environments, eq(environments.id, flagEnvironments.environmentId))
       .where(
         and(
           eq(flagEnvironments.autoRolloutEnabled, true),
@@ -118,8 +144,10 @@ async function processAutoRollouts(logger: AppLogger): Promise<void> {
       )
     pending = rows.map((r) => ({
       ...r.fe,
+      flagId: r.flagId,
       flagKey: r.flagKey,
-      projectId: r.projectId
+      projectId: r.projectId,
+      environmentSlug: r.environmentSlug
     }))
   } catch (err) {
     logger.error(
@@ -133,55 +161,58 @@ async function processAutoRollouts(logger: AppLogger): Promise<void> {
     return
   }
 
+  let enqueuedCount = 0
+
   for (const fe of pending) {
+    if (!fe.autoRolloutNextAt) {
+      continue
+    }
+
+    const jobData: AutoRolloutJobData = {
+      flagEnvironmentId: fe.id,
+      flagId: fe.flagId,
+      projectId: fe.projectId,
+      environmentId: fe.environmentId,
+      environmentSlug: fe.environmentSlug,
+      flagKey: fe.flagKey,
+      dueAt: fe.autoRolloutNextAt.toISOString()
+    }
+
     try {
-      const newPercent = Math.min(
-        fe.rolloutPercent + fe.autoRolloutIncreaseBy,
-        fe.autoRolloutUntilMax
-      )
-      const reached = newPercent >= fe.autoRolloutUntilMax
-      let nextAt: Date | null = null
-      if (!reached) {
-        nextAt = new Date(
-          now.getTime() +
-            calcIntervalMs(fe.autoRolloutEveryValue, fe.autoRolloutEveryUnit)
-        )
-      }
-
-      await db
-        .update(flagEnvironments)
-        .set({
-          rolloutPercent: newPercent,
-          autoRolloutEnabled: !reached,
-          autoRolloutNextAt: nextAt,
-          updatedAt: now
-        })
-        .where(eq(flagEnvironments.id, fe.id))
-
-      emitFlagEvent(`${fe.projectId}:${fe.environmentId}`, 'flag-updated', {
-        key: fe.flagKey,
-        enabled: fe.enabled,
-        rolloutPercent: newPercent
-      })
+      await enqueueAutoRolloutJob(jobData, logger)
+      enqueuedCount += 1
     } catch (err) {
       logger.error(
         {
           err,
           operation: 'schedule-processor',
-          step: 'apply-auto-rollout',
+          step: 'enqueue-auto-rollout',
           flagEnvironmentId: fe.id,
           flagKey: fe.flagKey,
           projectId: fe.projectId,
-          environmentId: fe.environmentId
+          environmentSlug: fe.environmentSlug,
+          dueAt: jobData.dueAt
         },
         'Schedule processor failed'
       )
     }
   }
+
+  if (enqueuedCount > 0) {
+    logger.info(
+      {
+        operation: 'schedule-processor',
+        step: 'enqueue-auto-rollouts',
+        count: enqueuedCount
+      },
+      'Enqueued due auto-rollout jobs'
+    )
+  }
 }
 
-export function startScheduleProcessor(logger: AppLogger): void {
+export function startScheduleProcessor(logger: AppLogger) {
   let running = false
+  let intervalHandle: ReturnType<typeof setInterval> | null = null
 
   const run = async () => {
     if (running) {
@@ -205,6 +236,13 @@ export function startScheduleProcessor(logger: AppLogger): void {
     }
   }
 
-  run()
-  setInterval(run, 60_000)
+  void run()
+  intervalHandle = setInterval(run, SCHEDULE_SCAN_INTERVAL_MS)
+
+  return () => {
+    if (intervalHandle) {
+      clearInterval(intervalHandle)
+      intervalHandle = null
+    }
+  }
 }

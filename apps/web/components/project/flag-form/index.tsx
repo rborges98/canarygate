@@ -49,11 +49,16 @@ export function FlagForm({
       everyValue: initialData?.everyValue ?? 1,
       everyUnit: initialData?.everyUnit ?? 'hours',
       untilMax: initialData?.untilMax ?? 100,
+      autoRolloutNextAt: initialData?.autoRolloutNextAt ?? '',
       scheduleRolloutPercent: initialData?.scheduleRolloutPercent ?? 25
     }
   })
 
-  const backHref = `/orgs/${orgSlug}/projects/${projectSlug}/flags`
+  const flagsHref = environmentSlug
+    ? `/orgs/${orgSlug}/projects/${projectSlug}/flags?env=${environmentSlug}`
+    : `/orgs/${orgSlug}/projects/${projectSlug}/flags`
+
+  const backHref = flagsHref
 
   const onSubmit = async (data: FlagFormData) => {
     try {
@@ -65,6 +70,7 @@ export function FlagForm({
           {
             name: data.name,
             description: data.description,
+            type: data.type,
             enabled: data.defaultEnabled,
             rolloutPercent: data.rolloutPercent,
             scheduleEnabled: data.scheduleEnabled,
@@ -116,7 +122,7 @@ export function FlagForm({
         }
         toast.success('Flag created')
       }
-      router.push(`/orgs/${orgSlug}/projects/${projectSlug}/flags`)
+      router.push(flagsHref)
     } catch (err) {
       console.error(err)
       toast.error('Something went wrong')
@@ -133,7 +139,7 @@ export function FlagForm({
       toast.error('Failed to delete flag')
       return false
     }
-    router.push(`/orgs/${orgSlug}/projects/${projectSlug}/flags`)
+    router.push(flagsHref)
     return true
   }
 
@@ -149,7 +155,10 @@ export function FlagForm({
           <GeneralInfoCard
             initialKeyTouched={mode === 'edit' || !!initialData?.key}
           />
-          <ScheduleCard />
+          <ScheduleCard
+            initialScheduleEnabled={initialData?.scheduleEnabled}
+            initialScheduleDate={initialData?.scheduleDate}
+          />
           <ConfigurationCard />
           <AutoRolloutCard />
         </div>

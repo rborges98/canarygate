@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import {
   environments,
@@ -49,8 +49,10 @@ export async function getEnvironmentBySlug(
 ) {
   try {
     return await db.query.environments.findFirst({
-      where: (e, { and, eq: eqFn }) =>
-        and(eqFn(e.projectId, projectId), eqFn(e.slug, slug))
+      where: and(
+        eq(environments.projectId, projectId),
+        eq(environments.slug, slug)
+      )
     })
   } catch (error) {
     log?.error(

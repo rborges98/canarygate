@@ -429,7 +429,7 @@ export default async function projectsRoutes(app: FastifyInstance) {
             return reply.status(404).send({ message: 'Project not found' })
           }
 
-          return { apiKey: apiKey.slice(0, 12) + '••••••••••••••••••••' }
+          return { apiKey }
         } catch (error) {
           request.log.error(
             {

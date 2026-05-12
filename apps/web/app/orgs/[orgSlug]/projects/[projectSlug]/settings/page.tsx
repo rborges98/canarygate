@@ -5,7 +5,7 @@ import {
 } from '@/server/projects/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { ProjectSettingsForm } from '@/components/project/project-settings-form'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 import { notFound } from 'next/navigation'
 
 type Props = {

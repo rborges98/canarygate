@@ -1,6 +1,6 @@
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { OrgSettingsForm } from '@/components/org/org-settings-form'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 import { notFound } from 'next/navigation'
 
 type Props = {

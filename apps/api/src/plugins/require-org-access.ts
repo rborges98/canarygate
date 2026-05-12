@@ -20,6 +20,7 @@ export async function requireOrgMember(
   if (!membership) {
     return reply.status(403).send({ message: 'Forbidden' })
   }
+
   request.orgRole = membership.role as 'OWNER' | 'MEMBER'
 }
 
@@ -36,9 +37,11 @@ export async function requireOrgOwner(
   if (!membership) {
     return reply.status(403).send({ message: 'Forbidden' })
   }
+
   if (membership.role !== 'OWNER') {
     return reply.status(403).send({ message: 'Owner access required' })
   }
+
   request.orgRole = 'OWNER'
 }
 

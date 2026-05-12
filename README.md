@@ -1,159 +1,122 @@
-# Turborepo starter
+# CanaryGate
 
-This Turborepo starter is maintained by the Turborepo core team.
+CanaryGate é um monorepo com:
 
-## Using this example
+- `apps/web`: dashboard Next.js
+- `apps/api`: API Fastify + SSE para o SDK
+- `apps/worker`: worker BullMQ para `schedule` e `auto-rollout`
+- `packages/database`: schema e client Drizzle/Postgres
+- `packages/logger`: logger compartilhado para API, web e worker
+- `packages/redis`: conexão Redis compartilhada
+- `packages/messaging-utils`: contratos compartilhados de pub/sub, filas e utilitários de mensageria
+- `sdks/js`: SDK JavaScript com snapshot + stream SSE
 
-Run the following command:
+## Requisitos locais
 
-```sh
-npx create-turbo@latest
+- Node.js 18+
+- pnpm 9+
+- PostgreSQL
+- Redis
+
+## Variáveis principais
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/canarygate
+REDIS_URL=redis://localhost:6379
+WEB_URL=http://localhost:3000
+API_URL=http://localhost:3001
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3005
+BETTER_AUTH_SECRET=
 ```
 
-## What's inside?
+`REDIS_URL` é obrigatória para API e worker em produção. Em desenvolvimento, o fallback padrão é `redis://localhost:6379`.
 
-This Turborepo includes the following packages/apps:
+`CORS_ALLOWED_ORIGINS` é opcional e aceita uma lista separada por vírgulas com origens extras liberadas no CORS da API. `WEB_URL` continua sendo a origem principal do dashboard e do auth.
 
-### Apps and Packages
+## Desenvolvimento
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Instale as dependências:
 
 ```sh
-cd my-turborepo
-turbo build
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+Suba o banco e aplique o schema:
 
 ```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+pnpm --filter @canarygate/database db:push
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Rode o monorepo em modo dev:
 
 ```sh
-turbo build --filter=docs
+pnpm dev
 ```
 
-Without global `turbo`:
+## Docker Compose local
+
+O compose local sobe `redis`, `api` e `worker` em containers separados e reaproveita um PostgreSQL já exposto no host em `localhost:5432`.
+
+Com a configuração padrão deste repo, ele aponta para:
+
+```env
+postgresql://postgres:postgres@host.docker.internal:5432/canarygate
+```
+
+Para subir os serviços com um comando:
 
 ```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+docker compose up --build -d
 ```
 
-### Develop
+Nao ha bind mount do repositorio nesses containers. Quando voce alterar codigo ou dependencias, rode `docker compose up --build` novamente para reconstruir as imagens de `api` e `worker`.
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Logs da API:
 
 ```sh
-cd my-turborepo
-turbo dev
+docker compose logs -f api
 ```
 
-Without global `turbo`, use your package manager:
+Logs do worker:
 
 ```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+docker compose logs -f worker
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Se quiser ver o banco que já está fora do compose, use o log do container existente diretamente.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Se o banco estiver vazio, aplique o schema uma vez antes de usar a API/worker:
 
 ```sh
-turbo dev --filter=web
+pnpm --filter @canarygate/database db:push
 ```
 
-Without global `turbo`:
+Serviços locais esperados:
+
+- `web`: `http://localhost:3000`
+- `api`: `http://localhost:3001`
+- `api docs`: `http://localhost:3001/docs`
+- `worker`: processo background sem porta pública
+
+## Runtime de background
+
+- A API mantém as conexões SSE do SDK.
+- Mudanças de flag são publicadas em Redis pub/sub segmentado por `projectId:environmentId`.
+- A API assina os canais Redis e retransmite para os subscribers SSE locais.
+- `schedule` e `auto-rollout` entram em filas BullMQ e são processados pelo `worker`.
+- O SDK trata snapshot + stream como dupla obrigatória e faz resync por `/sdk/flags` no reconnect.
+
+## Build por serviço
 
 ```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+pnpm --filter @canarygate/web build
+pnpm --filter @canarygate/api build
+pnpm --filter @canarygate/worker build
+pnpm --filter @canarygate/sdk build
 ```
 
-### Remote Caching
+## Documentação operacional
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- `brainstorm/SETUP.md`
+- `brainstorm/DEPLOY.md`
+- `brainstorm/queues-pubsub-implementation-plan.md`

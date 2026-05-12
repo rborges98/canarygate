@@ -1,0 +1,25 @@
+{
+  "name": "@canarygate/worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch --env-file=.env.local src/index.ts",
+    "build": "tsup src/index.ts --format cjs --out-dir dist",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@canarygate/database": "workspace:^",
+    "@canarygate/logger": "workspace:^",
+    "@canarygate/messaging-utils": "workspace:^",
+    "@canarygate/redis": "workspace:^",
+    "bullmq": "^5.61.0",
+    "fastify": "^5.8.4",
+    "drizzle-orm": "^0.41.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2"
+  }
+}

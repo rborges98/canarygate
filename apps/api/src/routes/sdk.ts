@@ -17,7 +17,14 @@ const SSE_MAX_CONNECTION_LIFETIME_MS = 1000 * 60 * 60 * 24
 export function resolveSdkStreamAuthentication(input: {
   headerApiKey?: string
   queryApiKey?: string
-}) {
+}):
+  | {
+      apiKey: string
+    }
+  | {
+      statusCode: 400 | 401
+      message: string
+    } {
   if (input.queryApiKey?.trim()) {
     return {
       statusCode: 400 as const,
@@ -134,7 +141,8 @@ export default async function sdkRoutes(app: FastifyInstance) {
           key: r.flags.key,
           type: r.flags.type,
           enabled: r.flag_environments.enabled,
-          rolloutPercent: r.flag_environments.rolloutPercent
+          rolloutPercent: r.flag_environments.rolloutPercent,
+          updatedAt: r.flag_environments.updatedAt.toISOString()
         }))
       }
     }
@@ -202,6 +210,8 @@ export default async function sdkRoutes(app: FastifyInstance) {
       }
 
       reply.hijack()
+
+      raw.setHeader('Access-Control-Allow-Origin', '*')
       raw.setHeader('Content-Type', 'text/event-stream')
       raw.setHeader('Cache-Control', 'no-cache')
       raw.setHeader('Connection', 'keep-alive')

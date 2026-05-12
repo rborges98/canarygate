@@ -3,7 +3,7 @@ import { getOrgBySlug } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { ENVIRONMENTS } from '@/shared/environments'
 import { HistoryList } from '@/components/project/history-list'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 import { notFound } from 'next/navigation'
 
 type Props = {

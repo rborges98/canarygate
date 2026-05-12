@@ -1,27 +1,36 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { BorderBeam } from '@/components/ui/border-beam'
 import Header from '@/components/header'
+import { getSession } from '@/shared/auth'
+import { logServerWarn } from '@canarygate/logger'
 
 export default async function AuthLayout({
   children
 }: {
   children: React.ReactNode
 }) {
-  const { auth } = await import('@/lib/auth')
-  const hdrs = await headers()
-  const session = await auth.api.getSession({ headers: hdrs })
+  let session: Awaited<ReturnType<typeof getSession>> = null
+
+  try {
+    session = await getSession()
+  } catch (error) {
+    logServerWarn('AuthLayout falhou ao carregar sessao', {
+      routeGroup: '(login_layout)',
+      reason: error instanceof Error ? error.message : 'unknown error'
+    })
+  }
+
   if (session) {
     redirect('/orgs')
   }
 
   return (
     <div className="bg-cg-bg-400 relative flex min-h-screen flex-col overflow-hidden md:flex-row">
-      <div className="w-105 relative z-10 hidden shrink-0 flex-col justify-between px-14 py-14 md:flex">
+      <div className="relative z-10 hidden w-105 shrink-0 flex-col justify-between px-14 py-14 md:flex">
         <Header />
 
         <div>
-          <p className="mb-3 text-[30px] font-extrabold leading-tight tracking-tight text-white">
+          <p className="mb-3 text-[30px] leading-tight font-extrabold tracking-tight text-white">
             Deploy on Friday.
             <br />
             <span className="text-cg-indigo-300">Sleep on Saturday.</span>
@@ -41,7 +50,7 @@ export default async function AuthLayout({
           <Header />
         </div>
 
-        <div className="max-w-85 w-full">
+        <div className="w-full max-w-85">
           <div className="relative rounded-[18px] border p-6 md:p-8">
             <BorderBeam
               borderWidth={2}

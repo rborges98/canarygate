@@ -130,7 +130,7 @@ export function ProjectSettingsForm({
     return true
   }
 
-  const maskedKey = apiKey.slice(0, 12) + '••••••••••••••••••••'
+  const maskedKey = '••••••••••••••••••••••••••••••••'
   let toggleActionTitle = 'Reactivate project'
   let toggleActionDescription =
     'Restore this project to the regular project list for all members with access.'

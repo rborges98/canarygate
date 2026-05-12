@@ -10,8 +10,46 @@ import { StepperInput } from '@/components/ui/stepper-input'
 import { labelCls, SegmentedControl } from './shared'
 import type { FlagFormData, EveryUnit } from './shared'
 
+function calcIntervalMs(value: number, unit: EveryUnit) {
+  const hourInMs = 60 * 60 * 1000
+  const dayInMs = 24 * hourInMs
+  const weekInMs = 7 * dayInMs
+
+  if (unit === 'hours') {
+    return value * hourInMs
+  }
+
+  if (unit === 'days') {
+    return value * dayInMs
+  }
+
+  return value * weekInMs
+}
+
+function parseDateValue(value: string) {
+  if (!value) {
+    return null
+  }
+
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
+  const parsed = new Date(normalized)
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function formatDateTime(value: Date | null) {
+  if (!value) {
+    return null
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(value)
+}
+
 export function AutoRolloutCard() {
-  const { control, setValue } = useFormContext<FlagFormData>()
+  const { control, setValue, formState } = useFormContext<FlagFormData>()
   const [showTooltip, setShowTooltip] = useState(false)
   const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -22,7 +60,8 @@ export function AutoRolloutCard() {
     everyValue,
     everyUnit,
     untilMax,
-    rolloutPercent
+    rolloutPercent,
+    autoRolloutNextAt
   ] = useWatch({
     control,
     name: [
@@ -32,7 +71,8 @@ export function AutoRolloutCard() {
       'everyValue',
       'everyUnit',
       'untilMax',
-      'rolloutPercent'
+      'rolloutPercent',
+      'autoRolloutNextAt'
     ]
   })
 
@@ -65,6 +105,19 @@ export function AutoRolloutCard() {
         ? `${total}d`
         : `${total}w`
   })()
+
+  const nextIncreasePreview = enabled
+    ? new Date(Date.now() + calcIntervalMs(everyValue, everyUnit))
+    : null
+  const hasNextIncreaseDraft =
+    !!formState.dirtyFields.autoRolloutEnabled ||
+    !!formState.dirtyFields.everyValue ||
+    !!formState.dirtyFields.everyUnit
+  const nextIncreaseAt =
+    hasNextIncreaseDraft || !autoRolloutNextAt
+      ? nextIncreasePreview
+      : parseDateValue(autoRolloutNextAt)
+  const formattedNextIncrease = formatDateTime(nextIncreaseAt)
 
   return (
     <div
@@ -99,8 +152,8 @@ export function AutoRolloutCard() {
             onCheckedChange={handleToggleAttempt}
           />
           {showTooltip && (
-            <div className="border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-300 absolute right-0 top-9 z-10 w-max max-w-[200px] rounded-lg border px-3 py-2 font-mono text-[11px] shadow-lg">
-              <span className="border-cg-bg-100 bg-cg-bg-200 absolute -top-[5px] right-3 h-2.5 w-2.5 rotate-45 border-l border-t" />
+            <div className="border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-300 absolute top-9 right-0 z-10 w-max max-w-[200px] rounded-lg border px-3 py-2 font-mono text-[11px] shadow-lg">
+              <span className="border-cg-bg-100 bg-cg-bg-200 absolute -top-[5px] right-3 h-2.5 w-2.5 rotate-45 border-t border-l" />
               Only active for rollout flags
             </div>
           )}
@@ -194,6 +247,12 @@ export function AutoRolloutCard() {
         <p className="text-cg-neutral-300 font-mono text-[11px]">
           +{increaseBy}% every {everyValue} {everyUnitLabel} · done in {doneIn}
         </p>
+
+        {enabled && formattedNextIncrease && (
+          <p className="text-cg-indigo-200 font-mono text-[11px]">
+            Next increase: {formattedNextIncrease}
+          </p>
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/services/auth/client'
 
 type OAuthProvider = 'google' | 'github' | 'microsoft'
 

@@ -18,6 +18,7 @@ type RawApiFlag = {
   autoRolloutEveryValue?: number
   autoRolloutEveryUnit?: 'hours' | 'days' | 'weeks'
   autoRolloutUntilMax?: number
+  autoRolloutNextAt?: string
   scheduleRolloutPercent?: number
 }
 
@@ -37,6 +38,7 @@ type ApiFlag = {
   everyValue?: number
   everyUnit?: 'hours' | 'days' | 'weeks'
   untilMax?: number
+  autoRolloutNextAt?: string
   scheduleRolloutPercent?: number
 }
 
@@ -57,6 +59,7 @@ function normalizeFlag(flag: RawApiFlag): ApiFlag {
     everyValue: flag.autoRolloutEveryValue,
     everyUnit: flag.autoRolloutEveryUnit,
     untilMax: flag.autoRolloutUntilMax,
+    autoRolloutNextAt: flag.autoRolloutNextAt,
     scheduleRolloutPercent: flag.scheduleRolloutPercent
   }
 }

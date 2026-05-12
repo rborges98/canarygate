@@ -22,6 +22,7 @@ export type FlagFormData = {
   everyValue: number
   everyUnit: EveryUnit
   untilMax: number
+  autoRolloutNextAt: string
   scheduleRolloutPercent: number
 }
 
@@ -44,7 +45,7 @@ export const labelCls =
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-cg-indigo-300 mb-4 font-sans text-[10px] uppercase tracking-widest">
+    <p className="text-cg-indigo-300 mb-4 font-sans text-[10px] tracking-widest uppercase">
       {children}
     </p>
   )

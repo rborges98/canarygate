@@ -3,11 +3,20 @@ import { getFlag } from '@/server/flags/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { FlagForm } from '@/components/project/flag-form'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 
 type Props = {
   params: Promise<{ orgSlug: string; projectSlug: string; flagKey: string[] }>
   searchParams: Promise<{ env?: string }>
+}
+
+function toDateTimeLocalValue(value?: string | null) {
+  if (!value) {
+    return ''
+  }
+
+  const normalized = value.includes('T') ? value : value.replace(' ', 'T')
+  return normalized.slice(0, 16)
 }
 
 export default async function EditFlagPage({ params, searchParams }: Props) {
@@ -42,13 +51,14 @@ export default async function EditFlagPage({ params, searchParams }: Props) {
     defaultEnabled: flag.enabled,
     rolloutPercent: flag.rolloutPercent,
     scheduleEnabled: flag.scheduleEnabled ?? false,
-    scheduleDate: flag.scheduleDate ?? '',
+    scheduleDate: toDateTimeLocalValue(flag.scheduleDate),
     scheduleAction: flag.scheduleAction ?? 'enable',
     autoRolloutEnabled: flag.autoRolloutEnabled ?? false,
     increaseBy: flag.increaseBy ?? 10,
     everyValue: flag.everyValue ?? 1,
     everyUnit: flag.everyUnit ?? 'hours',
     untilMax: flag.untilMax ?? 100,
+    autoRolloutNextAt: flag.autoRolloutNextAt ?? '',
     scheduleRolloutPercent: flag.scheduleRolloutPercent ?? 0
   }
 

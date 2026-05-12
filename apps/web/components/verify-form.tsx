@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useForm, Controller } from 'react-hook-form'
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/services/auth/client'
 import {
   InputOTP,
   InputOTPGroup,
@@ -17,6 +17,10 @@ type FormValues = {
   otp: string
 }
 
+const OTP_FETCH_OPTIONS = {
+  retry: 0
+} as const
+
 export function VerifyForm({ email }: Props) {
   const router = useRouter()
   const {
@@ -29,7 +33,8 @@ export function VerifyForm({ email }: Props) {
   async function onSubmit({ otp }: FormValues) {
     const { error } = await authClient.signIn.emailOtp({
       email: email ?? '',
-      otp
+      otp,
+      fetchOptions: OTP_FETCH_OPTIONS
     })
     if (error) {
       setError('otp', {
@@ -45,7 +50,11 @@ export function VerifyForm({ email }: Props) {
       return
     }
 
-    await authClient.emailOtp.sendVerificationOtp({ email, type: 'sign-in' })
+    await authClient.emailOtp.sendVerificationOtp({
+      email,
+      type: 'sign-in',
+      fetchOptions: OTP_FETCH_OPTIONS
+    })
   }
 
   return (
@@ -95,7 +104,7 @@ export function VerifyForm({ email }: Props) {
           </p>
         )}
 
-        <div className="bg-cg-white-300 border-cg-bg-100 mb-6 mt-6 w-full rounded-lg border px-4 py-3">
+        <div className="bg-cg-white-300 border-cg-bg-100 mt-6 mb-6 w-full rounded-lg border px-4 py-3">
           <p className="text-cg-neutral-400 font-sans text-[11px]">
             ⏱ Expires in 5 minutes
           </p>

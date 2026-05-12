@@ -2,7 +2,7 @@ import { getMembers } from '@/server/members/queries'
 import { getOrgBySlug } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { ProjectMembersClient } from '@/components/project/project-members-client'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 import { notFound } from 'next/navigation'
 
 type Props = {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Nav } from '@/components/nav'
+import type { SessionUser } from '@/shared/auth'
 import { createOrg } from '@/server/orgs/actions'
 
 function deriveSlug(name: string) {
@@ -21,7 +22,11 @@ type FormValues = {
   slug: string
 }
 
-export function CreateOrgForm() {
+type CreateOrgFormProps = {
+  user?: SessionUser | null
+}
+
+export function CreateOrgForm({ user }: CreateOrgFormProps) {
   const router = useRouter()
   const {
     register,
@@ -40,7 +45,7 @@ export function CreateOrgForm() {
     const finalSlug = slugTouched ? watchedSlug : deriveSlug(name)
     const org = await createOrg({ name: name.trim(), slug: finalSlug })
     if (org) {
-      router.push(`/orgs/${org.id}/projects`)
+      router.push(`/orgs/${org.slug}/projects`)
     } else {
       toast.error('Failed to create organization')
     }
@@ -48,7 +53,7 @@ export function CreateOrgForm() {
 
   return (
     <div className="bg-cg-bg-400 relative flex min-h-screen flex-col overflow-hidden">
-      <Nav />
+      <Nav user={user} />
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
@@ -83,7 +88,7 @@ export function CreateOrgForm() {
                 Organization name
               </label>
               <input
-                className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none transition-colors"
+                className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none"
                 placeholder="Acme Inc."
                 autoFocus
                 {...register('name', { required: true })}
@@ -96,7 +101,7 @@ export function CreateOrgForm() {
                 Slug
               </label>
               <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">
-                <span className="text-cg-neutral-400 border-cg-bg-100 whitespace-nowrap border-r px-3 py-2.5 font-mono text-[11px]">
+                <span className="text-cg-neutral-400 border-cg-bg-100 border-r px-3 py-2.5 font-mono text-[11px] whitespace-nowrap">
                   canarygate.com/
                 </span>
                 <input

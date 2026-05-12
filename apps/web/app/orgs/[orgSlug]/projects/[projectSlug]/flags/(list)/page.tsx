@@ -1,9 +1,9 @@
 import { getFlags } from '@/server/flags/queries'
-import { getOrgBySlug } from '@/server/orgs/queries'
+import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { FlagsList } from '@/components/project/flags-list'
 import { EnvironmentSelector } from '@/components/project/environment-selector'
-import { getSessionOrRedirect } from '@/lib/get-session-or-redirect'
+import { getSessionOrRedirect } from '@/shared/auth'
 import { notFound } from 'next/navigation'
 
 type Props = {
@@ -15,7 +15,7 @@ export default async function FlagsPage({ params, searchParams }: Props) {
   const { orgSlug, projectSlug } = await params
   const { env } = await searchParams
   await getSessionOrRedirect()
-  const org = await getOrgBySlug(orgSlug)
+  const org = await getOrgBySlugOrName(orgSlug)
   if (!org) {
     notFound()
   }

@@ -1,5 +1,5 @@
 import { TabNav } from '@/components/tab-nav'
-import { getOrgBySlug } from '@/server/orgs/queries'
+import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { notFound } from 'next/navigation'
 
@@ -10,7 +10,7 @@ type Props = {
 
 export default async function ProjectLayout({ children, params }: Props) {
   const { orgSlug, projectSlug } = await params
-  const org = await getOrgBySlug(orgSlug)
+  const org = await getOrgBySlugOrName(orgSlug)
   if (!org) {
     notFound()
   }

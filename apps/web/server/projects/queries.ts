@@ -1,4 +1,5 @@
 import { apiFetch } from '../api-fetch'
+import { getSessionOrRedirect } from '@/shared/auth'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -28,6 +29,8 @@ export type ProjectDetail = {
 }
 
 export async function getProjects(orgId: string): Promise<ProjectItem[]> {
+  await getSessionOrRedirect()
+
   const res = await apiFetch(`${API_BASE}/orgs/${orgId}/projects`)
   if (!res.ok) {
     return []
@@ -47,6 +50,8 @@ export async function getProjectBySlug(
   orgId: string,
   projectSlug: string
 ): Promise<ProjectDetail | null> {
+  await getSessionOrRedirect()
+
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/slug/${projectSlug}`
   )
@@ -68,6 +73,8 @@ export async function getApiKey(
   orgId: string,
   projectId: string
 ): Promise<string | null> {
+  await getSessionOrRedirect()
+
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/${projectId}/api-key`
   )
@@ -83,6 +90,8 @@ export async function getWebhook(
   orgId: string,
   projectId: string
 ): Promise<string | null> {
+  await getSessionOrRedirect()
+
   const res = await apiFetch(
     `${API_BASE}/orgs/${orgId}/projects/${projectId}/webhook`
   )

@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { logServerError } from '@/lib/server-log'
+import { logServerError } from '@canarygate/logger'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -28,6 +28,7 @@ const createFlagSchema = z.object({
 const updateFlagSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500),
+  type: z.enum(['boolean', 'rollout']).optional(),
   enabled: z.boolean(),
   rolloutPercent: z.number().min(0).max(100),
   scheduleEnabled: z.boolean().optional(),
@@ -93,6 +94,7 @@ export async function updateFlag(
   data: {
     name: string
     description: string
+    type?: 'boolean' | 'rollout'
     enabled: boolean
     rolloutPercent: number
     scheduleEnabled?: boolean

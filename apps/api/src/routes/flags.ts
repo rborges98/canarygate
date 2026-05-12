@@ -11,7 +11,7 @@ import {
 import * as flagsDb from '../db/flags.ts'
 import * as historyDb from '../db/history.ts'
 import * as environmentsDb from '../db/environments.ts'
-import { emitFlagEvent } from '../sse/flag-emitter.ts'
+import { publishFlagEvent } from '../pubsub/flag-events.ts'
 import {
   environmentSlugQuerySchema,
   nameSchema,
@@ -207,7 +207,12 @@ export default async function flagsRoutes(app: FastifyInstance) {
             })
           }
 
-          environmentIds = resolved.map((environment) => environment.id)
+          environmentIds = resolved
+            .filter(
+              (environment): environment is NonNullable<typeof environment> =>
+                environment !== null
+            )
+            .map((environment) => environment.id)
         } else {
           const allEnvs = await environmentsDb.getOrCreateEnvironments(
             projectId,
@@ -245,12 +250,22 @@ export default async function flagsRoutes(app: FastifyInstance) {
             request.log
           )
 
-          emitFlagEvent(`${projectId}:${env.id}`, 'flag-created', {
-            key: flag.key,
-            enabled: flagData.enabled ?? false,
-            rolloutPercent:
-              flagData.type === 'rollout' ? (flagData.rolloutPercent ?? 0) : 0
-          })
+          await publishFlagEvent(
+            projectId,
+            env.id,
+            'flag-created',
+            {
+              key: flag.key,
+              type: flag.type,
+              enabled: flagData.enabled ?? false,
+              rolloutPercent:
+                flagData.type === 'rollout'
+                  ? (flagData.rolloutPercent ?? 0)
+                  : 0,
+              updatedAt: flag.updatedAt.toISOString()
+            },
+            request.log
+          )
         }
 
         reply.status(201)
@@ -325,6 +340,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
     Body: {
       name: string
       description: string
+      type?: 'boolean' | 'rollout'
       enabled: boolean
       rolloutPercent: number
       scheduleEnabled?: boolean
@@ -348,6 +364,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         properties: {
           name: nameSchema,
           description: { type: 'string', maxLength: 500 },
+          type: { type: 'string', enum: ['boolean', 'rollout'] },
           enabled: { type: 'boolean' },
           rolloutPercent: { type: 'number', minimum: 0, maximum: 100 },
           scheduleEnabled: { type: 'boolean' },
@@ -428,11 +445,19 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        emitFlagEvent(`${projectId}:${env.id}`, 'flag-updated', {
-          key: flag.key,
-          enabled: flag.enabled,
-          rolloutPercent: flag.rolloutPercent
-        })
+        await publishFlagEvent(
+          projectId,
+          env.id,
+          'flag-updated',
+          {
+            key: flag.key,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt.toISOString()
+          },
+          request.log
+        )
         return flag
       } catch (error) {
         request.log.error(
@@ -487,9 +512,18 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        emitFlagEvent(`${projectId}:${env?.id ?? ''}`, 'flag-deleted', {
-          key: flag.key
-        })
+        if (env) {
+          await publishFlagEvent(
+            projectId,
+            env.id,
+            'flag-deleted',
+            {
+              key: flag.key,
+              deletedAt: new Date().toISOString()
+            },
+            request.log
+          )
+        }
         reply.status(204)
       } catch (error) {
         request.log.error(
@@ -556,11 +590,19 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        emitFlagEvent(`${projectId}:${env.id}`, 'flag-updated', {
-          key: flag.key,
-          enabled: flag.enabled,
-          rolloutPercent: flag.rolloutPercent
-        })
+        await publishFlagEvent(
+          projectId,
+          env.id,
+          'flag-updated',
+          {
+            key: flag.key,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt.toISOString()
+          },
+          request.log
+        )
         return flag
       } catch (error) {
         request.log.error(
@@ -646,11 +688,19 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        emitFlagEvent(`${projectId}:${env.id}`, 'flag-updated', {
-          key: flag.key,
-          enabled: flag.enabled,
-          rolloutPercent: flag.rolloutPercent
-        })
+        await publishFlagEvent(
+          projectId,
+          env.id,
+          'flag-updated',
+          {
+            key: flag.key,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt.toISOString()
+          },
+          request.log
+        )
         return flag
       } catch (error) {
         request.log.error(
@@ -713,11 +763,19 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        emitFlagEvent(`${projectId}:${env.id}`, 'flag-created', {
-          key: flag.key,
-          enabled: flag.enabled,
-          rolloutPercent: flag.rolloutPercent
-        })
+        await publishFlagEvent(
+          projectId,
+          env.id,
+          'flag-created',
+          {
+            key: flag.key,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt.toISOString()
+          },
+          request.log
+        )
         reply.status(201)
         return flag
       } catch (error) {

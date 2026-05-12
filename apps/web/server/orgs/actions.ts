@@ -1,7 +1,8 @@
 'use server'
 
 import { z } from 'zod'
-import { logServerError } from '@/lib/server-log'
+import { revalidatePath } from 'next/cache'
+import { logServerError } from '@canarygate/logger'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
@@ -31,7 +32,9 @@ export async function createOrg(data: { name: string; slug: string }) {
       return null
     }
 
-    return res.json() as Promise<{ id: string; name: string; slug: string }>
+    const org = (await res.json()) as { id: string; name: string; slug: string }
+    revalidatePath('/orgs')
+    return org
   } catch (error) {
     logServerError('createOrg falhou', error)
     return null
@@ -44,7 +47,7 @@ export async function updateOrg(
 ) {
   const parsed = orgSchema.safeParse(data)
   if (!parsed.success) {
-    return false
+    return null
   }
 
   try {
@@ -53,10 +56,16 @@ export async function updateOrg(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed.data)
     })
-    return res.ok
+    if (!res.ok) {
+      return null
+    }
+
+    const org = (await res.json()) as { id: string; name: string; slug: string }
+    revalidatePath('/orgs')
+    return org
   } catch (error) {
     logServerError('updateOrg falhou', error, { orgId })
-    return false
+    return null
   }
 }
 
@@ -65,6 +74,9 @@ export async function deleteOrg(orgId: string) {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}`, {
       method: 'DELETE'
     })
+    if (res.ok) {
+      revalidatePath('/orgs')
+    }
     return res.ok
   } catch (error) {
     logServerError('deleteOrg falhou', error, { orgId })

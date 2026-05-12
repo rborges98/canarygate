@@ -80,7 +80,7 @@ export const auth = betterAuth({
         })
       }
     }),
-    nextCookies() // deve ser o ÚLTIMO plugin
+    nextCookies()
   ],
   socialProviders: {
     google: {

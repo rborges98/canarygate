@@ -95,7 +95,7 @@ function mergeFlag(
     description: flag.description,
     type: flag.type,
     createdAt: flag.createdAt,
-    updatedAt: flag.updatedAt,
+    updatedAt: fe.updatedAt,
     environmentId: fe.environmentId,
     enabled: fe.enabled,
     rolloutPercent: fe.rolloutPercent,
@@ -333,6 +333,7 @@ export async function updateFlag(
   data: {
     name: string
     description: string
+    type?: 'boolean' | 'rollout'
     enabled: boolean
     rolloutPercent: number
   } & Partial<UpdateFlagScheduleData>,
@@ -346,6 +347,7 @@ export async function updateFlag(
       .set({
         name: data.name,
         description: data.description,
+        ...(data.type ? { type: data.type } : {}),
         updatedAt: new Date()
       })
       .where(and(eq(flags.id, flagId), eq(flags.projectId, projectId)))

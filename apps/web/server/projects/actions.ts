@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { logServerError } from '@/lib/server-log'
+import { logServerError } from '@canarygate/logger'
 import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'

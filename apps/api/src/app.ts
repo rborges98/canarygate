@@ -13,20 +13,27 @@ import flagsRoutes from './routes/flags.ts'
 import historyRoutes from './routes/history.ts'
 import invitesRoutes from './routes/invites.ts'
 import sdkRoutes from './routes/sdk.ts'
+import { fastifyLogger } from '@canarygate/logger'
 import { getRequiredUrl, IS_PRODUCTION } from './utils/env.ts'
-import { fastifyLogger } from './utils/logger.ts'
 
 const AUTH_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 
 export function buildApp() {
   const webUrl = getRequiredUrl('WEB_URL', 'http://localhost:3000', 'api app')
+  const allowedCorsOrigins = [
+    webUrl,
+    ...(process.env.CORS_ALLOWED_ORIGINS ?? '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
+  ]
 
   const app = Fastify({
     logger: fastifyLogger
   })
 
   app.register(cors, {
-    origin: webUrl,
+    origin: IS_PRODUCTION ? allowedCorsOrigins : true,
     credentials: true
   })
 
@@ -93,6 +100,9 @@ export function buildApp() {
     const appError = error as { statusCode?: number }
     const statusCode =
       typeof appError.statusCode === 'number' ? appError.statusCode : 500
+    const errorName = error instanceof Error ? error.name : 'UnknownError'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error payload'
     const message =
       !IS_PRODUCTION && error instanceof Error
         ? error.message
@@ -103,8 +113,8 @@ export function buildApp() {
         statusCode,
         route: request.routeOptions.url,
         method: request.method,
-        errorName: error.name,
-        errorMessage: error.message
+        errorName,
+        errorMessage
       },
       'Request failed'
     )

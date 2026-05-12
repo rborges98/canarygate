@@ -1,6 +1,6 @@
 'use server'
 
-import { logServerError } from '@/lib/server-log'
+import { logServerError } from '@canarygate/logger'
 import { getHistory } from './queries'
 import type { HistoryItem } from './queries'
 

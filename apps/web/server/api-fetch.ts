@@ -1,10 +1,24 @@
-import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { logServerError, logServerInfo, logServerWarn } from '@/lib/server-log'
+import {
+  logServerError,
+  logServerInfo,
+  logServerWarn
+} from '@canarygate/logger'
 
 const MAX_RETRIES = 2
 const TIMEOUT_MS = 15_000
 const SENSITIVE_QUERY_PARAMS = ['apiKey', 'token', 'e']
+
+function isNextRedirectError(error: unknown): error is { digest: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'digest' in error &&
+    typeof (error as { digest?: unknown }).digest === 'string' &&
+    (error as { digest: string }).digest.startsWith('NEXT_REDIRECT')
+  )
+}
 
 function redactSensitiveUrl(rawUrl: string) {
   try {
@@ -59,11 +73,8 @@ export async function apiFetch(
   const method = init?.method ?? 'GET'
   const safeUrl = redactSensitiveUrl(url)
   const startedAt = Date.now()
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get('better-auth.session_token')?.value
-  const cookieHeader = sessionToken
-    ? `better-auth.session_token=${sessionToken}`
-    : ''
+  const requestHeaders = await headers()
+  const cookieHeader = requestHeaders.get('cookie') ?? ''
 
   let lastError: unknown
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -97,6 +108,10 @@ export async function apiFetch(
 
       return res
     } catch (err) {
+      if (isNextRedirectError(err)) {
+        throw err
+      }
+
       lastError = err
       const isRetryable =
         err instanceof TypeError ||

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
-import { isLocalAuthBypassEnabled } from './lib/is-local-auth-bypass-enabled'
+import { isLocalAuthBypassEnabled } from './shared/auth'
 
 const PUBLIC_PATHS = ['/login', '/verify', '/invite', '/api/auth']
 
