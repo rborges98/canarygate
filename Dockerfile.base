@@ -1,0 +1,35 @@
+FROM node:20-bookworm-slim AS base
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+ENV NODE_ENV=development
+
+RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+
+WORKDIR /workspace
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY apps/worker/package.json apps/worker/package.json
+COPY packages/database/package.json packages/database/package.json
+COPY packages/messaging-utils/package.json packages/messaging-utils/package.json
+COPY packages/redis/package.json packages/redis/package.json
+COPY sdks/js/package.json sdks/js/package.json
+COPY packages/logger/package.json packages/logger/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY apps ./apps
+COPY packages ./packages
+COPY sdks ./sdks
+
+FROM base AS api
+
+EXPOSE 3001
+
+CMD ["pnpm", "--filter", "@canarygate/api", "exec", "tsx", "src/index.ts"]
+
+FROM base AS worker
+
+CMD ["pnpm", "--filter", "@canarygate/worker", "exec", "tsx", "src/index.ts"]

@@ -7,7 +7,9 @@
     "build": "tsup src/index.ts --format cjs --out-dir dist",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "license": "ISC",
   "dependencies": {
@@ -28,10 +30,15 @@
     "pg": "^8.13.0"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^10.0.0",
+    "@testcontainers/redis": "^10.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.11.0",
+    "@vitest/coverage-v8": "^3.0.0",
     "drizzle-kit": "^0.31.10",
+    "ioredis-mock": "^8.9.0",
     "tsup": "^8.5.1",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "vitest": "^3.0.0"
   }
 }

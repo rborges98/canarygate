@@ -1,0 +1,7 @@
+.git
+.turbo
+**/.next
+**/coverage
+**/dist
+**/node_modules
+**/*.log
