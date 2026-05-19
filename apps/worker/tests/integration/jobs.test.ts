@@ -1,38 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { ScheduleJobData, AutoRolloutJobData } from '@canarygate/messaging-utils'
+import type {
+  ScheduleJobData,
+  AutoRolloutJobData
+} from '@canarygate/messaging-utils'
 import { db } from '@canarygate/database/client'
 
 const { mockRedisPublish } = vi.hoisted(() => ({
-  mockRedisPublish: vi.fn().mockResolvedValue(1),
+  mockRedisPublish: vi.fn().mockResolvedValue(1)
 }))
 
 vi.mock('@canarygate/redis', () => ({
   createRedisConnection: vi.fn(() => ({
     publish: mockRedisPublish,
     quit: vi.fn().mockResolvedValue('OK'),
-    on: vi.fn(),
-  })),
+    on: vi.fn()
+  }))
 }))
 
 vi.mock('@canarygate/database/client', () => ({
   db: {
     select: vi.fn(),
     update: vi.fn(),
-    insert: vi.fn(),
-  },
+    insert: vi.fn()
+  }
 }))
 
 vi.mock('@canarygate/database/schema', () => ({
   flags: {},
   flagEnvironments: {},
   environments: {},
-  history: {},
+  history: {}
 }))
 
 vi.mock('@canarygate/messaging-utils', () => ({
-  buildFlagEventsChannel: vi.fn((p: string, e: string) => `flag-events:${p}:${e}`),
+  buildFlagEventsChannel: vi.fn(
+    (p: string, e: string) => `flag-events:${p}:${e}`
+  ),
   serializeFlagEventEnvelope: vi.fn((env: unknown) => JSON.stringify(env)),
-  calcIntervalMs: vi.fn(() => 3_600_000),
+  calcIntervalMs: vi.fn(() => 3_600_000)
 }))
 
 import { processScheduleJob } from '../../src/jobs/process-schedule.ts'
@@ -55,7 +60,7 @@ const mockLog = {
   debug: vi.fn(),
   trace: vi.fn(),
   fatal: vi.fn(),
-  child: vi.fn().mockReturnThis(),
+  child: vi.fn().mockReturnThis()
 } as any
 
 function createScheduleJob(overrides: Partial<ScheduleJobData> = {}): any {
@@ -68,12 +73,14 @@ function createScheduleJob(overrides: Partial<ScheduleJobData> = {}): any {
       environmentSlug: 'production',
       flagKey: 'my-flag',
       dueAt: TEST_DUE_AT.toISOString(),
-      ...overrides,
-    },
+      ...overrides
+    }
   }
 }
 
-function createAutoRolloutJob(overrides: Partial<AutoRolloutJobData> = {}): any {
+function createAutoRolloutJob(
+  overrides: Partial<AutoRolloutJobData> = {}
+): any {
   return {
     data: {
       flagEnvironmentId: TEST_FLAG_ENV_ID,
@@ -83,8 +90,8 @@ function createAutoRolloutJob(overrides: Partial<AutoRolloutJobData> = {}): any 
       environmentSlug: 'production',
       flagKey: 'my-flag',
       dueAt: TEST_DUE_AT.toISOString(),
-      ...overrides,
-    },
+      ...overrides
+    }
   }
 }
 
@@ -116,7 +123,7 @@ function createScheduleFlagState(overrides: Record<string, unknown> = {}) {
       key: 'my-flag',
       name: 'My Flag',
       projectId: TEST_PROJECT_ID,
-      type: 'boolean',
+      type: 'boolean'
     },
     flagEnvironment: {
       id: TEST_FLAG_ENV_ID,
@@ -135,9 +142,9 @@ function createScheduleFlagState(overrides: Record<string, unknown> = {}) {
       autoRolloutUntilMax: 0,
       autoRolloutNextAt: null,
       updatedAt: new Date(),
-      ...overrides,
+      ...overrides
     },
-    environment: { id: TEST_ENV_ID, slug: 'production', name: 'Production' },
+    environment: { id: TEST_ENV_ID, slug: 'production', name: 'Production' }
   }
 }
 
@@ -148,7 +155,7 @@ function createAutoRolloutFlagState(overrides: Record<string, unknown> = {}) {
       key: 'my-flag',
       name: 'My Flag',
       projectId: TEST_PROJECT_ID,
-      type: 'boolean',
+      type: 'boolean'
     },
     flagEnvironment: {
       id: TEST_FLAG_ENV_ID,
@@ -167,9 +174,9 @@ function createAutoRolloutFlagState(overrides: Record<string, unknown> = {}) {
       autoRolloutUntilMax: 100,
       autoRolloutNextAt: TEST_DUE_AT,
       updatedAt: new Date(),
-      ...overrides,
+      ...overrides
     },
-    environment: { id: TEST_ENV_ID, slug: 'production', name: 'Production' },
+    environment: { id: TEST_ENV_ID, slug: 'production', name: 'Production' }
   }
 }
 
@@ -182,12 +189,14 @@ describe('processScheduleJob integration', () => {
 
   it('enables a flag when processing a schedule job with enable action', async () => {
     setupSelectChain([createScheduleFlagState()])
-    setupUpdateChain([{
-      id: TEST_FLAG_ENV_ID,
-      enabled: true,
-      rolloutPercent: 0,
-      updatedAt: new Date(),
-    }])
+    setupUpdateChain([
+      {
+        id: TEST_FLAG_ENV_ID,
+        enabled: true,
+        rolloutPercent: 0,
+        updatedAt: new Date()
+      }
+    ])
     setupInsertChain()
 
     const job = createScheduleJob()
@@ -214,19 +223,32 @@ describe('processScheduleJob integration', () => {
 
   it('propagates db error from getWorkerFlagState and can succeed on retry', async () => {
     // First call: db.select chain rejects
-    const mockLimit = vi.fn().mockRejectedValueOnce(new Error('DB connection failed'))
+    const mockLimit = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('DB connection failed'))
     const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
     const mockInnerJoin2 = vi.fn().mockReturnValue({ where: mockWhere })
-    const mockInnerJoin1 = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin2 })
+    const mockInnerJoin1 = vi
+      .fn()
+      .mockReturnValue({ innerJoin: mockInnerJoin2 })
     const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin1 })
     vi.mocked(db.select).mockReturnValueOnce({ from: mockFrom } as any)
 
     const job = createScheduleJob()
-    await expect(processScheduleJob(job, mockLog)).rejects.toThrow('DB connection failed')
+    await expect(processScheduleJob(job, mockLog)).rejects.toThrow(
+      'DB connection failed'
+    )
 
     // Second call: succeeds
     setupSelectChain([createScheduleFlagState()])
-    setupUpdateChain([{ id: TEST_FLAG_ENV_ID, enabled: true, rolloutPercent: 0, updatedAt: new Date() }])
+    setupUpdateChain([
+      {
+        id: TEST_FLAG_ENV_ID,
+        enabled: true,
+        rolloutPercent: 0,
+        updatedAt: new Date()
+      }
+    ])
     setupInsertChain()
 
     await expect(processScheduleJob(job, mockLog)).resolves.not.toThrow()
@@ -256,13 +278,15 @@ describe('processAutoRolloutJob integration', () => {
 
   it('increments rollout percent when processing an auto-rollout job', async () => {
     setupSelectChain([createAutoRolloutFlagState()])
-    setupUpdateChain([{
-      id: TEST_FLAG_ENV_ID,
-      rolloutPercent: 10,
-      autoRolloutEnabled: true,
-      autoRolloutNextAt: new Date(),
-      updatedAt: new Date(),
-    }])
+    setupUpdateChain([
+      {
+        id: TEST_FLAG_ENV_ID,
+        rolloutPercent: 10,
+        autoRolloutEnabled: true,
+        autoRolloutNextAt: new Date(),
+        updatedAt: new Date()
+      }
+    ])
     setupInsertChain()
 
     const job = createAutoRolloutJob()

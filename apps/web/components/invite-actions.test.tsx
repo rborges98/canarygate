@@ -6,12 +6,12 @@ import { acceptInvite, declineInvite } from '@/server/members/actions'
 const pushMock = vi.fn()
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock })
 }))
 
 vi.mock('@/server/members/actions', () => ({
   acceptInvite: vi.fn().mockResolvedValue(undefined),
-  declineInvite: vi.fn().mockResolvedValue(undefined),
+  declineInvite: vi.fn().mockResolvedValue(undefined)
 }))
 
 beforeEach(() => {
@@ -24,8 +24,12 @@ describe('InviteActions', () => {
   it('renders Accept invite and Decline invite buttons', () => {
     render(<InviteActions token="abc123" />)
 
-    expect(screen.getByRole('button', { name: /accept invite/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /decline invite/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /accept invite/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /decline invite/i })
+    ).toBeInTheDocument()
   })
 
   it('calls acceptInvite with token when Accept is clicked', async () => {
@@ -77,11 +81,15 @@ describe('InviteActions', () => {
 
     await user.click(screen.getByRole('button', { name: /accept invite/i }))
 
-    expect(screen.getByRole('button', { name: /accepting\.\.\./i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /accepting\.\.\./i })
+    ).toBeInTheDocument()
 
     resolveAccept()
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /accept invite/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /accept invite/i })
+      ).toBeInTheDocument()
     )
   })
 
@@ -98,11 +106,15 @@ describe('InviteActions', () => {
 
     await user.click(screen.getByRole('button', { name: /decline invite/i }))
 
-    expect(screen.getByRole('button', { name: /declining\.\.\./i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /declining\.\.\./i })
+    ).toBeInTheDocument()
 
     resolveDecline()
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /decline invite/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /decline invite/i })
+      ).toBeInTheDocument()
     )
   })
 
