@@ -8,7 +8,7 @@ export default defineConfig({
     name: 'web',
     environment: 'happy-dom',
     globals: true,
-    setupFiles: ['./test/setup.ts'],
+    setupFiles: ['./tests/setup.ts'],
     include: ['**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/.next/**', '**/dist/**'],
     coverage: {
@@ -18,17 +18,17 @@ export default defineConfig({
       thresholds: {
         lines: 70,
         functions: 70,
-        branches: 60,
+        branches: 60
       },
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov']
     },
     env: {
-      NODE_ENV: 'test',
-    },
+      NODE_ENV: 'test'
+    }
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, '.'),
-    },
-  },
+      '@': resolve(__dirname, '.')
+    }
+  }
 })

@@ -5,5 +5,5 @@ export default defineWorkspace([
   'apps/web/vitest.config.mts',
   'apps/worker/vitest.config.mts',
   'sdks/js/vitest.config.mts',
-  'packages/messaging-utils/vitest.config.mts',
+  'packages/messaging-utils/vitest.config.mts'
 ])
