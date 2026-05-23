@@ -1,0 +1,123 @@
+---
+title: Flags API
+description: Endpoints para gerenciar flags via API REST.
+---
+
+## Base URL
+
+```
+https://api.canarygate.io/api/v1
+```
+
+## Listar flags
+
+```http
+GET /flags
+```
+
+Retorna todas as flags do environment associado à API Key.
+
+**Response 200**
+
+```json
+[
+  {
+    "key": "new-checkout",
+    "type": "boolean",
+    "enabled": true,
+    "description": "Novo fluxo de checkout"
+  },
+  {
+    "key": "new-dashboard",
+    "type": "rollout",
+    "enabled": false,
+    "percentage": 25,
+    "description": null
+  }
+]
+```
+
+## Obter flag
+
+```http
+GET /flags/:key
+```
+
+**Response 200**
+
+```json
+{
+  "key": "new-checkout",
+  "type": "boolean",
+  "enabled": true,
+  "description": "Novo fluxo de checkout"
+}
+```
+
+**Response 404**
+
+```json
+{
+  "error": "NOT_FOUND",
+  "message": "Flag 'new-checkout' not found"
+}
+```
+
+## Criar flag
+
+```http
+POST /flags
+```
+
+**Body**
+
+```json
+{
+  "key": "new-feature",
+  "type": "boolean",
+  "description": "Minha nova feature"
+}
+```
+
+| Campo         | Tipo                     | Obrigatório |
+| ------------- | ------------------------ | ----------- |
+| `key`         | `string`                 | Sim         |
+| `type`        | `'boolean' \| 'rollout'` | Sim         |
+| `description` | `string`                 | Não         |
+
+**Response 201**
+
+```json
+{
+  "key": "new-feature",
+  "type": "boolean",
+  "enabled": false,
+  "description": "Minha nova feature"
+}
+```
+
+## Atualizar flag
+
+```http
+PATCH /flags/:key
+```
+
+**Body** (campos opcionais)
+
+```json
+{
+  "enabled": true,
+  "percentage": 50,
+  "description": "Updated description"
+}
+```
+
+**Response 200** — retorna a flag atualizada.
+
+## Deletar flag
+
+```http
+DELETE /flags/:key
+```
+
+**Response 204** — sem corpo.

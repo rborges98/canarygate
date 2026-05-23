@@ -1,0 +1,90 @@
+---
+title: Create your first flag
+description: Step by step guide to create and activate a flag in the CanaryGate dashboard.
+keywords:
+  ['first flag', 'create flag', 'dashboard', 'boolean flag', 'rollout flag']
+aliases: ['create flag', 'first flag']
+---
+
+## Before clicking New Flag
+
+There is one decision that changes the rest of the flow:
+
+- **Boolean**: use it when you only need a simple on/off switch.
+- **Rollout**: use it when you want percentage-based releases, progressive exposure, and lower risk.
+
+If you are not sure which one to choose yet, start conservatively:
+
+- choose **Boolean** for administrative features, internal toggles, and simple validations
+- choose **Rollout** for gradual releases, canary deploys, and experiments with a partial audience
+
+## 1. Create or choose a project
+
+In the dashboard, go to **Organizations -> your org -> New Project**. Give the project a name that clearly represents the application or domain that owns the flags, such as `checkout-web` or `billing-api`.
+
+If the project already exists, reuse it. The important part is to avoid mixing flags from different systems inside the same project unless there is a clear reason.
+
+## 2. Select an environment
+
+Each project has independent environments, such as `staging` and `production`. The same flag can exist in both environments with different states.
+
+Choose the environment where the flag should be created first. In general:
+
+- start with `staging` to validate behavior and naming
+- move to `production` when the rule is clear
+
+## 3. Create the flag
+
+Click **New Flag** and fill in:
+
+| Field           | Description                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| **Name**        | Flag identifier (for example `new-checkout`). Used in the API and SDK.  |
+| **Type**        | `Boolean` for simple on/off. `Rollout` for a percentage-based audience. |
+| **Description** | Optional. Team-facing context.                                          |
+
+Best practices for the **Name** field:
+
+- prefer short, stable, behavior-oriented names such as `new-checkout`
+- avoid generic names like `test` or `feature-1`
+- do not include the environment in the flag name; CanaryGate already separates that for you
+
+## 4. Activate the flag
+
+After creation, the flag starts **disabled** by default.
+
+- For **Boolean** flags, activating means releasing it to everyone in that environment.
+- For **Rollout** flags, activating usually comes with the initial percentage you want to release.
+
+<Callout type="info">
+  Changes are delivered in real time via SSE to all connected clients, without a
+  reload or redeploy.
+</Callout>
+
+## 5. Read it in the SDK
+
+```ts
+const flag = canary.getFlag('new-checkout')
+
+if (!flag) {
+  console.warn('Flag new-checkout is not available yet')
+}
+
+if (flag?.enabled ?? false) {
+  renderNewCheckout()
+} else {
+  renderCurrentCheckout()
+}
+```
+
+If `flag` comes back as `undefined`, it usually indicates one of these situations:
+
+- `init()` has not finished yet
+- the flag was created in a different environment
+- the flag name in code does not match the name saved in the dashboard
+
+## Next steps
+
+- [Understand boolean flags vs rollout](/docs/concepts/flags)
+- [Configure percentage rollout](/docs/concepts/rollout)
+- [Do the minimum SDK integration](/docs/getting-started/quickstart)

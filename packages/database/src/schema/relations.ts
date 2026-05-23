@@ -1,13 +1,13 @@
 import { relations } from 'drizzle-orm'
-import { users } from './users.ts'
-import { orgs } from './orgs.ts'
-import { orgMembers } from './members.ts'
-import { projects, projectMembers } from './projects.ts'
-import { flags } from './flags.ts'
-import { environments } from './environments.ts'
-import { flagEnvironments } from './flag-environments.ts'
-import { history } from './history.ts'
-import { invites } from './invites.ts'
+import { users } from './users'
+import { orgs } from './orgs'
+import { orgMembers } from './members'
+import { projects, projectMembers } from './projects'
+import { flags } from './flags'
+import { environments } from './environments'
+import { flagEnvironments } from './flag-environments'
+import { history } from './history'
+import { invites } from './invites'
 
 export const usersRelations = relations(users, ({ many }) => ({
   orgMembers: many(orgMembers)

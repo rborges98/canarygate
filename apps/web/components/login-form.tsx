@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { authClient } from '@/services/auth/client'
-import { OAuthButton } from '@/components/ui/oauth-button'
+import { OAuthButton } from '@/components/oauth-button'
 
 type FormValues = {
   email: string

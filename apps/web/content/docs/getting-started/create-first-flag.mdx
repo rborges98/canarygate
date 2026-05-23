@@ -1,0 +1,47 @@
+---
+title: Crie sua primeira flag
+description: Passo a passo para criar e ativar uma flag no painel do CanaryGate.
+---
+
+## 1. Crie um projeto
+
+No painel, vá em **Organizations → seu org → New Project**. Dê um nome ao projeto (ex: `my-app`).
+
+## 2. Selecione um environment
+
+Cada projeto tem environments independentes (por padrão: `production` e `staging`). Selecione o environment onde quer criar a flag.
+
+## 3. Crie a flag
+
+Clique em **New Flag** e preencha:
+
+| Campo           | Descrição                                                        |
+| --------------- | ---------------------------------------------------------------- |
+| **Name**        | Identificador da flag (ex: `new-checkout`). Usado na API e SDK.  |
+| **Type**        | `Boolean` — on/off simples. `Rollout` — porcentagem de usuários. |
+| **Description** | Opcional. Contexto para o time.                                  |
+
+## 4. Ative a flag
+
+Após criar, a flag começa **desativada** por padrão. Clique no toggle para ativar.
+
+<Callout type="info">
+  Mudanças são entregues em tempo real via SSE para todos os clientes conectados
+  — sem precisar recarregar ou redesploiar.
+</Callout>
+
+## 5. Leia no SDK
+
+```ts
+const flag = canary.getFlag('new-checkout')
+
+if (flag?.enabled) {
+  renderNewCheckout()
+}
+```
+
+## Próximos passos
+
+- [Entenda flags boolean vs rollout](/docs/concepts/flags)
+- [Configure rollout por porcentagem](/docs/concepts/rollout)
+- [Agende ativações automáticas](/docs/concepts/schedule-auto-rollout)

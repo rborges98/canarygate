@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { orgs } from './orgs.ts'
-import { projects } from './projects.ts'
+import { orgs } from './orgs'
+import { projects } from './projects'
 
 export const inviteStatusEnum = pgEnum('invite_status', ['PENDING', 'ACCEPTED', 'DECLINED'])
 

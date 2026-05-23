@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useForm, FormProvider } from 'react-hook-form'
-import { DangerZone } from '@/components/ui/danger-zone'
-import { DangerZoneAction } from '@/components/ui/danger-zone-action'
+import { DangerZone } from '@/components/danger-zone'
+import { DangerZoneAction } from '@/components/danger-zone-action'
 import { FlagFormHeader } from './flag-form-header'
 import { GeneralInfoCard } from './general-info-card'
 import { ConfigurationCard } from './configuration-card'

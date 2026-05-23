@@ -1,0 +1,58 @@
+---
+title: SDK JavaScript / TypeScript
+description: Visão geral do SDK oficial do CanaryGate para browser e Node.js.
+asIndexPage: true
+---
+
+O SDK `@canarygate/js` é o cliente oficial para integrar o CanaryGate em aplicações JavaScript e TypeScript.
+
+## Compatibilidade
+
+| Ambiente                                       | Suporte     |
+| ---------------------------------------------- | ----------- |
+| Browser (moderno)                              | ✓           |
+| Node.js 18+                                    | ✓           |
+| Deno                                           | ✓ (via npm) |
+| Bun                                            | ✓           |
+| Edge Runtime (Cloudflare Workers, Vercel Edge) | Parcial\*   |
+
+\*Edge runtimes têm suporte limitado a `EventSource` — SSE pode não funcionar. Use `disconnect()` imediatamente após `init()` nesses ambientes.
+
+## Instalação
+
+```bash
+npm install @canarygate/js
+```
+
+## API completa
+
+| Método                             | Descrição                              |
+| ---------------------------------- | -------------------------------------- |
+| `new CanaryGate(apiKey, options?)` | Cria o cliente                         |
+| `init()`                           | Carrega flags e inicia SSE             |
+| `getFlag(key)`                     | Retorna `FlagData \| undefined`        |
+| `getFlags()`                       | Retorna `FlagData[]` (todas as flags)  |
+| `isStale()`                        | `true` se a conexão está degradada     |
+| `getLastSyncAt()`                  | `Date \| null` da última sincronização |
+| `disconnect()`                     | Fecha a conexão SSE                    |
+
+## Próximos passos
+
+<Cards>
+  <Cards.Card
+    title="Inicialização"
+    href="/docs/sdk/javascript/initialization"
+  />
+  <Cards.Card
+    title="Avaliando flags"
+    href="/docs/sdk/javascript/evaluate-flags"
+  />
+  <Cards.Card
+    title="Tempo real e SSE"
+    href="/docs/sdk/javascript/realtime-sse"
+  />
+  <Cards.Card
+    title="Tipos TypeScript"
+    href="/docs/sdk/javascript/typescript-types"
+  />
+</Cards>

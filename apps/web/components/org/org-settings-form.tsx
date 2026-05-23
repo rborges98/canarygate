@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
-import { DangerZone } from '@/components/ui/danger-zone'
-import { DangerZoneAction } from '@/components/ui/danger-zone-action'
+import { DangerZone } from '@/components/danger-zone'
+import { DangerZoneAction } from '@/components/danger-zone-action'
 import { updateOrg, deleteOrg } from '@/server/orgs/actions'
 
 type Props = {

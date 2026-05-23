@@ -1,4 +1,4 @@
-import { TabNav } from '@/components/tab-nav'
+import { TabNav } from '@/components/ui/tab-nav'
 import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { getProjectBySlug } from '@/server/projects/queries'
 import { notFound } from 'next/navigation'

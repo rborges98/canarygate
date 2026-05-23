@@ -15,6 +15,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 function getRequiredEnv(name: string) {
   const value = process.env[name]
+
   if (!value) {
     throw new Error(`[web auth] Missing required env var: ${name}`)
   }

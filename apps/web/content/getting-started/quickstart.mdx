@@ -1,0 +1,74 @@
+---
+title: Quickstart
+description: From zero to your first flag in less than 5 minutes.
+keywords:
+  ['quickstart', 'getting started', 'first flag', 'feature flags', 'sdk']
+aliases: ['getting started', 'first steps']
+searchBoost: 9
+---
+
+## Before you start
+
+This quickstart assumes you already:
+
+- installed the SDK
+- have a valid API Key
+- created at least one project and one environment in the dashboard
+
+If you have not done that yet, go back to [Installation](/docs/getting-started/installation).
+
+## 1. Initialize the client
+
+Create an API Key in **Settings -> API Keys** and initialize the SDK:
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+
+const canary = new CanaryGate('cg_your_api_key')
+
+try {
+  await canary.init()
+} catch (error) {
+  console.error('Failed to initialize CanaryGate', error)
+}
+```
+
+`init()` performs the initial flag fetch and opens the SSE connection for real-time updates. If it fails, your application should decide whether to continue with a local fallback, temporarily disable the feature, or show an operational message.
+
+## 2. Evaluate a flag with a safe fallback
+
+```ts
+const flag = canary.getFlag('new-checkout')
+
+if (!flag) {
+  // the flag does not exist yet, the key is wrong, or init failed
+}
+
+if (flag?.enabled ?? false) {
+  // new checkout
+} else {
+  // current checkout
+}
+```
+
+Use `flag?.enabled ?? false` when you want a safe fallback to the off state. This prevents the application from breaking when the flag does not exist yet or when the initial load did not finish as expected.
+
+## 3. Disconnect when it makes sense
+
+```ts
+// In an SPA: during component cleanup / before unmount
+canary.disconnect()
+```
+
+<Callout type="info">
+  The SSE connection is persistent. In Node.js environments that do not need
+  real-time updates, call `disconnect()` after `init()` to release the resource.
+</Callout>
+
+In traditional client applications, you will usually keep the connection open for the lifetime of the session. In scripts, jobs, and short-lived processes, close it explicitly when you no longer need updates.
+
+## Next steps
+
+- [Create your first flag in the dashboard](/docs/getting-started/create-first-flag)
+- [Understand flag types](/docs/concepts/flags)
+- [See more complete initialization patterns](/docs/sdk/javascript/initialization)

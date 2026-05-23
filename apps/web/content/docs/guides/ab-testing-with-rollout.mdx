@@ -1,0 +1,80 @@
+---
+title: A/B Testing com Rollout
+description: Use rollout flags para experimentos simples sem ferramentas externas.
+---
+
+## Quando usar rollout para A/B
+
+Rollout flags são ideais para **experimentos de produto simples** onde você quer expor uma variante para uma porcentagem de usuários e medir o impacto.
+
+Para testes estatísticos complexos com múltiplas variantes e análise de conversão, considere ferramentas dedicadas de A/B testing integradas via webhook.
+
+## Configuração básica
+
+### 1. Crie a flag
+
+No painel: **New Flag → Type: Rollout** com key `experiment-new-cta`.
+
+Configure para 50% — metade dos usuários verá a nova variante.
+
+### 2. Implemente no código
+
+```ts
+const client = new CanaryGate(process.env.CANARYGATE_KEY!, {
+  userId: user.id // Fundamental: userId estável para stickiness
+})
+await client.init()
+
+const showNewCta = client.getFlag('experiment-new-cta')?.enabled ?? false
+```
+
+### 3. Renderize com base na variante
+
+```tsx
+function HeroSection({ userId }: { userId: string }) {
+  const showNewCta = client.getFlag('experiment-new-cta')?.enabled ?? false
+
+  return (
+    <section>
+      <h1>Bem-vindo</h1>
+      {showNewCta ? (
+        <Button>Comece agora — grátis</Button> // Variante B
+      ) : (
+        <Button>Criar conta</Button> // Variante A (controle)
+      )}
+    </section>
+  )
+}
+```
+
+### 4. Meça o impacto
+
+Envie o grupo do usuário junto com seus eventos de analytics:
+
+```ts
+const variant = client.getFlag('experiment-new-cta')?.enabled ? 'B' : 'A'
+
+analytics.track('cta_clicked', {
+  userId: user.id,
+  variant,
+  page: 'home'
+})
+```
+
+## Stickiness
+
+A propriedade mais importante para A/B é **stickiness**: o mesmo usuário sempre vê a mesma variante. O CanaryGate garante isso pelo hash determinístico do `userId` + `flagKey`.
+
+<Callout type="warning">
+  Se você não passar `userId`, o SDK usa um ID anônimo de `localStorage`. Isso
+  significa que usuários que trocam de dispositivo/browser podem ver variantes
+  diferentes — o que pode distorcer os resultados.
+</Callout>
+
+## Encerrando o experimento
+
+Quando terminar o teste:
+
+1. Escolha o vencedor
+2. Se a variante B venceu → defina o código da variante B como padrão e remova a flag
+3. Se a variante A venceu → remova a flag sem mudar o código padrão

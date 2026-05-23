@@ -1,6 +1,6 @@
 import React from 'react'
 import { cn } from '@/shared/utils'
-import { Logo } from '@/components/ui/logo'
+import { Logo } from '@/components/logo'
 
 export { Logo }
 

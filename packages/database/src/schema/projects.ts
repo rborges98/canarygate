@@ -1,6 +1,6 @@
 import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { orgs } from './orgs.ts'
-import { orgMembers } from './members.ts'
+import { orgs } from './orgs'
+import { orgMembers } from './members'
 
 export const projectRoleEnum = pgEnum('project_role', ['ADMIN', 'MEMBER'])
 

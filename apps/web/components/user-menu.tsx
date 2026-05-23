@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from '@/services/auth/client'
 import type { SessionUser } from '@/shared/auth'
-import { UserAvatar } from './user-avatar'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 const SESSION_REFETCH_RETRY_LIMIT = 2
 const SESSION_REFETCH_RETRY_DELAY_MS = 750
@@ -85,7 +85,6 @@ export function UserMenu({ initialUser }: UserMenuProps) {
 
       {open && (
         <>
-          {/* arrow */}
           <div
             className="absolute right-3.5 z-101"
             style={{
@@ -98,7 +97,6 @@ export function UserMenu({ initialUser }: UserMenuProps) {
               borderLeft: '1px solid #1a1a1a'
             }}
           />
-          {/* dropdown */}
           <div
             className="absolute right-0 z-100 w-52 rounded-xl border"
             style={{

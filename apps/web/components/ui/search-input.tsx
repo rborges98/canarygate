@@ -1,17 +1,20 @@
 import { cn } from '@/shared/utils'
+import type { Ref } from 'react'
 
 type SearchInputProps = {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  inputRef?: Ref<HTMLInputElement>
 }
 
 export function SearchInput({
   value,
   onChange,
   placeholder = 'Search...',
-  className
+  className,
+  inputRef
 }: SearchInputProps) {
   return (
     <div
@@ -33,6 +36,7 @@ export function SearchInput({
         <path d="M10 10l3 3" />
       </svg>
       <input
+        ref={inputRef}
         className="text-cg-neutral-100 placeholder:text-cg-neutral-600 flex-1 bg-transparent font-sans text-[12px] outline-none"
         placeholder={placeholder}
         value={value}

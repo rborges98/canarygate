@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { redirect, unstable_rethrow } from 'next/navigation'
 import { BorderBeam } from '@/components/ui/border-beam'
 import Header from '@/components/header'
 import { getSession } from '@/shared/auth'
@@ -14,6 +14,8 @@ export default async function AuthLayout({
   try {
     session = await getSession()
   } catch (error) {
+    unstable_rethrow(error)
+
     logServerWarn('AuthLayout falhou ao carregar sessao', {
       routeGroup: '(login_layout)',
       reason: error instanceof Error ? error.message : 'unknown error'

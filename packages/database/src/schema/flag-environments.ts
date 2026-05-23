@@ -1,7 +1,7 @@
 import { boolean, integer, pgTable, real, text, timestamp, unique } from 'drizzle-orm/pg-core'
-import { flags } from './flags.ts'
-import { environments } from './environments.ts'
-import { scheduleActionEnum, everyUnitEnum } from './flags.ts'
+import { flags } from './flags'
+import { environments } from './environments'
+import { scheduleActionEnum, everyUnitEnum } from './flags'
 
 export const flagEnvironments = pgTable(
   'flag_environments',

@@ -1,0 +1,50 @@
+---
+title: Organizações e Projetos
+description: Como o CanaryGate organiza flags por org, projeto e environment.
+---
+
+## Hierarquia
+
+```
+Organization
+└── Project
+    └── Environment
+        └── Flags
+```
+
+## Organização
+
+A **organização** é o nível mais alto. Ela representa sua empresa ou time. O plano (Free/Starter/Pro) pertence à organização.
+
+- Você pode ter múltiplas organizações (ex: uma pessoal, uma da empresa)
+- Cada organização tem seus próprios membros com papéis (admin/member)
+- Billing e limites são por organização
+
+## Projeto
+
+Um **projeto** representa uma aplicação ou serviço. Por exemplo: `web-app`, `mobile`, `api`.
+
+- Cada projeto tem environments independentes
+- Flags são criadas dentro de um environment de um projeto
+- Não há limite de projetos por organização (dentro dos limites do plano)
+
+## Environment
+
+Cada projeto tem **environments** para isolar o estado das flags por fase do ciclo de desenvolvimento.
+
+Padrão: `production` e `staging`. Você pode criar environments adicionais (ex: `qa`, `dev`).
+
+Cada environment tem:
+
+- **API Key** própria para o SDK
+- Estado independente de cada flag
+- Histórico de auditoria separado
+
+## Membros e papéis
+
+| Papel      | Permissões                                                           |
+| ---------- | -------------------------------------------------------------------- |
+| **Admin**  | Gerencia membros, cria/edita projetos e environments, todas as flags |
+| **Member** | Cria e edita flags, não gerencia membros ou configurações da org     |
+
+Convidar membros: **Settings → Members → Invite**.

@@ -1,0 +1,110 @@
+---
+title: Webhooks API
+description: Endpoints para gerenciar webhooks via API REST.
+keywords:
+  [
+    'webhooks api',
+    'webhook deliveries',
+    'rest api',
+    'webhook endpoints',
+    'manage webhooks'
+  ]
+aliases: ['webhook api', 'webhook deliveries']
+---
+
+## Listar webhooks
+
+```http
+GET /webhooks
+```
+
+**Response 200**
+
+```json
+[
+  {
+    "id": "wh_abc123",
+    "url": "https://myapp.com/webhooks/canarygate",
+    "events": ["flag.enabled", "flag.disabled"],
+    "active": true,
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+]
+```
+
+## Criar webhook
+
+```http
+POST /webhooks
+```
+
+**Body**
+
+```json
+{
+  "url": "https://myapp.com/webhooks/canarygate",
+  "events": ["flag.enabled", "flag.disabled", "flag.updated"]
+}
+```
+
+**Response 201**
+
+```json
+{
+  "id": "wh_abc123",
+  "url": "https://myapp.com/webhooks/canarygate",
+  "events": ["flag.enabled", "flag.disabled", "flag.updated"],
+  "secret": "whsec_xxxxxxxxxxxxxxxx",
+  "active": true
+}
+```
+
+<Callout type="warning">
+  O campo `secret` é retornado **apenas na criação**. Guarde-o em variável de
+  ambiente — não é possível recuperá-lo depois.
+</Callout>
+
+## Atualizar webhook
+
+```http
+PATCH /webhooks/:id
+```
+
+**Body** (campos opcionais)
+
+```json
+{
+  "active": false,
+  "events": ["flag.enabled"]
+}
+```
+
+## Deletar webhook
+
+```http
+DELETE /webhooks/:id
+```
+
+**Response 204** — sem corpo.
+
+## Validando a assinatura
+
+Cada request do webhook inclui o header `X-Canarygate-Signature`:
+
+```ts
+import { createHmac, timingSafeEqual } from 'crypto'
+
+export function verifyWebhookSignature(
+  rawBody: string,
+  signature: string,
+  secret: string
+): boolean {
+  const expected = `sha256=${createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex')}`
+
+  return timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+}
+```
+
+Use `timingSafeEqual` para evitar timing attacks.

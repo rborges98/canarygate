@@ -1,0 +1,41 @@
+---
+title: Environments
+description: Isole flags por ambiente para evitar que mudanças de produção afetem desenvolvimento.
+---
+
+## O que são environments
+
+Cada projeto no CanaryGate tem environments independentes. Uma flag com o mesmo nome pode ter **estados completamente diferentes** em cada environment — assim você pode testar em `staging` antes de ativar em `production`.
+
+Por padrão, cada projeto tem:
+
+- `production`
+- `staging`
+
+## Como funciona
+
+Cada environment tem sua própria **API Key**. Ao inicializar o SDK, você especifica implicitamente o environment pela key usada:
+
+```ts
+// SDK production
+const canary = new CanaryGate(process.env.CANARYGATE_PRODUCTION_KEY!)
+
+// SDK staging
+const canary = new CanaryGate(process.env.CANARYGATE_STAGING_KEY!)
+```
+
+## Isolamento de estado
+
+Ativar uma flag em `staging` **não afeta** `production`. Cada environment tem:
+
+- Estado próprio de cada flag (enabled/disabled, porcentagem)
+- Histórico de auditoria separado
+- Webhooks configurados independentemente
+
+## Boas práticas
+
+<Cards>
+  <Cards.Card title="Teste em staging primeiro" />
+  <Cards.Card title="Use nomes de environment nos .env" />
+  <Cards.Card title="Cuidado com sincronizar manualmente" />
+</Cards>

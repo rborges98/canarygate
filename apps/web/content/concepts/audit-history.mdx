@@ -1,0 +1,51 @@
+---
+title: Audit History
+description: Rastreie quem mudou o quê e quando em cada flag.
+keywords:
+  [
+    'audit history',
+    'audit log',
+    'change history',
+    'traceability',
+    'flag changes'
+  ]
+aliases: ['audit log', 'change history']
+---
+
+## O que é o Audit History
+
+Todo evento que modifica o estado de uma flag no CanaryGate é registrado no **histórico de auditoria**. Isso inclui:
+
+- Criação e deleção de flags
+- Ativação e desativação
+- Mudanças de porcentagem em rollout
+- Criação e execução de schedules
+- Mudanças feitas via API ou painel
+
+## Acesso
+
+O histórico fica disponível em dois lugares:
+
+1. **Por flag**: Abra a flag e clique na aba **History**
+2. **Por environment**: **Settings → Audit Log** para ver todas as mudanças do environment
+
+## Formato de entrada
+
+Cada entrada do histórico contém:
+
+| Campo              | Descrição                                                                |
+| ------------------ | ------------------------------------------------------------------------ |
+| **Timestamp**      | Data e hora exata da mudança (UTC)                                       |
+| **Actor**          | Quem fez a mudança (email do usuário ou "system" para ações automáticas) |
+| **Event**          | Tipo do evento (`flag.enabled`, `flag.updated`, etc.)                    |
+| **Before / After** | Estado anterior e posterior (quando aplicável)                           |
+
+## Retenção
+
+- **Free**: 7 dias
+- **Starter**: 30 dias
+- **Pro**: 90 dias
+
+## Exportação
+
+No plano Pro, você pode exportar o histórico completo em CSV via **Settings → Audit Log → Export**.

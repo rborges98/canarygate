@@ -1,0 +1,54 @@
+---
+title: Schedule e Auto-rollout
+description: Agende ativações e rollouts automáticos com horário definido (plano Pro).
+keywords:
+  ['scheduled rollout', 'auto rollout', 'automation', 'schedule', 'pro plan']
+aliases: ['scheduled rollout', 'auto rollout']
+---
+
+<Callout type="warning">
+  Schedule e auto-rollout são funcionalidades do **plano Pro**. No plano
+  Starter, o rollout é sempre manual.
+</Callout>
+
+## Schedule
+
+Você pode agendar a **ativação** ou **desativação** de uma flag Boolean para um horário específico:
+
+- **Enable at**: A flag é ativada automaticamente no horário definido
+- **Disable at**: A flag é desativada automaticamente no horário definido
+
+Ideal para lançamentos coordenados — configure antecipadamente e a flag ativa sozinha no momento certo.
+
+## Auto-rollout
+
+Para flags do tipo Rollout, o auto-rollout define **etapas automáticas** de aumento de porcentagem:
+
+```
+Etapa 1: 10% às 10:00
+Etapa 2: 25% às 14:00
+Etapa 3: 50% no dia seguinte às 09:00
+Etapa 4: 100% após 48h sem erros
+```
+
+Cada etapa é executada automaticamente pelo worker do CanaryGate. Você pode pausar ou cancelar o auto-rollout a qualquer momento pelo painel.
+
+## Timezones
+
+Todos os horários de schedule são configurados e exibidos no **timezone da organização**, configurável em **Settings → Organization**.
+
+## Como criar um schedule
+
+1. Abra a flag no painel
+2. Clique em **Schedule**
+3. Adicione as etapas com horário e valor de porcentagem
+4. Confirme — o schedule é salvo e aparece no histórico da flag
+
+## Monitoramento
+
+O painel mostra o status de cada etapa:
+
+- `pending` — aguardando execução
+- `executed` — executado com sucesso
+- `failed` — falhou (você receberá uma notificação)
+- `cancelled` — cancelado manualmente

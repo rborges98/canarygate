@@ -24,7 +24,6 @@ export async function processAutoRolloutJob(
     log.warn(
       {
         scope: 'worker.jobs.processAutoRolloutJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagId: job.data.flagId,
         projectId: job.data.projectId,
         environmentSlug: job.data.environmentSlug
@@ -43,8 +42,8 @@ export async function processAutoRolloutJob(
     log.info(
       {
         scope: 'worker.jobs.processAutoRolloutJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagKey: flag.key,
+        environmentSlug: environment.slug,
         dueAt: job.data.dueAt
       },
       'Skipping stale auto-rollout job'
@@ -91,8 +90,8 @@ export async function processAutoRolloutJob(
     log.info(
       {
         scope: 'worker.jobs.processAutoRolloutJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagKey: flag.key,
+        environmentSlug: environment.slug,
         dueAt: job.data.dueAt
       },
       'Auto-rollout job was already applied or superseded'
@@ -143,7 +142,6 @@ export async function processAutoRolloutJob(
   log.info(
     {
       scope: 'worker.jobs.processAutoRolloutJob',
-      flagEnvironmentId: job.data.flagEnvironmentId,
       flagKey: flag.key,
       projectId: flag.projectId,
       environmentSlug: environment.slug,

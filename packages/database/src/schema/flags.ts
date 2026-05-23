@@ -1,5 +1,5 @@
 import { pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { projects } from './projects.ts'
+import { projects } from './projects'
 
 export const flagTypeEnum       = pgEnum('flag_type',       ['boolean', 'rollout'])
 export const scheduleActionEnum = pgEnum('schedule_action', ['enable', 'disable', 'rollout'])

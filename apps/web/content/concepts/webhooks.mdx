@@ -1,0 +1,75 @@
+---
+title: Webhooks
+description: Receba notificações HTTP quando flags mudam de estado.
+keywords:
+  [
+    'webhooks',
+    'notifications',
+    'outbound events',
+    'http callbacks',
+    'integrations'
+  ]
+aliases: ['webhook notifications', 'outbound events']
+---
+
+## O que são webhooks
+
+Webhooks permitem que o CanaryGate **notifique sua infraestrutura** quando uma flag é criada, atualizada ou deletada — sem precisar de polling.
+
+Use webhooks para:
+
+- Invalidar caches server-side quando uma flag muda
+- Registrar mudanças em seu próprio sistema de auditoria
+- Disparar builds ou deploys condicionais
+- Integrar com Slack, PagerDuty, ou sistemas de monitoramento
+
+## Configuração
+
+1. Vá em **Settings → Webhooks** dentro do environment
+2. Clique em **Add Webhook**
+3. Informe a URL do endpoint (deve ser HTTPS em produção)
+4. Selecione os eventos que deseja receber
+
+## Eventos disponíveis
+
+| Evento          | Disparado quando                                     |
+| --------------- | ---------------------------------------------------- |
+| `flag.created`  | Uma nova flag é criada                               |
+| `flag.updated`  | Uma flag é editada (nome, tipo, estado, porcentagem) |
+| `flag.deleted`  | Uma flag é deletada                                  |
+| `flag.enabled`  | Uma flag é ativada                                   |
+| `flag.disabled` | Uma flag é desativada                                |
+
+## Payload
+
+```json
+{
+  "event": "flag.enabled",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "environment": "production",
+  "flag": {
+    "key": "new-checkout",
+    "type": "boolean",
+    "enabled": true
+  }
+}
+```
+
+## Segurança
+
+O CanaryGate assina cada request com um header `X-Canarygate-Signature` (HMAC SHA-256). Sempre valide a assinatura antes de processar o payload:
+
+```ts
+import { createHmac } from 'crypto'
+
+function verifyWebhook(payload: string, signature: string, secret: string) {
+  const expected = createHmac('sha256', secret).update(payload).digest('hex')
+  return signature === `sha256=${expected}`
+}
+```
+
+O segredo do webhook é exibido uma única vez na criação — guarde em variável de ambiente.
+
+## Retries
+
+Em caso de falha (status != 2xx ou timeout), o CanaryGate retenta até **5 vezes** com backoff exponencial. Após isso, o webhook é marcado como falhado e você pode ver o histórico no painel.

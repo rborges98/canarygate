@@ -1,4 +1,4 @@
-import { cn } from './utils'
+import { cn } from './'
 
 describe('cn', () => {
   it('returns single class name unchanged', () => {

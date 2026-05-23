@@ -2,7 +2,7 @@
 
 import { useSelectedLayoutSegments } from 'next/navigation'
 import { Nav } from '@/components/nav'
-import { TabNav } from '@/components/tab-nav'
+import { TabNav } from '@/components/ui/tab-nav'
 import type { SessionUser } from '@/shared/auth'
 
 type OrgShellProps = {

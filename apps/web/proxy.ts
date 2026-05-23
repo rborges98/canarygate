@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
-import { isLocalAuthBypassEnabled } from './shared/auth'
+import { isLocalAuthBypassEnabled } from './shared/auth/bypass'
 
-const PUBLIC_PATHS = ['/login', '/verify', '/invite', '/api/auth']
+const PUBLIC_PATHS = [
+  '/',
+  '/docs',
+  '/login',
+  '/verify',
+  '/invite',
+  '/api/auth',
+  '/manifest.json'
+]
+
+function isPublicAssetPath(pathname: string) {
+  return /\.[^/]+$/.test(pathname)
+}
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some((publicPath) => {
+    if (publicPath === '/') {
+      return pathname === publicPath
+    }
+
+    return pathname === publicPath || pathname.startsWith(`${publicPath}/`)
+  })
+}
 
 export function proxy(request: NextRequest) {
   if (isLocalAuthBypassEnabled()) {
@@ -11,8 +33,7 @@ export function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
-  if (isPublic) {
+  if (isPublicAssetPath(pathname) || isPublicPath(pathname)) {
     return NextResponse.next()
   }
 

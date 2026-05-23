@@ -71,6 +71,7 @@
   --color-cg-yellow-200: #eab308;
   --color-cg-yellow-300: #ca8a04;
   --color-cg-yellow-400: rgba(234,179,8,0.12);
+
 }
 
 @theme inline {
@@ -168,6 +169,48 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-family-sans);
+}
+
+.docs-theme-shell {
+  --x-font-sans: var(--font-sans);
+  --x-font-mono: var(--font-mono);
+  color: var(--color-cg-neutral-100);
+}
+
+.docs-theme-shell :where(nav, aside) {
+  color: var(--color-cg-neutral-100);
+}
+
+.docs-theme-shell aside :where(a, button) {
+  color: var(--color-cg-neutral-100) !important;
+  transition: color 150ms ease;
+}
+
+.docs-theme-shell aside :where(a, button):hover {
+  color: var(--color-cg-indigo-200) !important;
+}
+
+.docs-theme-shell nav :where(a, button):hover {
+  color: var(--color-cg-indigo-200) !important;
+}
+
+.docs-theme-shell
+  article
+  :where(h1, h2, h3, h4, h5, h6, p, li, blockquote, strong, th, td) {
+  color: var(--color-cg-neutral-100) !important;
+}
+
+.docs-theme-shell article a {
+  color: var(--color-cg-indigo-300) !important;
+  text-decoration-color: color-mix(
+    in oklab,
+    var(--color-cg-indigo-300) 45%,
+    transparent
+  );
+}
+
+.docs-theme-shell article a:hover {
+  color: var(--color-cg-indigo-400) !important;
 }
 
 button, a {

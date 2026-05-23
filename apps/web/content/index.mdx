@@ -1,0 +1,75 @@
+---
+title: Introduction
+description: What CanaryGate is and why to use feature flags.
+keywords:
+  [
+    'canarygate',
+    'feature flags',
+    'gradual rollout',
+    'real-time updates',
+    'documentation'
+  ]
+aliases: ['docs', 'documentation']
+searchBoost: 10
+asIndexPage: true
+---
+
+## What is CanaryGate?
+
+CanaryGate is a **feature flag** platform for teams that need to release changes more safely, without depending on a redeploy to turn a feature on, off, or gradually roll it out in production.
+
+With CanaryGate you can:
+
+- Turn features on or off instantly, **without redeploying**
+- Roll out changes gradually to an increasing percentage of users
+- Schedule automatic activations at a specific time
+- Receive **real-time** updates via SSE, so the SDK updates without polling
+- Organize flags by project and environment, with a complete audit trail
+
+## When it makes sense to use CanaryGate
+
+Use CanaryGate when you want to:
+
+- Ship code before exposing the feature to everyone
+- Reduce rollout risk with phases like `5% -> 25% -> 100%`
+- Revert a problematic change quickly without a new deploy
+- Separate behavior by environment, project, or organization
+- Measure the impact of a feature before opening it to your full user base
+
+If you currently manage releases with env vars, long-lived branches, or manual deploys to activate features, CanaryGate replaces that flow with a more predictable operational control layer.
+
+## Recommended path to get started
+
+To get to your first production flag without getting stuck halfway through, follow this sequence:
+
+1. **Prepare the dashboard setup**: organization, project, environment, and API Key.
+2. **Install and initialize the SDK** in your application.
+3. **Create your first flag** and validate the behavior in code.
+
+This flow avoids the most common onboarding problem: reaching the SDK without an API Key ready, or creating a flag without clarity on its type and environment.
+
+## Start here
+
+<Cards>
+  <Cards.Card title="Installation" href="/docs/getting-started/installation" />
+  <Cards.Card title="Quickstart" href="/docs/getting-started/quickstart" />
+  <Cards.Card
+    title="Create First Flag"
+    href="/docs/getting-started/create-first-flag"
+  />
+  <Cards.Card title="SDK JavaScript" href="/docs/sdk/javascript" />
+</Cards>
+
+## What you will learn in the first pages
+
+### Installation
+
+Explains the requirements, where to get your API Key, and how to prepare your application to initialize the SDK correctly.
+
+### Quickstart
+
+Shows the minimum integration needed to connect the SDK, load flags, and handle the basic success and failure path.
+
+### Create First Flag
+
+Shows how to choose between a boolean flag and a rollout, how to name the flag, and how to validate the result in code.

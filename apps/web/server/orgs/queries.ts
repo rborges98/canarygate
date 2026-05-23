@@ -1,3 +1,4 @@
+import { unstable_rethrow } from 'next/navigation'
 import { apiFetch } from '../api-fetch'
 import { logServerError } from '@canarygate/logger'
 import { getSessionOrRedirect } from '@/shared/auth'
@@ -63,6 +64,8 @@ export async function getOrgs(): Promise<OrgItem[]> {
       members: org.memberCount
     }))
   } catch (err) {
+    unstable_rethrow(err)
+
     if (isNextRedirectError(err)) {
       throw err
     }

@@ -1,0 +1,91 @@
+---
+title: Tipos TypeScript
+description: Referência completa dos tipos exportados pelo SDK @canarygate/js.
+keywords: ['typescript types', 'ts types', 'typings', 'sdk types', 'TypeScript']
+aliases: ['ts types', 'typing', 'types']
+---
+
+## `CanaryGate`
+
+Classe principal do SDK.
+
+```ts
+class CanaryGate {
+  constructor(apiKey: string, options?: CanaryGateOptions)
+  init(): Promise<void>
+  getFlag(key: string): FlagData | undefined
+  getFlags(): FlagData[]
+  isStale(): boolean
+  getLastSyncAt(): Date | null
+  disconnect(): void
+}
+```
+
+## `CanaryGateOptions`
+
+```ts
+interface CanaryGateOptions {
+  /** ID do usuário para hashing determinístico de rollout. */
+  userId?: string
+  /** URL base da API. Padrão: 'https://api.canarygate.io' */
+  baseUrl?: string
+  /** Tempo em ms para considerar o SDK como stale. Padrão: 60000 */
+  staleThreshold?: number
+}
+```
+
+## `FlagData`
+
+Union type que representa qualquer flag.
+
+```ts
+type FlagData = BooleanFlagData | RolloutFlagData
+```
+
+## `BooleanFlagData`
+
+```ts
+interface BooleanFlagData {
+  key: string
+  type: 'boolean'
+  enabled: boolean
+  description: string | null
+}
+```
+
+## `RolloutFlagData`
+
+```ts
+interface RolloutFlagData {
+  key: string
+  type: 'rollout'
+  enabled: boolean
+  percentage: number
+  description: string | null
+}
+```
+
+## Narrowing por tipo
+
+Use `type` para narrowing seguro:
+
+```ts
+const flag = canary.getFlag('new-dashboard')
+
+if (flag?.type === 'rollout') {
+  // TypeScript sabe que flag é RolloutFlagData aqui
+  console.log(flag.percentage)
+}
+```
+
+## Exportações completas
+
+```ts
+import {
+  CanaryGate,
+  type CanaryGateOptions,
+  type FlagData,
+  type BooleanFlagData,
+  type RolloutFlagData
+} from '@canarygate/js'
+```

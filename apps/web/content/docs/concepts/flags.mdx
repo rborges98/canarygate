@@ -1,0 +1,66 @@
+---
+title: Flags
+description: Os dois tipos de flag no CanaryGate e quando usar cada um.
+---
+
+## Boolean Flag
+
+A flag mais simples: **on** ou **off**. Quando ativada, `flag.enabled` é `true` para todos os usuários no environment.
+
+```ts
+const flag = canary.getFlag('maintenance-mode')
+// flag.type === 'boolean'
+// flag.enabled === true | false
+```
+
+**Quando usar:**
+
+- Kill switches / manutenção
+- Features completas que você quer liberar para todos de uma vez
+- Integrações ou módulos que precisam de ativação manual
+
+## Rollout Flag
+
+Expõe a feature para uma **porcentagem** de usuários de forma sticky (determinística). Um usuário com o mesmo `userId` sempre receberá o mesmo resultado para uma determinada configuração de porcentagem.
+
+```ts
+const flag = canary.getFlag('new-dashboard')
+// flag.type === 'rollout'
+// flag.enabled === true | false (baseado no userId e percentage)
+// flag.percentage === 25 (a porcentagem atual configurada)
+```
+
+O SDK calcula se o usuário está incluso via hash do `userId` combinado com o nome da flag — sem estado no servidor por usuário.
+
+**Quando usar:**
+
+- Canary deploys (expose para 5% → 25% → 100%)
+- Testes A/B simples
+- Features em beta para usuários early adopters
+
+## Campos comuns
+
+| Campo         | Tipo                     | Descrição                                  |
+| ------------- | ------------------------ | ------------------------------------------ |
+| `key`         | `string`                 | Identificador único da flag no environment |
+| `type`        | `'boolean' \| 'rollout'` | Tipo da flag                               |
+| `enabled`     | `boolean`                | Se a flag está ativa para o usuário atual  |
+| `description` | `string \| null`         | Descrição opcional                         |
+
+## Acesso no SDK
+
+```ts
+// Flag específica
+const flag = canary.getFlag('feature-key')
+
+// Todas as flags
+const flags = canary.getFlags()
+
+// Verificação segura (retorna false se a flag não existir)
+const isEnabled = canary.getFlag('feature-key')?.enabled ?? false
+```
+
+<Callout type="warning">
+  O SDK não expõe um método `isEnabled()` — use sempre `getFlag(key)?.enabled ??
+  false` para verificações simples.
+</Callout>

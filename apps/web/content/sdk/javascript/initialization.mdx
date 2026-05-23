@@ -1,0 +1,103 @@
+---
+title: Inicialização
+description: Como criar e configurar o cliente CanaryGate.
+keywords:
+  ['sdk initialization', 'client setup', 'init', 'api key', 'configuration']
+aliases: ['sdk setup', 'client setup', 'init']
+---
+
+## Construtor
+
+```ts
+new CanaryGate(apiKey: string, options?: CanaryGateOptions)
+```
+
+### Parâmetros
+
+| Parâmetro | Tipo                | Obrigatório | Descrição                                                  |
+| --------- | ------------------- | ----------- | ---------------------------------------------------------- |
+| `apiKey`  | `string`            | Sim         | API Key do environment. Criada em **Settings → API Keys**. |
+| `options` | `CanaryGateOptions` | Não         | Opções de configuração. Ver abaixo.                        |
+
+### `CanaryGateOptions`
+
+| Opção            | Tipo     | Padrão                      | Descrição                                                             |
+| ---------------- | -------- | --------------------------- | --------------------------------------------------------------------- |
+| `userId`         | `string` | Auto-gerado                 | ID do usuário para hashing de rollout. Use um ID estável por usuário. |
+| `baseUrl`        | `string` | `https://api.canarygate.io` | URL base da API (útil para ambientes self-hosted ou proxies).         |
+| `staleThreshold` | `number` | `60000`                     | Tempo em ms sem sync para considerar stale.                           |
+
+## `init()`
+
+```ts
+await canary.init()
+```
+
+Executa duas ações em sequência:
+
+1. Faz um fetch HTTP para carregar todas as flags do environment
+2. Abre a conexão SSE para receber atualizações em tempo real
+
+Sempre `await` o `init()` antes de ler flags — caso contrário, `getFlag()` pode retornar `undefined` antes da carga inicial completar.
+
+## Exemplos
+
+### Browser (React)
+
+```tsx
+import { CanaryGate } from '@canarygate/js'
+import { useEffect, useRef } from 'react'
+
+export function useCanaryGate(userId: string) {
+  const ref = useRef<CanaryGate | null>(null)
+
+  useEffect(() => {
+    const client = new CanaryGate(process.env.NEXT_PUBLIC_CANARYGATE_KEY!, {
+      userId
+    })
+
+    client.init().then(() => {
+      ref.current = client
+    })
+
+    return () => {
+      client.disconnect()
+    }
+  }, [userId])
+
+  return ref
+}
+```
+
+### Node.js (singleton)
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+
+let client: CanaryGate | null = null
+
+export async function getCanaryGate() {
+  if (!client) {
+    client = new CanaryGate(process.env.CANARYGATE_KEY!)
+    await client.init()
+  }
+  return client
+}
+```
+
+### Script one-shot (sem SSE)
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+
+const client = new CanaryGate('cg_api_key')
+await client.init()
+
+const flag = client.getFlag('run-migration')
+if (flag?.enabled) {
+  await runMigration()
+}
+
+// Fecha a conexão SSE para o processo terminar
+client.disconnect()
+```

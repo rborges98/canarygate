@@ -1,0 +1,95 @@
+---
+title: Installation
+description: Requirements and installation options for the CanaryGate SDK.
+keywords: ['installation', 'install', 'sdk', 'setup', 'node.js']
+aliases: ['install', 'setup']
+---
+
+## Before you start
+
+Before installing the SDK, make sure you already have these items in the CanaryGate dashboard:
+
+1. **An organization** to group teams and projects.
+2. **A project** for the application that will consume flags.
+3. **An environment** such as `staging` or `production`.
+4. **An API Key** created in **Settings -> API Keys**.
+
+The API Key identifies the project and environment the SDK should query. Without it, the client cannot load flags or open the SSE connection for real-time updates.
+
+## Technical requirements
+
+- **Node.js 18+** or a modern browser (current Chrome, Firefox, Safari, Edge)
+- **TypeScript 5+** (optional, but fully typed)
+- The SDK uses `EventSource` internally for SSE, which is available natively in browsers and in Node.js 18+
+
+## 1. Install the SDK
+
+```bash
+npm install @canarygate/js
+```
+
+```bash
+pnpm add @canarygate/js
+```
+
+```bash
+yarn add @canarygate/js
+```
+
+## 2. Import the client
+
+The package is published as ESM + CJS with bundled type declarations. It does not require extra configuration.
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+```
+
+## 3. Have your API Key ready
+
+In the web dashboard, go to **Settings -> API Keys** and create a key for the correct project and environment.
+
+- Use a read-only key for clients that only need to evaluate flags.
+- Separate keys by environment so you do not mix `staging` and `production`.
+- Store the key in an environment variable or another secure application config.
+
+## 4. Using bundlers (Vite, Webpack, esbuild)
+
+In client applications, you usually only need to import the class and initialize the SDK once during application bootstrap.
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+
+const canary = new CanaryGate(import.meta.env.VITE_CANARYGATE_KEY)
+```
+
+## 5. Using Next.js
+
+In Next.js App Router, the SDK should be initialized inside a **Client Component** or in controlled Node.js code such as a singleton. The important part is: do not create new SSE connections on every render.
+
+```tsx filename="lib/canary.ts"
+import { CanaryGate } from '@canarygate/js'
+
+let instance: CanaryGate | null = null
+
+export function getCanaryGate() {
+  if (!instance) {
+    instance = new CanaryGate(process.env.NEXT_PUBLIC_CANARYGATE_KEY!)
+  }
+
+  return instance
+}
+```
+
+<Callout type="warning">
+  Do not initialize the SDK in Server Components. It opens an SSE connection
+  that requires either a browser runtime or a Node.js runtime with `EventSource`
+  support.
+</Callout>
+
+If you have not integrated the SDK yet, the next recommended page is Quickstart, where the complete flow shows `init()`, flag reads, and basic failure handling.
+
+## Next steps
+
+- [Do the first integration in Quickstart](/docs/getting-started/quickstart)
+- [Create your first flag in the dashboard](/docs/getting-started/create-first-flag)
+- [Understand how initialization works in more detail](/docs/sdk/javascript/initialization)

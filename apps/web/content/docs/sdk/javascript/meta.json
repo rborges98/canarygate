@@ -1,0 +1,10 @@
+{
+  "title": "JavaScript / TypeScript",
+  "pages": [
+    "index",
+    "initialization",
+    "evaluate-flags",
+    "realtime-sse",
+    "typescript-types"
+  ]
+}

@@ -21,7 +21,6 @@ export async function processScheduleJob(
     log.warn(
       {
         scope: 'worker.jobs.processScheduleJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagId: job.data.flagId,
         projectId: job.data.projectId,
         environmentSlug: job.data.environmentSlug
@@ -40,8 +39,8 @@ export async function processScheduleJob(
     log.info(
       {
         scope: 'worker.jobs.processScheduleJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagKey: flag.key,
+        environmentSlug: environment.slug,
         dueAt: job.data.dueAt
       },
       'Skipping stale schedule job'
@@ -86,8 +85,8 @@ export async function processScheduleJob(
     log.info(
       {
         scope: 'worker.jobs.processScheduleJob',
-        flagEnvironmentId: job.data.flagEnvironmentId,
         flagKey: flag.key,
+        environmentSlug: environment.slug,
         dueAt: job.data.dueAt
       },
       'Schedule job was already applied or superseded'
@@ -142,10 +141,10 @@ export async function processScheduleJob(
   log.info(
     {
       scope: 'worker.jobs.processScheduleJob',
-      flagEnvironmentId: job.data.flagEnvironmentId,
       flagKey: flag.key,
       projectId: flag.projectId,
-      environmentSlug: environment.slug
+      environmentSlug: environment.slug,
+      dueAt: job.data.dueAt
     },
     'Processed schedule job'
   )

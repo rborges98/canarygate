@@ -1,7 +1,7 @@
 import { jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { projects } from './projects.ts'
-import { flags } from './flags.ts'
-import { environments } from './environments.ts'
+import { projects } from './projects'
+import { flags } from './flags'
+import { environments } from './environments'
 
 export const flagActionEnum = pgEnum('flag_action', [
   'created',

@@ -1,5 +1,5 @@
 import { pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { orgs } from './orgs.ts'
+import { orgs } from './orgs'
 
 export const orgRoleEnum = pgEnum('org_role', ['OWNER', 'MEMBER'])
 

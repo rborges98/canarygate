@@ -1,0 +1,58 @@
+---
+title: Quickstart
+description: Do zero à sua primeira flag em menos de 5 minutos.
+---
+
+## 1. Instale o SDK
+
+```bash
+npm install @canarygate/js
+# ou
+pnpm add @canarygate/js
+# ou
+yarn add @canarygate/js
+```
+
+## 2. Inicialize o cliente
+
+Crie uma API Key no painel em **Settings → API Keys** e inicialize o SDK:
+
+```ts
+import { CanaryGate } from '@canarygate/js'
+
+const canary = new CanaryGate('cg_your_api_key')
+await canary.init()
+```
+
+O `init()` faz o fetch inicial das flags e abre a conexão SSE para receber atualizações em tempo real.
+
+## 3. Avalie uma flag
+
+```ts
+const flag = canary.getFlag('new-checkout')
+
+if (flag?.enabled) {
+  // novo checkout
+} else {
+  // checkout antigo
+}
+```
+
+## 4. Desconecte quando terminar
+
+```ts
+// Em SPA: no cleanup do componente / antes de desmontar
+canary.disconnect()
+```
+
+<Callout type="info">
+  A conexão SSE é persistente. Em ambientes Node.js que não precisam de
+  atualizações em tempo real, chame `disconnect()` após `init()` para liberar o
+  recurso.
+</Callout>
+
+## Próximos passos
+
+- [Crie sua primeira flag no painel](/docs/getting-started/create-first-flag)
+- [Entenda os tipos de flag](/docs/concepts/flags)
+- [Configure rollout gradual](/docs/concepts/rollout)
