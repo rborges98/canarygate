@@ -124,13 +124,30 @@ async function loadDocsSearch() {
     return { payload: cachedPayload, index: cachedIndex }
   }
 
-  const response = await fetch(SEARCH_DATA_URL, {
-    method: 'GET',
-    cache: 'force-cache'
-  })
+  // Single fetch (no-store) to always get fresh data; log errors for debugging.
+  let response: Response
+
+  try {
+    response = await fetch(SEARCH_DATA_URL, {
+      method: 'GET',
+      cache: 'no-store'
+    })
+  } catch (err) {
+    console.error('[docs-search] fetch failed', err)
+    throw new Error(
+      'Falha ao buscar o indice de busca: ' +
+        (err instanceof Error ? err.message : String(err))
+    )
+  }
 
   if (!response.ok) {
-    throw new Error(`Falha ao carregar o indice de busca (${response.status})`)
+    const status = `${response.status} ${response.statusText}`
+    const bodyText = await response
+      .clone()
+      .text()
+      .catch(() => '')
+    console.error('[docs-search] bad response', { status, bodyText })
+    throw new Error(`Falha ao carregar o indice de busca (${status})`)
   }
 
   const payload = (await response.json()) as DocsSearchPayload
@@ -272,6 +289,8 @@ export default function DocsSearch() {
           return
         }
 
+        console.error('[docs-search] loadDocsSearch error', error)
+
         setErrorMessage(
           error instanceof Error
             ? error.message
@@ -294,6 +313,15 @@ export default function DocsSearch() {
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
+  }, [open])
+
+  // Clear query and any previous error when the modal is closed so
+  // reopening starts with a clean state.
+  useEffect(() => {
+    if (!open) {
+      setQuery('')
+      setErrorMessage(null)
+    }
   }, [open])
 
   const results = useMemo(() => {

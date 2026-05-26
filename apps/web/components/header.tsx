@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { cn } from '@/shared/utils'
 import { Logo } from '@/components/logo'
 
@@ -14,11 +15,13 @@ export function Header({
   return (
     <nav
       className={cn(
-        'relative z-10 flex items-center justify-between px-8 py-4',
+        'border-cg-bg-100 relative z-10 flex items-center justify-between border-b px-4 py-3 sm:px-8 sm:py-4',
         className
       )}
     >
-      <Logo />
+      <Link href="/">
+        <Logo />
+      </Link>
       <div>{right}</div>
     </nav>
   )

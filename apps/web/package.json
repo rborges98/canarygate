@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "generate:docs-search": "node ./scripts/generate-docs-search-data.mjs",
-    "dev": "pnpm generate:docs-search && next dev --turbopack",
-    "build": "pnpm generate:docs-search && next build",
+    "generate-docs-search": "node ./scripts/generate-docs-search-data.mjs",
+    "dev": "pnpm generate-docs-search && next dev --turbopack",
+    "build": "pnpm generate-docs-search && next build",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
