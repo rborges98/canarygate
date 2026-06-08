@@ -68,7 +68,6 @@ export function CreateOrgForm({ user }: CreateOrgFormProps) {
               Set up a new workspace for your team
             </p>
 
-            {/* Avatar */}
             <div className="mb-6 flex justify-center">
               <button className="border-cg-indigo-600 bg-cg-indigo-950 hover:border-cg-indigo-300 group relative flex h-16 w-16 items-center justify-center rounded-full border-2 transition-colors">
                 <span className="text-cg-indigo-100 text-[22px] font-bold">
@@ -82,7 +81,6 @@ export function CreateOrgForm({ user }: CreateOrgFormProps) {
               </button>
             </div>
 
-            {/* Name */}
             <div className="mb-4">
               <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
                 Organization name
@@ -95,7 +93,6 @@ export function CreateOrgForm({ user }: CreateOrgFormProps) {
               />
             </div>
 
-            {/* Slug */}
             <div className="mb-7">
               <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
                 Slug
@@ -116,7 +113,6 @@ export function CreateOrgForm({ user }: CreateOrgFormProps) {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2">
               <button
                 type="submit"

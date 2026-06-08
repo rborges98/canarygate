@@ -77,7 +77,6 @@ async function resolveProjectAndEnvironment(
 }
 
 export default async function sdkRoutes(app: FastifyInstance) {
-  // GET /sdk/flags
   // Header: X-Api-Key: <project api key>
   // Header: X-Environment: <environment slug> (optional, defaults to production)
   app.get('/sdk/flags', {
@@ -148,7 +147,6 @@ export default async function sdkRoutes(app: FastifyInstance) {
     }
   })
 
-  // GET /sdk/stream — SSE endpoint
   app.get('/sdk/stream', {
     config: { rateLimit: SDK_STREAM_RATE_LIMIT },
     schema: {

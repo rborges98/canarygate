@@ -66,26 +66,24 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
             Add a new project to your organization
           </p>
 
-          {/* Name */}
           <div className="mb-4">
             <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Project name
             </label>
             <input
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none transition-colors"
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none"
               placeholder="My App"
               autoFocus
               {...register('name', { required: true })}
             />
           </div>
 
-          {/* Slug */}
           <div className="mb-7">
             <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
               Slug
             </label>
             <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">
-              <span className="text-cg-neutral-400 border-cg-bg-100 whitespace-nowrap border-r px-3 py-2.5 font-mono text-[11px]">
+              <span className="text-cg-neutral-400 border-cg-bg-100 border-r px-3 py-2.5 font-mono text-[11px] whitespace-nowrap">
                 {orgSlug}/
               </span>
               <input
@@ -100,7 +98,6 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2">
             <button
               type="submit"

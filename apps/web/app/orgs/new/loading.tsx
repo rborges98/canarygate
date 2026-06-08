@@ -12,16 +12,13 @@ export default function NewOrgLoading() {
             <Skeleton className="mb-1 h-6 w-44" />
             <Skeleton className="mb-7 h-3.5 w-56" />
 
-            {/* Avatar circle */}
             <div className="mb-6 flex justify-center">
               <Skeleton className="h-16 w-16 rounded-full" />
             </div>
 
-            {/* Name */}
             <Skeleton className="mb-1.5 h-3 w-32" />
             <Skeleton className="mb-4 h-10 w-full rounded-lg" />
 
-            {/* Slug */}
             <Skeleton className="mb-1.5 h-3 w-24" />
             <Skeleton className="mb-6 h-10 w-full rounded-lg" />
 

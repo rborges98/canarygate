@@ -8,11 +8,9 @@ export default function NewProjectLoading() {
           <Skeleton className="mb-1 h-6 w-36" />
           <Skeleton className="mb-7 h-3.5 w-52" />
 
-          {/* Name */}
           <Skeleton className="mb-1.5 h-3 w-24" />
           <Skeleton className="mb-4 h-10 w-full rounded-lg" />
 
-          {/* Slug */}
           <Skeleton className="mb-1.5 h-3 w-20" />
           <Skeleton className="mb-6 h-10 w-full rounded-lg" />
 

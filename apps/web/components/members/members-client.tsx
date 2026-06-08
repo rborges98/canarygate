@@ -110,7 +110,6 @@ export function MembersClient({
 
   return (
     <div className="flex h-full flex-col px-4 py-4 sm:px-8 sm:py-6">
-      {/* Top bar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <SearchInput
           value={search}
@@ -137,9 +136,7 @@ export function MembersClient({
         </button>
       </div>
 
-      {/* Split layout */}
       <div className="flex flex-col gap-3 md:min-h-0 md:flex-1 md:flex-row">
-        {/* Left — member list */}
         <div className="flex flex-col gap-1.5 overflow-y-auto md:shrink-0 md:basis-1/2">
           {filteredMembers.map((member) => (
             <MemberRow
@@ -151,7 +148,6 @@ export function MembersClient({
           ))}
         </div>
 
-        {/* Right — detail panel */}
         <div className="border-cg-bg-100 bg-cg-white-300 h-fit flex-1 overflow-y-auto rounded-xl border p-5">
           {selected ? (
             selected.isOwner ? (
@@ -176,9 +172,8 @@ export function MembersClient({
         </div>
       </div>
 
-      {/* Make owner modal */}
       <Modal open={!!makeOwnerTarget} onClose={() => setMakeOwnerTarget(null)}>
-        <div className="border-cg-bg-100 border-b px-6 pb-4 pt-6">
+        <div className="border-cg-bg-100 border-b px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             <div className="border-cg-indigo-600 bg-cg-indigo-800 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
               <span className="text-[15px]">👑</span>
@@ -236,9 +231,8 @@ export function MembersClient({
         </div>
       </Modal>
 
-      {/* Remove from org modal */}
       <Modal open={!!removeTarget} onClose={() => setRemoveTarget(null)}>
-        <div className="border-cg-bg-100 border-b px-6 pb-4 pt-6">
+        <div className="border-cg-bg-100 border-b px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             <div className="border-cg-red-200 bg-cg-red-300 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
               <span className="text-[15px]">🗑</span>
@@ -273,9 +267,8 @@ export function MembersClient({
         </div>
       </Modal>
 
-      {/* Invite member modal */}
       <Modal open={inviteOpen} onClose={() => setInviteOpen(false)}>
-        <div className="border-cg-bg-100 border-b px-6 pb-4 pt-6">
+        <div className="border-cg-bg-100 border-b px-6 pt-6 pb-4">
           <div className="flex items-start gap-3">
             <div className="border-cg-indigo-600 bg-cg-indigo-800 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border">
               <span className="text-[15px]">✉️</span>
@@ -298,7 +291,7 @@ export function MembersClient({
             </label>
             <input
               type="email"
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none transition-colors"
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none"
               placeholder="member@company.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}

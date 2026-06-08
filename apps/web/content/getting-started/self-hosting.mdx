@@ -1,0 +1,55 @@
+---
+title: Self-hosting
+description: Run CanaryGate on your own infrastructure using Docker Compose.
+---
+
+CanaryGate is open source. You can run the full stack on your own infrastructure.
+
+## Requirements
+
+- Docker and Docker Compose
+- A PostgreSQL database (Neon free tier works, or any Postgres instance)
+- A Redis instance (Upstash free tier works, or self-hosted)
+
+## Quick start
+
+Clone the repository and copy the environment file:
+
+```bash
+git clone https://github.com/canarygate/canarygate.git
+cd canarygate
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+Fill in the environment variables, then start the stack:
+
+```bash
+docker compose up
+```
+
+This starts the `web` (Next.js), `api` (Fastify), and `worker` services. You still need external PostgreSQL and Redis — the `docker-compose.yml` expects `DATABASE_URL` and `REDIS_URL` from the environment.
+
+## Environment variables
+
+See `apps/api/.env.example` and `apps/web/.env.local.example` in the repository for the full list of required variables.
+
+## Deployment options
+
+| Option                            | Cost   | Notes                                               |
+| --------------------------------- | ------ | --------------------------------------------------- |
+| [Render free](https://render.com) | $0     | Sleeps after 15 min — use UptimeRobot to keep awake |
+| [Fly.io free](https://fly.io)     | $0     | Always-on, 3 shared VMs included                    |
+| [Railway](https://railway.com)    | ~$5/mo | Simplest DX, no hibernation                         |
+| VPS (Oracle Cloud Always Free)    | $0     | 4 ARM cores + 24 GB RAM — most headroom             |
+
+The API uses SSE for real-time flag updates. The SDK reconnects automatically if the connection drops, so platforms with request timeouts (like Render) are still viable.
+
+## Keep-alive on Render free
+
+If you deploy the API to Render's free tier, set up a periodic ping to prevent hibernation:
+
+1. Create a free monitor on [UptimeRobot](https://uptimerobot.com) pointing to `https://your-api.onrender.com/healthz`
+2. Set the interval to 5 minutes
+
+The API's `/healthz` endpoint responds with `200 OK` and keeps the service awake.

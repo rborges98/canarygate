@@ -5,6 +5,7 @@ import { isLocalAuthBypassEnabled } from './shared/auth/bypass'
 const PUBLIC_PATHS = [
   '/',
   '/docs',
+  '/home',
   '/login',
   '/verify',
   '/invite',

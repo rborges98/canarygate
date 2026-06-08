@@ -157,7 +157,6 @@ export function ProjectSettingsForm({
 
   return (
     <div className="flex flex-col gap-4 px-8 py-6">
-      {/* General */}
       <form
         onSubmit={generalForm.handleSubmit(onSaveGeneral)}
         className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5"
@@ -197,7 +196,6 @@ export function ProjectSettingsForm({
         </div>
       </form>
 
-      {/* API Key */}
       <div className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5">
         <h3 className="mb-1 text-[13px] font-semibold text-white">API Key</h3>
         <p className="text-cg-neutral-300 mb-4 text-[11px]">
@@ -230,7 +228,6 @@ export function ProjectSettingsForm({
         </button>
       </div>
 
-      {/* Webhook */}
       <form
         onSubmit={webhookForm.handleSubmit(onSaveWebhook)}
         className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5"

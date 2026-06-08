@@ -3,7 +3,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function OrgSettingsLoading() {
   return (
     <div className="flex flex-col gap-4 px-8 py-6">
-      {/* General card */}
       <div className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5">
         <Skeleton className="mb-4 h-4 w-16" />
 
@@ -23,7 +22,6 @@ export default function OrgSettingsLoading() {
         <Skeleton className="mt-4 h-8 w-16 rounded-lg" />
       </div>
 
-      {/* Danger zone card */}
       <div className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5">
         <Skeleton className="mb-2 h-4 w-24" />
         <Skeleton className="mb-4 h-3 w-64" />

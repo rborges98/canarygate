@@ -3,7 +3,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function EditFlagLoading() {
   return (
     <div className="px-4 py-4 sm:px-8 sm:py-6">
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Skeleton className="h-7 w-24" />
@@ -15,7 +14,6 @@ export default function EditFlagLoading() {
         </div>
       </div>
 
-      {/* Cards grid */}
       <div className="grid grid-cols-1 gap-3.5 md:grid-cols-5">
         <div className="border-cg-bg-100 bg-cg-white-300 col-span-3 rounded-xl border p-5">
           <Skeleton className="mb-4 h-4 w-24" />

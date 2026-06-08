@@ -1,12 +1,18 @@
 ---
-title: Organizações e Projetos
-description: Como o CanaryGate organiza flags por org, projeto e environment.
+title: Organizations and Projects
+description: How CanaryGate organizes flags by org, project, and environment.
 keywords:
   ['organizations', 'projects', 'workspace', 'multi project', 'org structure']
 aliases: ['orgs', 'projects', 'workspace']
 ---
 
-## Hierarquia
+## Creating your account
+
+CanaryGate uses **passwordless** authentication. To create an account or log in, all you need is your **email address** — no password required. A verification code is sent to your email on each login.
+
+Payment information is only required when upgrading a plan, and it is associated with the **organization**, not the individual user.
+
+## Hierarchy
 
 ```
 Organization
@@ -15,39 +21,40 @@ Organization
         └── Flags
 ```
 
-## Organização
+## Organization
 
-A **organização** é o nível mais alto. Ela representa sua empresa ou time. O plano (Free/Starter/Pro) pertence à organização.
+The **organization** is the top-level entity. It represents your company or team. The plan (Free/Starter/Pro) belongs to the organization.
 
-- Você pode ter múltiplas organizações (ex: uma pessoal, uma da empresa)
-- Cada organização tem seus próprios membros com papéis (admin/member)
-- Billing e limites são por organização
+- You can have multiple organizations (e.g., one personal, one for your company)
+- Each organization has its own members with roles (admin/member)
+- Billing, limits, and features are per organization — when you upgrade, your whole team benefits
+- Billing is managed by the owner under **Settings → Billing**
 
-## Projeto
+## Project
 
-Um **projeto** representa uma aplicação ou serviço. Por exemplo: `web-app`, `mobile`, `api`.
+A **project** represents an application or service. For example: `web-app`, `mobile`, `api`.
 
-- Cada projeto tem environments independentes
-- Flags são criadas dentro de um environment de um projeto
-- Não há limite de projetos por organização (dentro dos limites do plano)
+- Each project has independent environments
+- Flags are created inside a project's environment
+- There is no project limit per organization (within plan limits)
 
 ## Environment
 
-Cada projeto tem **environments** para isolar o estado das flags por fase do ciclo de desenvolvimento.
+Each project has **environments** to isolate flag state by development phase.
 
-Padrão: `production` e `staging`. Você pode criar environments adicionais (ex: `qa`, `dev`).
+Defaults: `production` and `staging`. You can create additional environments (e.g., `qa`, `dev`).
 
-Cada environment tem:
+Each environment has:
 
-- **API Key** própria para o SDK
-- Estado independente de cada flag
-- Histórico de auditoria separado
+- Its own **API Key** for the SDK
+- Independent flag state
+- Separate audit history
 
-## Membros e papéis
+## Members and roles
 
-| Papel      | Permissões                                                           |
-| ---------- | -------------------------------------------------------------------- |
-| **Admin**  | Gerencia membros, cria/edita projetos e environments, todas as flags |
-| **Member** | Cria e edita flags, não gerencia membros ou configurações da org     |
+| Role       | Permissions                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| **Admin**  | Manage members, create/edit projects and environments, all flags |
+| **Member** | Create and edit flags, cannot manage members or org settings     |
 
-Convidar membros: **Settings → Members → Invite**.
+To invite members: **Settings → Members → Invite**.

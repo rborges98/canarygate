@@ -31,7 +31,6 @@ export function ConfigurationCard() {
         </span>
       </div>
 
-      {/* Type picker */}
       <div className="mb-4 grid grid-cols-2 gap-3">
         {(
           [
@@ -89,7 +88,6 @@ export function ConfigurationCard() {
 
       {/* Boolean / Rollout overlay — no layout shift */}
       <div className="grid">
-        {/* Boolean */}
         <div
           className={cn(
             'col-start-1 row-start-1 h-full transition-opacity duration-150',
@@ -115,7 +113,7 @@ export function ConfigurationCard() {
             <div className="mb-3 flex items-center justify-between">
               <span
                 className={cn(
-                  'text-[36px] font-extrabold leading-none tracking-tight transition-colors',
+                  'text-[36px] leading-none font-extrabold tracking-tight transition-colors',
                   defaultEnabled ? 'text-cg-green-100' : 'text-cg-red-100'
                 )}
               >
@@ -147,7 +145,6 @@ export function ConfigurationCard() {
           </div>
         </div>
 
-        {/* Rollout */}
         <div
           className={cn(
             'col-start-1 row-start-1 h-full transition-opacity duration-150',
@@ -162,7 +159,7 @@ export function ConfigurationCard() {
               </span>
             </div>
             <div className="mb-3 flex items-baseline justify-between">
-              <span className="text-cg-indigo-200 text-[36px] font-extrabold leading-none tracking-tight">
+              <span className="text-cg-indigo-200 text-[36px] leading-none font-extrabold tracking-tight">
                 {rolloutPercent}%
               </span>
               <span className="text-cg-red-100 font-mono text-[10px]">

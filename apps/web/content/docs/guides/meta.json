@@ -1,8 +1,0 @@
-{
-  "title": "Guides",
-  "pages": [
-    "canary-deploys",
-    "ab-testing-with-rollout",
-    "migrate-from-env-vars"
-  ]
-}

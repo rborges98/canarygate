@@ -1,4 +1,3 @@
-// Shared types, interfaces and style constants used across flag-form sub-components
 import { cn } from '@/shared/utils'
 
 export type FlagType = 'boolean' | 'rollout'

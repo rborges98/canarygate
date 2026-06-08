@@ -97,7 +97,6 @@ export function MemberDetail({
 
   return (
     <div className="flex h-full flex-col gap-0">
-      {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <div className="bg-cg-bg-100 text-cg-neutral-400 flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-mono text-base font-bold">
           {member.initial}
@@ -109,10 +108,9 @@ export function MemberDetail({
         </div>
       </div>
 
-      {/* Projects section */}
       <div className="flex-1">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-cg-neutral-500 font-sans text-[10px] uppercase tracking-wider">
+          <p className="text-cg-neutral-500 font-sans text-[10px] tracking-wider uppercase">
             Projects
             {projects.length > 0 && (
               <span className="text-cg-neutral-600 ml-1.5">
@@ -174,7 +172,6 @@ export function MemberDetail({
         )}
       </div>
 
-      {/* Footer actions */}
       <div className="border-cg-bg-100 mt-6 flex items-center border-t pt-4">
         <button
           className="text-cg-indigo-200 font-sans text-[11px] transition-colors hover:text-white"

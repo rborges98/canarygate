@@ -266,7 +266,6 @@ export function HistoryList({
 
   return (
     <div className="px-4 py-4 sm:px-8 sm:py-6">
-      {/* Toolbar */}
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <SearchInput
           value={search}
@@ -303,7 +302,6 @@ export function HistoryList({
         )}
       </div>
 
-      {/* Entries */}
       <div className="flex flex-col gap-2">
         {filtered.map((entry) => (
           <div
