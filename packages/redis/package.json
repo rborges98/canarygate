@@ -6,12 +6,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "build": "tsup src/index.ts --format cjs --dts"
   },
   "dependencies": {
     "ioredis": "^5.8.2"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsup": "^8.5.1"
   }
 }
