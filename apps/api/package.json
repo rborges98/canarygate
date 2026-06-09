@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch --env-file=.env.local src/index.ts",
-    "build": "tsup src/index.ts --format cjs --out-dir dist --no-external=@canarygate/database,@canarygate/redis,@canarygate/logger,@canarygate/messaging-utils",
-    "start": "node dist/index.js",
+    "build": "tsup",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
