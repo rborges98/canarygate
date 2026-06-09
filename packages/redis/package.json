@@ -2,8 +2,14 @@
   "name": "@canarygate/redis",
   "version": "0.1.0",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
   },
   "scripts": {
     "check-types": "tsc --noEmit",

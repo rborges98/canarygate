@@ -2,12 +2,22 @@
   "name": "@canarygate/database",
   "version": "0.1.0",
   "private": true,
+  "main": "./dist/client.js",
+  "types": "./dist/client.d.ts",
   "exports": {
-    "./client": "./src/client.ts",
-    "./schema": "./src/schema/index.ts"
+    "./client": {
+      "import": "./dist/client.js",
+      "require": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema.js",
+      "require": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
+    }
   },
   "scripts": {
-    "build": "tsup src/client.ts --format cjs --dts",
+    "build": "tsup src/client.ts src/schema/index.ts --format cjs --dts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
