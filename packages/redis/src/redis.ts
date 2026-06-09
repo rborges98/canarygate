@@ -1,6 +1,6 @@
 import IORedis from 'ioredis'
 
-const DEFAULT_REDIS_URL = 'redis://localhost:6379'
+const DEFAULT_REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 export type RedisConnectionOptions = {
