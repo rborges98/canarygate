@@ -13,7 +13,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "build": "tsup src/index.ts --format cjs --dts"
+    "build": "tsup src/index.ts --format cjs --dts --clean"
   },
   "dependencies": {
     "pino": "^10.3.1",

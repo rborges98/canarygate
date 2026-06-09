@@ -13,7 +13,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "build": "tsup src/index.ts --format cjs --dts"
+    "build": "tsup src/index.ts --format cjs --dts --clean"
   },
   "dependencies": {
     "ioredis": "^5.8.2"
