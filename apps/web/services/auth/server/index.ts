@@ -11,13 +11,19 @@ import {
 } from '@canarygate/database/schema'
 import { Resend } from 'resend'
 
+import 'server-only'
+
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+const IS_BUILD_TIME = !process.env.NEXT_RUNTIME
 
 function getRequiredEnv(name: string) {
   const value = process.env[name]
 
   if (!value) {
-    console.log('getRequiredEnv function:' + value + name)
+    if (IS_BUILD_TIME) {
+      return ''
+    }
+
     throw new Error(`[web auth] Missing required env var: ${name}`)
   }
 
@@ -35,7 +41,10 @@ function getRequiredUrl(name: string, developmentFallback: string) {
     return developmentFallback
   }
 
-  console.log('getRequiredUrl function:' + value + name)
+  if (IS_BUILD_TIME) {
+    return ''
+  }
+
   throw new Error(`[web auth] Missing required env var: ${name}`)
 }
 
