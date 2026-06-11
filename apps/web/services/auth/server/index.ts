@@ -17,6 +17,7 @@ function getRequiredEnv(name: string) {
   const value = process.env[name]
 
   if (!value) {
+    console.log('getRequiredEnv function:' + value + name)
     throw new Error(`[web auth] Missing required env var: ${name}`)
   }
 
@@ -34,6 +35,7 @@ function getRequiredUrl(name: string, developmentFallback: string) {
     return developmentFallback
   }
 
+  console.log('getRequiredUrl function:' + value + name)
   throw new Error(`[web auth] Missing required env var: ${name}`)
 }
 
