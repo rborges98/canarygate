@@ -20,6 +20,7 @@ function getRequiredEnv(name: string) {
   const value = process.env[name]
 
   if (!value) {
+    console.log('is build time', IS_BUILD_TIME, value, name)
     if (IS_BUILD_TIME) {
       return ''
     }
