@@ -29,9 +29,25 @@ export default async function OrgsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {orgs.map((org) => (
-            <OrgCard key={org.orgId} {...org} />
-          ))}
+          {orgs.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center gap-3 py-20 text-center">
+              <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">
+                No organizations yet
+              </p>
+              <p className="text-cg-neutral-500 max-w-xs font-sans text-[12px] leading-relaxed">
+                Organizations group your projects and members. Create your
+                first organization to get started.
+              </p>
+              <Link
+                href="/orgs/new"
+                className="bg-cg-indigo-300 hover:bg-cg-indigo-400 mt-1 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-colors"
+              >
+                + Create organization
+              </Link>
+            </div>
+          ) : (
+            orgs.map((org) => <OrgCard key={org.orgId} {...org} />)
+          )}
         </div>
       </div>
     </div>

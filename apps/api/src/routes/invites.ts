@@ -12,7 +12,6 @@ export default async function invitesRoutes(app: FastifyInstance) {
     route.schema = { tags: ['invites'], ...(route.schema ?? {}) }
   })
 
-  // Rota pública — não requer sessão
   app.get<{ Params: { token: string } }>('/invites/:token', {
     config: { rateLimit: INVITE_LOOKUP_RATE_LIMIT },
     schema: {

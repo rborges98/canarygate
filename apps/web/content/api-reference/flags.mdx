@@ -1,6 +1,6 @@
 ---
 title: Flags API
-description: Endpoints para gerenciar flags via API REST.
+description: Endpoints for managing flags via REST API.
 keywords:
   [
     'flags api',
@@ -18,13 +18,13 @@ aliases: ['flags endpoint', 'feature flags api']
 https://api.canarygate.io/api/v1
 ```
 
-## Listar flags
+## List flags
 
 ```http
 GET /flags
 ```
 
-Retorna todas as flags do environment associado à API Key.
+Returns all flags for the environment associated with the API Key.
 
 **Response 200**
 
@@ -34,7 +34,7 @@ Retorna todas as flags do environment associado à API Key.
     "key": "new-checkout",
     "type": "boolean",
     "enabled": true,
-    "description": "Novo fluxo de checkout"
+    "description": "New checkout flow"
   },
   {
     "key": "new-dashboard",
@@ -46,7 +46,7 @@ Retorna todas as flags do environment associado à API Key.
 ]
 ```
 
-## Obter flag
+## Get flag
 
 ```http
 GET /flags/:key
@@ -59,7 +59,7 @@ GET /flags/:key
   "key": "new-checkout",
   "type": "boolean",
   "enabled": true,
-  "description": "Novo fluxo de checkout"
+  "description": "New checkout flow"
 }
 ```
 
@@ -72,7 +72,7 @@ GET /flags/:key
 }
 ```
 
-## Criar flag
+## Create flag
 
 ```http
 POST /flags
@@ -84,15 +84,15 @@ POST /flags
 {
   "key": "new-feature",
   "type": "boolean",
-  "description": "Minha nova feature"
+  "description": "My new feature"
 }
 ```
 
-| Campo         | Tipo                     | Obrigatório |
-| ------------- | ------------------------ | ----------- |
-| `key`         | `string`                 | Sim         |
-| `type`        | `'boolean' \| 'rollout'` | Sim         |
-| `description` | `string`                 | Não         |
+| Field         | Type                     | Required |
+| ------------- | ------------------------ | -------- |
+| `key`         | `string`                 | Yes      |
+| `type`        | `'boolean' \| 'rollout'` | Yes      |
+| `description` | `string`                 | No       |
 
 **Response 201**
 
@@ -101,17 +101,17 @@ POST /flags
   "key": "new-feature",
   "type": "boolean",
   "enabled": false,
-  "description": "Minha nova feature"
+  "description": "My new feature"
 }
 ```
 
-## Atualizar flag
+## Update flag
 
 ```http
 PATCH /flags/:key
 ```
 
-**Body** (campos opcionais)
+**Body** (optional fields)
 
 ```json
 {
@@ -121,12 +121,12 @@ PATCH /flags/:key
 }
 ```
 
-**Response 200** — retorna a flag atualizada.
+**Response 200** — returns the updated flag.
 
-## Deletar flag
+## Delete flag
 
 ```http
 DELETE /flags/:key
 ```
 
-**Response 204** — sem corpo.
+**Response 204** — no body.

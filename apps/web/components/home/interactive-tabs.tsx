@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll } from 'motion/react'
 import { cn } from '@/shared/utils'
+import { useCountdown } from './use-countdown'
 
 type MockFlag = {
   key: string
@@ -208,27 +209,6 @@ function RolloutMockup() {
       </div>
     </div>
   )
-}
-
-function useCountdown(target: Date) {
-  const [remaining, setRemaining] = useState({ d: 0, h: 0, m: 0, s: 0 })
-
-  useEffect(() => {
-    function tick() {
-      const diff = Math.max(0, target.getTime() - Date.now())
-      setRemaining({
-        d: Math.floor(diff / 86_400_000),
-        h: Math.floor((diff % 86_400_000) / 3_600_000),
-        m: Math.floor((diff % 3_600_000) / 60_000),
-        s: Math.floor((diff % 60_000) / 1_000)
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [target])
-
-  return remaining
 }
 
 const SCHEDULED_TARGET = new Date('2026-06-13T09:00:00Z')

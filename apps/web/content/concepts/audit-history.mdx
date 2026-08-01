@@ -1,6 +1,6 @@
 ---
 title: Audit History
-description: Rastreie quem mudou o quê e quando em cada flag.
+description: Track who changed what and when on each flag.
 keywords:
   [
     'audit history',
@@ -12,40 +12,40 @@ keywords:
 aliases: ['audit log', 'change history']
 ---
 
-## O que é o Audit History
+## What is Audit History
 
-Todo evento que modifica o estado de uma flag no CanaryGate é registrado no **histórico de auditoria**. Isso inclui:
+Every event that modifies the state of a flag in CanaryGate is recorded in the **audit history**. This includes:
 
-- Criação e deleção de flags
-- Ativação e desativação
-- Mudanças de porcentagem em rollout
-- Criação e execução de schedules
-- Mudanças feitas via API ou painel
+- Flag creation and deletion
+- Activation and deactivation
+- Percentage changes in rollout
+- Schedule creation and execution
+- Changes made via API or dashboard
 
-## Acesso
+## Access
 
-O histórico fica disponível em dois lugares:
+The history is available in two places:
 
-1. **Por flag**: Abra a flag e clique na aba **History**
-2. **Por environment**: **Settings → Audit Log** para ver todas as mudanças do environment
+1. **Per flag**: Open the flag and click the **History** tab
+2. **Per environment**: **Settings → Audit Log** to see all changes in the environment
 
-## Formato de entrada
+## Entry format
 
-Cada entrada do histórico contém:
+Each history entry contains:
 
-| Campo              | Descrição                                                                |
-| ------------------ | ------------------------------------------------------------------------ |
-| **Timestamp**      | Data e hora exata da mudança (UTC)                                       |
-| **Actor**          | Quem fez a mudança (email do usuário ou "system" para ações automáticas) |
-| **Event**          | Tipo do evento (`flag.enabled`, `flag.updated`, etc.)                    |
-| **Before / After** | Estado anterior e posterior (quando aplicável)                           |
+| Field              | Description                                                                    |
+| ------------------ | ------------------------------------------------------------------------------ |
+| **Timestamp**      | Exact date and time of the change (UTC)                                        |
+| **Actor**          | Who made the change (user email or "system" for automated actions)             |
+| **Event**          | Event type (`flag.enabled`, `flag.updated`, etc.)                              |
+| **Before / After** | Previous and next state (when applicable)                                      |
 
-## Retenção
+## Retention
 
-- **Free**: 7 dias
-- **Starter**: 30 dias
-- **Pro**: 90 dias
+- **Free**: 7 days
+- **Starter**: 30 days
+- **Pro**: 90 days
 
-## Exportação
+## Export
 
-No plano Pro, você pode exportar o histórico completo em CSV via **Settings → Audit Log → Export**.
+On the Pro plan, you can export the full history as CSV via **Settings → Audit Log → Export**.

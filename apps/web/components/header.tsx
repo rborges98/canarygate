@@ -15,7 +15,7 @@ export function Header({
   return (
     <nav
       className={cn(
-        'border-cg-bg-100 relative z-10 flex items-center justify-between border-b px-4 py-3 sm:px-8 sm:py-4',
+        'border-cg-bg-100 relative z-10 flex h-[60px] items-center justify-between border-b px-4 sm:px-8',
         className
       )}
     >

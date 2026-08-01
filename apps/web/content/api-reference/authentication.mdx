@@ -1,6 +1,6 @@
 ---
-title: Autenticação
-description: Como autenticar nas APIs do CanaryGate.
+title: Authentication
+description: How to authenticate with the CanaryGate APIs.
 keywords: ['authentication', 'auth', 'api auth', 'bearer token', 'api key']
 aliases: ['auth', 'api auth', 'authentication']
 searchBoost: 7
@@ -8,26 +8,26 @@ searchBoost: 7
 
 ## API Keys
 
-A API do CanaryGate usa **API Keys por environment**. Cada environment de cada projeto tem sua própria key, criada em:
+The CanaryGate API uses **API Keys per environment**. Each environment of each project has its own key, created at:
 
-**Painel → Projeto → Environment → Settings → API Keys**
+**Dashboard → Project → Environment → Settings → API Keys**
 
-### Formato
+### Format
 
 ```
 cg_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-## Enviando a API Key
+## Sending the API Key
 
-### Header (recomendado)
+### Header (recommended)
 
 ```http
 GET /api/v1/flags
 Authorization: Bearer cg_live_your_key_here
 ```
 
-### Exemplo com fetch
+### Example with fetch
 
 ```ts
 const response = await fetch('https://api.canarygate.io/api/v1/flags', {
@@ -38,19 +38,19 @@ const response = await fetch('https://api.canarygate.io/api/v1/flags', {
 })
 ```
 
-### Exemplo com curl
+### Example with curl
 
 ```bash
 curl https://api.canarygate.io/api/v1/flags \
   -H "Authorization: Bearer cg_live_your_key_here"
 ```
 
-## Erros de autenticação
+## Authentication errors
 
-| Status | Código         | Descrição                                          |
-| ------ | -------------- | -------------------------------------------------- |
-| `401`  | `UNAUTHORIZED` | API Key ausente ou inválida                        |
-| `403`  | `FORBIDDEN`    | API Key válida mas sem permissão para este recurso |
+| Status | Code           | Description                                          |
+| ------ | -------------- | ---------------------------------------------------- |
+| `401`  | `UNAUTHORIZED` | API Key missing or invalid                           |
+| `403`  | `FORBIDDEN`    | Valid API Key but no permission for this resource    |
 
 ```json
 {
@@ -59,12 +59,12 @@ curl https://api.canarygate.io/api/v1/flags \
 }
 ```
 
-## Segurança
+## Security
 
 <Callout type="warning">
-  Nunca exponha sua API Key no código do browser ou em repositórios públicos.
-  Use variáveis de ambiente e, para browsers, use `NEXT_PUBLIC_` apenas com keys
-  de environments públicos (staging/preview).
+  Never expose your API Key in browser code or public repositories.
+  Use environment variables and, for browsers, only use `NEXT_PUBLIC_` with keys
+  from public environments (staging/preview).
 </Callout>
 
-Para aplicações browser, considere criar uma **API Key read-only** separada para produção.
+For browser applications, consider creating a separate **read-only API Key** for production.

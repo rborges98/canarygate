@@ -1,6 +1,6 @@
 ---
-title: Endpoint do SDK
-description: O endpoint interno usado pelo SDK para inicialização e SSE.
+title: SDK Endpoint
+description: The internal endpoint used by the SDK for initialization and SSE.
 keywords:
   [
     'sdk endpoint',
@@ -12,18 +12,18 @@ keywords:
 aliases: ['sdk bootstrap', 'client bootstrap']
 ---
 
-O SDK usa dois endpoints especiais que não são voltados para uso direto, mas estão documentados aqui para fins de debugging e integrações avançadas.
+The SDK uses two special endpoints that are not intended for direct use, but are documented here for debugging purposes and advanced integrations.
 
-## Carga inicial de flags
+## Initial flag load
 
 ```http
 GET /sdk/flags
 Authorization: Bearer cg_live_your_key
 ```
 
-Retorna todas as flags do environment em formato otimizado para o SDK, incluindo dados de rollout necessários para o hashing local.
+Returns all flags for the environment in a format optimized for the SDK, including rollout data needed for local hashing.
 
-## Stream SSE
+## SSE stream
 
 ```http
 GET /sdk/events
@@ -31,11 +31,11 @@ Authorization: Bearer cg_live_your_key
 Accept: text/event-stream
 ```
 
-Abre uma conexão SSE. Eventos emitidos:
+Opens an SSE connection. Events emitted:
 
 ### `flags:updated`
 
-Emitido quando qualquer flag do environment é criada, atualizada ou deletada.
+Emitted when any flag in the environment is created, updated, or deleted.
 
 ```
 event: flags:updated
@@ -44,19 +44,19 @@ data: {"key":"new-checkout","type":"boolean","enabled":true}
 
 ### `ping`
 
-Emitido periodicamente para manter a conexão ativa.
+Emitted periodically to keep the connection alive.
 
 ```
 event: ping
 data: {}
 ```
 
-## Usando manualmente (sem o SDK)
+## Using manually (without the SDK)
 
 ```ts
 const source = new EventSource('https://api.canarygate.io/sdk/events', {
-  // EventSource padrão não suporta headers — use um polyfill
-  // ou o SDK que já lida com isso internamente
+  // Native EventSource does not support headers — use a polyfill
+  // or the SDK which already handles this internally
 })
 
 source.addEventListener('flags:updated', (event) => {
@@ -66,7 +66,7 @@ source.addEventListener('flags:updated', (event) => {
 ```
 
 <Callout type="warning">
-  O `EventSource` nativo do browser não suporta envio de headers de
-  autenticação. O SDK contorna isso internamente. Para uso manual, use uma
-  biblioteca como `eventsource` (npm) que suporta headers.
+  The native browser `EventSource` does not support sending authentication headers.
+  The SDK handles this internally. For manual use, use a library like `eventsource` (npm)
+  that supports headers.
 </Callout>

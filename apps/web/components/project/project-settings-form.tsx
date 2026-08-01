@@ -56,6 +56,7 @@ export function ProjectSettingsForm({
   const [apiKey, setApiKey] = useState(initialApiKey)
   const [isActive, setIsActive] = useState(initialActive)
   const [isTogglePending, setIsTogglePending] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [apiKeyRevealed, setApiKeyRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -73,7 +74,9 @@ export function ProjectSettingsForm({
   }
 
   const handleRegenerate = async () => {
+    setIsRegenerating(true)
     const newKey = await regenerateApiKey(orgId, projectId)
+    setIsRegenerating(false)
     if (newKey) {
       setApiKey(newKey)
       setApiKeyRevealed(true)
@@ -222,9 +225,10 @@ export function ProjectSettingsForm({
         </div>
         <button
           onClick={handleRegenerate}
-          className="text-cg-neutral-500 hover:text-cg-neutral-300 mt-3 font-sans text-[11px] transition-colors"
+          disabled={isRegenerating}
+          className="text-cg-neutral-500 hover:text-cg-neutral-300 mt-3 font-sans text-[11px] transition-colors disabled:opacity-50"
         >
-          ↻ Regenerate key
+          {isRegenerating ? 'Regenerating...' : '↻ Regenerate key'}
         </button>
       </div>
 

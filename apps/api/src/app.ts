@@ -15,6 +15,7 @@ import invitesRoutes from './routes/invites.ts'
 import sdkRoutes from './routes/sdk.ts'
 import { fastifyLogger } from '@canarygate/logger'
 import { getRequiredUrl, IS_PRODUCTION } from './utils/env.ts'
+import { webhookRoutes } from './routes/webhook'
 
 const AUTH_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 
@@ -58,43 +59,41 @@ export function buildApp() {
     timeWindow: '1 minute'
   })
 
-  if (!IS_PRODUCTION) {
-    app.register(swagger, {
-      openapi: {
-        info: {
-          title: 'CanaryGate API',
-          description: 'API para gerenciamento de feature flags',
-          version: '0.1.0'
-        },
-        tags: [
-          { name: 'orgs', description: 'Organizações' },
-          { name: 'members', description: 'Membros de organizações' },
-          { name: 'projects', description: 'Projetos' },
-          { name: 'flags', description: 'Feature flags' },
-          { name: 'history', description: 'Histórico de alterações' },
-          { name: 'invites', description: 'Convites' },
-          { name: 'sdk', description: 'SDK público' }
-        ],
-        components: {
-          securitySchemes: {
-            apiKey: {
-              type: 'apiKey',
-              name: 'x-api-key',
-              in: 'header'
-            }
+  app.register(swagger, {
+    openapi: {
+      info: {
+        title: 'CanaryGate API',
+        description: 'API para gerenciamento de feature flags',
+        version: '0.1.0'
+      },
+      tags: [
+        { name: 'orgs', description: 'Organizações' },
+        { name: 'members', description: 'Membros de organizações' },
+        { name: 'projects', description: 'Projetos' },
+        { name: 'flags', description: 'Feature flags' },
+        { name: 'history', description: 'Histórico de alterações' },
+        { name: 'invites', description: 'Convites' },
+        { name: 'sdk', description: 'SDK público' }
+      ],
+      components: {
+        securitySchemes: {
+          apiKey: {
+            type: 'apiKey',
+            name: 'x-api-key',
+            in: 'header'
           }
         }
       }
-    })
+    }
+  })
 
-    app.register(swaggerUi, {
-      routePrefix: '/docs',
-      uiConfig: {
-        docExpansion: 'list',
-        deepLinking: true
-      }
-    })
-  }
+  app.register(swaggerUi, {
+    routePrefix: '/docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: true
+    }
+  })
 
   app.setErrorHandler((error, request, reply) => {
     const appError = error as { statusCode?: number }
@@ -121,7 +120,6 @@ export function buildApp() {
     reply.status(statusCode).send({ message })
   })
 
-  // Better Auth handler — captura tudo sob /api/auth/*
   app.all('/api/auth/*', {
     config: { rateLimit: AUTH_RATE_LIMIT },
     handler: async (request, reply) => {
@@ -134,6 +132,7 @@ export function buildApp() {
           ? undefined
           : JSON.stringify(request.body)
       })
+
       const response = await auth.handler(webRequest)
       reply.status(response.status)
       response.headers.forEach((value, key) => reply.header(key, value))
@@ -148,6 +147,7 @@ export function buildApp() {
   app.register(historyRoutes)
   app.register(invitesRoutes)
   app.register(sdkRoutes)
+  app.register(webhookRoutes)
 
   return app
 }

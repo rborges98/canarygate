@@ -1,6 +1,6 @@
 ---
 title: Webhooks
-description: Receba notificações HTTP quando flags mudam de estado.
+description: Receive HTTP notifications when flags change state.
 keywords:
   [
     'webhooks',
@@ -12,33 +12,33 @@ keywords:
 aliases: ['webhook notifications', 'outbound events']
 ---
 
-## O que são webhooks
+## What are webhooks
 
-Webhooks permitem que o CanaryGate **notifique sua infraestrutura** quando uma flag é criada, atualizada ou deletada — sem precisar de polling.
+Webhooks allow CanaryGate to **notify your infrastructure** when a flag is created, updated, or deleted — without polling.
 
-Use webhooks para:
+Use webhooks to:
 
-- Invalidar caches server-side quando uma flag muda
-- Registrar mudanças em seu próprio sistema de auditoria
-- Disparar builds ou deploys condicionais
-- Integrar com Slack, PagerDuty, ou sistemas de monitoramento
+- Invalidate server-side caches when a flag changes
+- Record changes in your own audit system
+- Trigger conditional builds or deploys
+- Integrate with Slack, PagerDuty, or monitoring systems
 
-## Configuração
+## Configuration
 
-1. Vá em **Settings → Webhooks** dentro do environment
-2. Clique em **Add Webhook**
-3. Informe a URL do endpoint (deve ser HTTPS em produção)
-4. Selecione os eventos que deseja receber
+1. Go to **Settings → Webhooks** inside the environment
+2. Click **Add Webhook**
+3. Enter the endpoint URL (must be HTTPS in production)
+4. Select the events you want to receive
 
-## Eventos disponíveis
+## Available events
 
-| Evento          | Disparado quando                                     |
-| --------------- | ---------------------------------------------------- |
-| `flag.created`  | Uma nova flag é criada                               |
-| `flag.updated`  | Uma flag é editada (nome, tipo, estado, porcentagem) |
-| `flag.deleted`  | Uma flag é deletada                                  |
-| `flag.enabled`  | Uma flag é ativada                                   |
-| `flag.disabled` | Uma flag é desativada                                |
+| Event           | Triggered when                                        |
+| --------------- | ----------------------------------------------------- |
+| `flag.created`  | A new flag is created                                 |
+| `flag.updated`  | A flag is edited (name, type, state, percentage)      |
+| `flag.deleted`  | A flag is deleted                                     |
+| `flag.enabled`  | A flag is activated                                   |
+| `flag.disabled` | A flag is deactivated                                 |
 
 ## Payload
 
@@ -55,9 +55,9 @@ Use webhooks para:
 }
 ```
 
-## Segurança
+## Security
 
-O CanaryGate assina cada request com um header `X-Canarygate-Signature` (HMAC SHA-256). Sempre valide a assinatura antes de processar o payload:
+CanaryGate signs each request with an `X-Canarygate-Signature` header (HMAC SHA-256). Always validate the signature before processing the payload:
 
 ```ts
 import { createHmac } from 'crypto'
@@ -68,8 +68,8 @@ function verifyWebhook(payload: string, signature: string, secret: string) {
 }
 ```
 
-O segredo do webhook é exibido uma única vez na criação — guarde em variável de ambiente.
+The webhook secret is shown only once upon creation — store it in an environment variable.
 
 ## Retries
 
-Em caso de falha (status != 2xx ou timeout), o CanaryGate retenta até **5 vezes** com backoff exponencial. Após isso, o webhook é marcado como falhado e você pode ver o histórico no painel.
+In case of failure (status != 2xx or timeout), CanaryGate retries up to **5 times** with exponential backoff. After that, the webhook is marked as failed and you can view the history in the dashboard.

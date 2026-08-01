@@ -8,6 +8,7 @@ import {
   history
 } from '@canarygate/database/schema'
 import type { WorkerLogger } from '@canarygate/logger'
+import { AutoRolloutJobData } from '@canarygate/messaging-utils'
 
 type JobIdentifiers = {
   flagEnvironmentId: string
@@ -39,7 +40,7 @@ export async function getWorkerFlagState(
   log: WorkerLogger
 ) {
   try {
-    const rows = await db
+    const [row] = await db
       .select({
         flag: flags,
         flagEnvironment: flagEnvironments,
@@ -53,19 +54,20 @@ export async function getWorkerFlagState(
       )
       .where(
         and(
-          eq(flagEnvironments.id, identifiers.flagEnvironmentId),
+          // Apenas a combinação de Flag + Ambiente já é o suficiente para achar a linha
           eq(flagEnvironments.flagId, identifiers.flagId),
           eq(flagEnvironments.environmentId, identifiers.environmentId),
+          // Mantemos isso por segurança, para garantir que a flag pertence a este projeto
           eq(flags.projectId, identifiers.projectId)
         )
       )
       .limit(1)
 
-    if (!rows[0]) {
+    if (!row) {
       return null
     }
 
-    return rows[0] as WorkerFlagState
+    return row as WorkerFlagState
   } catch (error) {
     log.error(
       {
@@ -113,5 +115,39 @@ export async function insertWorkerHistory(
       'Failed to record worker history'
     )
     throw error
+  }
+}
+
+export async function scheduleNextAutoRollout(
+  targetDate: Date,
+  jobData: AutoRolloutJobData,
+  log: WorkerLogger
+) {
+  const delayInSeconds = Math.floor((targetDate.getTime() - Date.now()) / 1000)
+  if (delayInSeconds <= 0) return
+
+  const qstashUrl = `https://qstash.upstash.io/v2/publish/https://${process.env.APP_DOMAIN}/api/webhooks/qstash`
+
+  try {
+    await fetch(qstashUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.QSTASH_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Upstash-Delay': `${delayInSeconds}s`
+      },
+      body: JSON.stringify({
+        type: 'auto-rollout',
+        jobData: {
+          ...jobData,
+          dueAt: targetDate.toISOString() // Atualiza o dueAt esperado para o próximo step
+        }
+      })
+    })
+  } catch (error) {
+    log.error(
+      { err: error, jobData },
+      'Failed to schedule next auto-rollout step in QStash'
+    )
   }
 }

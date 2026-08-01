@@ -1,6 +1,6 @@
 ---
 title: SDK JavaScript / TypeScript
-description: Visão geral do SDK oficial do CanaryGate para browser e Node.js.
+description: Overview of the official CanaryGate SDK for browser and Node.js.
 keywords:
   ['javascript sdk', 'typescript sdk', 'js sdk', 'browser sdk', 'node sdk']
 aliases: ['javascript sdk', 'typescript sdk', 'js sdk']
@@ -8,55 +8,55 @@ searchBoost: 8
 asIndexPage: true
 ---
 
-O SDK `@canarygate/js` é o cliente oficial para integrar o CanaryGate em aplicações JavaScript e TypeScript.
+The `@canarygate/js` SDK is the official client for integrating CanaryGate into JavaScript and TypeScript applications.
 
-## Compatibilidade
+## Compatibility
 
-| Ambiente                                       | Suporte     |
-| ---------------------------------------------- | ----------- |
-| Browser (moderno)                              | ✓           |
-| Node.js 18+                                    | ✓           |
-| Deno                                           | ✓ (via npm) |
-| Bun                                            | ✓           |
-| Edge Runtime (Cloudflare Workers, Vercel Edge) | Parcial\*   |
+| Environment                                    | Support      |
+| ---------------------------------------------- | ------------ |
+| Browser (modern)                               | ✓            |
+| Node.js 18+                                    | ✓            |
+| Deno                                           | ✓ (via npm)  |
+| Bun                                            | ✓            |
+| Edge Runtime (Cloudflare Workers, Vercel Edge) | Partial\*    |
 
-\*Edge runtimes têm suporte limitado a `EventSource` — SSE pode não funcionar. Use `disconnect()` imediatamente após `init()` nesses ambientes.
+\*Edge runtimes have limited `EventSource` support — SSE may not work. Use `disconnect()` immediately after `init()` in those environments.
 
-## Instalação
+## Installation
 
 ```bash
 npm install @canarygate/js
 ```
 
-## API completa
+## Full API
 
-| Método                             | Descrição                              |
-| ---------------------------------- | -------------------------------------- |
-| `new CanaryGate(apiKey, options?)` | Cria o cliente                         |
-| `init()`                           | Carrega flags e inicia SSE             |
-| `getFlag(key)`                     | Retorna `FlagData \| undefined`        |
-| `getFlags()`                       | Retorna `FlagData[]` (todas as flags)  |
-| `isStale()`                        | `true` se a conexão está degradada     |
-| `getLastSyncAt()`                  | `Date \| null` da última sincronização |
-| `disconnect()`                     | Fecha a conexão SSE                    |
+| Method                             | Description                                    |
+| ---------------------------------- | ---------------------------------------------- |
+| `new CanaryGate(apiKey, options?)` | Creates the client                             |
+| `init()`                           | Loads flags and starts SSE                     |
+| `getFlag(key)`                     | Returns `FlagData \| undefined`                |
+| `getFlags()`                       | Returns `FlagData[]` (all flags)               |
+| `isStale()`                        | `true` if the connection is degraded           |
+| `getLastSyncAt()`                  | `Date \| null` of the last sync                |
+| `disconnect()`                     | Closes the SSE connection                      |
 
-## Próximos passos
+## Next steps
 
 <Cards>
   <Cards.Card
-    title="Inicialização"
+    title="Initialization"
     href="/docs/sdk/javascript/initialization"
   />
   <Cards.Card
-    title="Avaliando flags"
+    title="Evaluating flags"
     href="/docs/sdk/javascript/evaluate-flags"
   />
   <Cards.Card
-    title="Tempo real e SSE"
+    title="Real-time and SSE"
     href="/docs/sdk/javascript/realtime-sse"
   />
   <Cards.Card
-    title="Tipos TypeScript"
+    title="TypeScript types"
     href="/docs/sdk/javascript/typescript-types"
   />
 </Cards>

@@ -37,22 +37,5 @@ services:
     ports:
       - '3001:3001'
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.base
-      target: worker
-      provenance: false
-      sbom: false
-    image: canarygate-worker-local
-    init: true
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:5432/canarygate}
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      redis:
-        condition: service_healthy
-
 volumes:
   redis_data:

@@ -13,6 +13,10 @@ export type RolloutFlagData = {
 
 export type FlagData = BooleanFlagData | RolloutFlagData
 
+export type FlagEvaluationContext = {
+  userId?: string
+}
+
 export type CanaryGateOptions = {
   baseUrl?: string
   environment?: string
@@ -66,20 +70,6 @@ function hashString(input: string): number {
   return hash % 100
 }
 
-function toFlagData(raw: ApiFlagRaw, anonId: string): FlagData {
-  if (raw.type === 'rollout') {
-    const inRollout =
-      raw.enabled && hashString(`${raw.key}:${anonId}`) < raw.rolloutPercent
-    return {
-      key: raw.key,
-      type: 'rollout',
-      enabled: inRollout,
-      percent: raw.rolloutPercent
-    }
-  }
-  return { key: raw.key, type: 'boolean', enabled: raw.enabled }
-}
-
 function parseSseEventBlock(block: string): ParsedSseEvent | null {
   let event = 'message'
   const dataLines: string[] = []
@@ -115,11 +105,7 @@ function parseSseEventBlock(block: string): ParsedSseEvent | null {
     return null
   }
 
-  return {
-    event,
-    data: dataLines.join('\n'),
-    retryMs
-  }
+  return { event, data: dataLines.join('\n'), retryMs }
 }
 
 function isAbortError(error: unknown) {
@@ -142,7 +128,8 @@ export class CanaryGate {
   private readonly maxReconnectDelay: number
   private readonly heartbeatTimeoutMs: number
 
-  private cache = new Map<string, FlagData>()
+  // Cache alterado para guardar os dados brutos da API (ApiFlagRaw)
+  private cache = new Map<string, ApiFlagRaw>()
   private cacheVersions = new Map<string, number>()
   private readonly anonId: string
   private streamAbortController: AbortController | null = null
@@ -163,7 +150,20 @@ export class CanaryGate {
       ''
     )
     this.environment = options.environment
-    this.streamEnabled = options.stream ?? true
+
+    // TRAVA DE SEGURANÇA: Identifica se o SDK está rodando no Browser (React, Next Client, etc.)
+    const isBrowser =
+      typeof window !== 'undefined' && typeof window.document !== 'undefined'
+
+    // Se for Browser, força FALSE no stream para proteger o servidor. Se for backend, aceita a opção ou assume false.
+    this.streamEnabled = isBrowser ? false : (options.stream ?? false)
+
+    if (isBrowser && options.stream === true) {
+      console.warn(
+        '[canarygate] Real-time streams (SSE) are disabled in browser environments to protect network architecture.'
+      )
+    }
+
     this.reconnectDelay = options.reconnectDelay ?? 5_000
     this.maxReconnectDelay = Math.max(
       options.maxReconnectDelay ?? DEFAULT_MAX_RECONNECT_DELAY_MS,
@@ -181,7 +181,7 @@ export class CanaryGate {
   }
 
   private replaceCacheFromSnapshot(flags: ApiFlagRaw[], requestedAt: number) {
-    const nextCache = new Map<string, FlagData>()
+    const nextCache = new Map<string, ApiFlagRaw>()
     const nextVersions = new Map<string, number>()
 
     for (const flag of flags) {
@@ -190,14 +190,12 @@ export class CanaryGate {
 
       if (currentVersion > nextVersion && currentVersion > requestedAt) {
         const currentFlag = this.cache.get(flag.key)
-        if (currentFlag) {
-          nextCache.set(flag.key, currentFlag)
-        }
+        if (currentFlag) nextCache.set(flag.key, currentFlag)
         nextVersions.set(flag.key, currentVersion)
         continue
       }
 
-      nextCache.set(flag.key, toFlagData(flag, this.anonId))
+      nextCache.set(flag.key, flag)
       nextVersions.set(flag.key, nextVersion)
     }
 
@@ -207,9 +205,7 @@ export class CanaryGate {
       }
 
       const currentFlag = this.cache.get(key)
-      if (currentFlag) {
-        nextCache.set(key, currentFlag)
-      }
+      if (currentFlag) nextCache.set(key, currentFlag)
       nextVersions.set(key, currentVersion)
     }
 
@@ -248,31 +244,24 @@ export class CanaryGate {
     const nextVersion = parseTimestamp(raw.updatedAt)
     const currentVersion = this.cacheVersions.get(raw.key) ?? -1
 
-    if (nextVersion < currentVersion) {
-      return
-    }
+    if (nextVersion < currentVersion) return
 
     this.cacheVersions.set(raw.key, nextVersion)
-    this.cache.set(raw.key, toFlagData(raw, this.anonId))
+    this.cache.set(raw.key, raw)
   }
 
   private applyFlagDeletion(payload: { key: string; deletedAt: string }) {
     const nextVersion = parseTimestamp(payload.deletedAt)
     const currentVersion = this.cacheVersions.get(payload.key) ?? -1
 
-    if (nextVersion < currentVersion) {
-      return
-    }
+    if (nextVersion < currentVersion) return
 
     this.cacheVersions.set(payload.key, nextVersion)
     this.cache.delete(payload.key)
   }
 
   private handleStreamMessage(event: string, data: string) {
-    if (event === 'connected' || event === 'connection-closing') {
-      return
-    }
-
+    if (event === 'connected' || event === 'connection-closing') return
     if (!data) return
 
     try {
@@ -342,7 +331,9 @@ export class CanaryGate {
       }
 
       if (!response.body) {
-        console.error('[canarygate] Stream body is not available in this runtime')
+        console.error(
+          '[canarygate] Stream body is not available in this runtime'
+        )
         this.stale = true
         return
       }
@@ -388,7 +379,6 @@ export class CanaryGate {
           if (parsedEvent.retryMs !== undefined) {
             this.streamRetryDelay = parsedEvent.retryMs
           }
-
           this.handleStreamMessage(parsedEvent.event, parsedEvent.data)
         }
       }
@@ -398,11 +388,9 @@ export class CanaryGate {
       }
     } finally {
       this.clearHeartbeatTimeout()
-
       if (this.streamAbortController === abortController) {
         this.streamAbortController = null
       }
-
       if (!this.destroyed) {
         this.stale = true
         this.scheduleReconnect()
@@ -418,12 +406,33 @@ export class CanaryGate {
     void this.consumeStream(abortController)
   }
 
-  getFlag(key: string): FlagData | undefined {
-    return this.cache.get(key)
+  // CÁLCULO DINÂMICO: getFlag resolve o hash do rollout sob demanda
+  getFlag(key: string, context?: FlagEvaluationContext): FlagData | undefined {
+    const raw = this.cache.get(key)
+    if (!raw) return undefined
+
+    // No backend usa o userId passado por parâmetro. No frontend cai no anonId padrão.
+    const evaluationId = context?.userId || this.anonId
+
+    if (raw.type === 'rollout') {
+      const inRollout =
+        raw.enabled &&
+        hashString(`${raw.key}:${evaluationId}`) < raw.rolloutPercent
+      return {
+        key: raw.key,
+        type: 'rollout',
+        enabled: inRollout,
+        percent: raw.rolloutPercent
+      }
+    }
+
+    return { key: raw.key, type: 'boolean', enabled: raw.enabled }
   }
 
-  getFlags(): FlagData[] {
-    return Array.from(this.cache.values())
+  getFlags(context?: FlagEvaluationContext): FlagData[] {
+    return Array.from(this.cache.keys()).map(
+      (key) => this.getFlag(key, context)!
+    )
   }
 
   isStale(): boolean {

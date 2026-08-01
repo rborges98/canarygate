@@ -13,10 +13,6 @@ type OrgShellProps = {
 }
 
 export function OrgShell({ orgSlug, orgName, children, user }: OrgShellProps) {
-  // Called from [orgSlug]/layout — segments are relative to that level:
-  // /orgs/acme/projects              → ['projects']
-  // /orgs/acme/members               → ['members']
-  // /orgs/acme/projects/web/flags    → ['projects', 'web', 'flags']
   const segments = useSelectedLayoutSegments().filter(
     (segment) => !(segment.startsWith('(') && segment.endsWith(')'))
   )

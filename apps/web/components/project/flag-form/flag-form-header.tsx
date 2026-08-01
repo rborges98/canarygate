@@ -10,7 +10,7 @@ type FlagFormHeaderProps = {
 }
 
 export function FlagFormHeader({ mode, backHref }: FlagFormHeaderProps) {
-  const { control } = useFormContext<FlagFormData>()
+  const { control, formState: { isSubmitting } } = useFormContext<FlagFormData>()
   const key = useWatch({ control, name: 'key' })
 
   return (
@@ -34,9 +34,10 @@ export function FlagFormHeader({ mode, backHref }: FlagFormHeaderProps) {
         </Link>
         <button
           type="submit"
-          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-lg px-5 py-2 text-[13px] font-semibold text-white transition-colors"
+          disabled={isSubmitting}
+          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-lg px-5 py-2 text-[13px] font-semibold text-white transition-colors disabled:opacity-50"
         >
-          {mode === 'new' ? 'Create Flag' : 'Save Changes'}
+          {isSubmitting ? 'Saving...' : mode === 'new' ? 'Create Flag' : 'Save Changes'}
         </button>
       </div>
     </div>

@@ -13,6 +13,9 @@ const subscribers = new Map<string, Set<Subscriber>>()
 const connectionCountsByIp = new Map<string, number>()
 const connectionCountsByApiKey = new Map<string, number>()
 
+// Rastreia o nome do ambiente (slug) de cada canal de forma segura em memória
+export const channelSlugs = new Map<string, string>()
+
 const parsedMaxConnectionsPerIp = Number.parseInt(
   process.env.SSE_MAX_CONNECTIONS_PER_IP ?? '',
   10
@@ -52,9 +55,9 @@ function decrementCount(counts: Map<string, number>, key: string) {
 }
 
 export function subscribe(
-  projectId: string,
+  projectId: string, // Representa o channelKey (projectId:environmentId)
   response: ServerResponse,
-  metadata: { ip: string; apiKey: string }
+  metadata: { ip: string; apiKey: string; environmentSlug?: string }
 ): { ok: true } | { ok: false; message: string } {
   if ((connectionCountsByIp.get(metadata.ip) ?? 0) >= maxConnectionsPerIp) {
     return {
@@ -77,7 +80,13 @@ export function subscribe(
     subscribers.set(projectId, new Set())
   }
 
-  subscribers.get(projectId)!.add({ response, ...metadata })
+  subscribers
+    .get(projectId)!
+    .add({ response, ip: metadata.ip, apiKey: metadata.apiKey })
+
+  // Salva o slug do ambiente associado a este canal
+  channelSlugs.set(projectId, metadata.environmentSlug || 'unknown')
+
   incrementCount(connectionCountsByIp, metadata.ip)
   incrementCount(connectionCountsByApiKey, metadata.apiKey)
 
@@ -103,6 +112,7 @@ export function unsubscribe(projectId: string, response: ServerResponse): void {
 
   if (projectSubscribers.size === 0) {
     subscribers.delete(projectId)
+    channelSlugs.delete(projectId) // Limpa o mapa de slugs para evitar vazamento de memória
   }
 }
 
@@ -123,5 +133,59 @@ export function emitFlagEvent(
     } catch {
       unsubscribe(projectId, subscriber.response)
     }
+  }
+}
+
+export function getDetailedSseMetrics() {
+  let totalConnections = 0
+
+  // Agrupa os ambientes por projeto usando uma chave interna temporária em memória
+  const projectGroupMap = new Map<
+    string,
+    Array<{ name: string; connections: number }>
+  >()
+
+  for (const [channelKey, projectSubscribers] of subscribers.entries()) {
+    const connectionCount = projectSubscribers.size
+
+    if (connectionCount > 0) {
+      totalConnections += connectionCount
+
+      const [projectId] = channelKey.split(':')
+      if (!projectId) continue
+
+      // Resgata o nome amigável do ambiente (dev, stg, prod) salvo no registro do canal
+      const envName = channelSlugs.get(channelKey) || 'unknown'
+
+      if (!projectGroupMap.has(projectId)) {
+        projectGroupMap.set(projectId, [])
+      }
+
+      projectGroupMap.get(projectId)!.push({
+        name: envName,
+        connections: connectionCount
+      })
+    }
+  }
+
+  // Mapeia os dados para o formato final, omitindo totalmente os IDs dos projetos
+  const projectsList = Array.from(projectGroupMap.values())
+    .map((envs) => {
+      // Ordena os ambientes internos colocando os que possuem mais tráfego no topo
+      envs.sort((a, b) => b.connections - a.connections)
+      const projectTotal = envs.reduce((sum, e) => sum + e.connections, 0)
+
+      return {
+        totalConnections: projectTotal,
+        environments: envs
+      }
+    })
+    // Ordena os blocos de projetos anônimos do mais pesado para o mais leve
+    .sort((a, b) => b.totalConnections - a.totalConnections)
+
+  return {
+    totalConnections,
+    totalActiveProjects: projectsList.length,
+    projects: projectsList
   }
 }

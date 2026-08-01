@@ -91,51 +91,70 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        {filtered.map((flag) => (
-          <Link
-            key={flag.key}
-            href={buildFlagHref(orgSlug, projectSlug, flag.key, currentEnv)}
-            className="border-cg-bg-100 bg-cg-white-300 hover:border-cg-neutral-700 hover:bg-cg-white-100 grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3.5 rounded-lg border px-4 py-3 transition-all"
-          >
-            <div
-              className={cn(
-                'h-2 w-2 shrink-0 rounded-full',
-                dotColor[flag.status],
-                flag.status === 'enabled' && 'animate-pulse'
-              )}
-            />
-            <div>
-              <div className="font-mono text-[13px] font-semibold text-white">
-                {flag.key}
-              </div>
-              <div className="text-cg-neutral-300 mt-0.5 text-[11px]">
-                {flag.description}
-              </div>
-            </div>
-            {flag.status === 'rollout' && flag.rollout !== undefined ? (
-              <div className="flex items-center gap-2">
-                <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full">
-                  <div
-                    className="from-cg-yellow-300 to-cg-yellow-100 bg-linear-to-r h-full"
-                    style={{ width: `${flag.rollout}%` }}
-                  />
+        {flags.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">No flags yet</p>
+            <p className="text-cg-neutral-500 font-sans text-[12px] leading-relaxed max-w-xs">
+              This environment has no feature flags. Create your first flag to start controlling feature rollouts.
+            </p>
+            <Link
+              href={`/orgs/${orgSlug}/projects/${projectSlug}/flags/new`}
+              className="bg-cg-indigo-300 hover:bg-cg-indigo-400 mt-1 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-colors"
+            >
+              + Create flag
+            </Link>
+          </div>
+        ) : (
+          <>
+            {filtered.map((flag) => (
+              <Link
+                key={flag.key}
+                href={buildFlagHref(orgSlug, projectSlug, flag.key, currentEnv)}
+                className="border-cg-bg-100 bg-cg-white-300 hover:border-cg-neutral-700 hover:bg-cg-white-100 grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3.5 rounded-lg border px-4 py-3 transition-all"
+              >
+                <div
+                  className={cn(
+                    'h-2 w-2 shrink-0 rounded-full',
+                    dotColor[flag.status],
+                    flag.status === 'enabled' && 'animate-pulse'
+                  )}
+                />
+                <div>
+                  <div className="font-mono text-[13px] font-semibold text-white">
+                    {flag.key}
+                  </div>
+                  <div className="text-cg-neutral-300 mt-0.5 text-[11px]">
+                    {flag.description}
+                  </div>
                 </div>
-                <span className="text-cg-yellow-200 font-mono text-[11px]">
-                  {flag.rollout}%
-                </span>
+                {flag.status === 'rollout' && flag.rollout !== undefined ? (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full">
+                      <div
+                        className="from-cg-yellow-300 to-cg-yellow-100 bg-linear-to-r h-full"
+                        style={{ width: `${flag.rollout}%` }}
+                      />
+                    </div>
+                    <span className="text-cg-yellow-200 font-mono text-[11px]">
+                      {flag.rollout}%
+                    </span>
+                  </div>
+                ) : (
+                  <Badge color={FLAG_STATUS_BADGE_COLOR[flag.status]}>
+                    {flag.status}
+                  </Badge>
+                )}
+              </Link>
+            ))}
+            {filtered.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-16 text-center">
+                <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">No flags match your search</p>
+                <p className="text-cg-neutral-500 font-sans text-[12px]">
+                  Try a different name or clear your filters.
+                </p>
               </div>
-            ) : (
-              <Badge color={FLAG_STATUS_BADGE_COLOR[flag.status]}>
-                {flag.status}
-              </Badge>
             )}
-          </Link>
-        ))}
-
-        {filtered.length === 0 && (
-          <p className="text-cg-neutral-500 py-8 text-center font-sans text-[12px]">
-            No flags found
-          </p>
+          </>
         )}
       </div>
     </div>

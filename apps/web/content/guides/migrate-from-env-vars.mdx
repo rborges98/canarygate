@@ -1,6 +1,6 @@
 ---
-title: Migrar de Variáveis de Ambiente
-description: Como substituir feature toggles baseados em env vars pelo CanaryGate.
+title: Migrate from Environment Variables
+description: How to replace env-var-based feature toggles with CanaryGate.
 keywords:
   [
     'env vars',
@@ -12,39 +12,39 @@ keywords:
 aliases: ['env vars', 'environment variables', 'migration']
 ---
 
-## O problema com env vars para feature flags
+## The problem with env vars for feature flags
 
-É comum começar usando variáveis de ambiente como flags:
+It is common to start using environment variables as flags:
 
 ```ts
-// ❌ Abordagem com env vars
+// ❌ Env vars approach
 if (process.env.ENABLE_NEW_CHECKOUT === 'true') {
-  // novo checkout
+  // new checkout
 }
 ```
 
-Isso funciona para começar, mas traz problemas:
+This works initially, but brings problems:
 
-- **Redesploy obrigatório** para toda mudança de feature
-- **Sem histórico** de quem mudou o quê e quando
-- **Sem rollout gradual** — é tudo ou nada
-- **Sem reatividade** — o código não atualiza sem reiniciar
+- **Mandatory redeploy** for every feature change
+- **No history** of who changed what and when
+- **No gradual rollout** — it is all or nothing
+- **No reactivity** — the code does not update without restarting
 
-## Estratégia de migração
+## Migration strategy
 
-### 1. Instale o SDK
+### 1. Install the SDK
 
 ```bash
 npm install @canarygate/js
 ```
 
-### 2. Crie as flags no painel
+### 2. Create the flags in the dashboard
 
-Para cada `process.env.ENABLE_*` que você usa como toggle, crie uma flag Boolean equivalente no CanaryGate com o mesmo estado atual.
+For each `process.env.ENABLE_*` you use as a toggle, create an equivalent Boolean flag in CanaryGate with the same current state.
 
-### 3. Migre um por um (sem big bang)
+### 3. Migrate one by one (no big bang)
 
-Crie um wrapper que lê de ambas as fontes durante a transição:
+Create a wrapper that reads from both sources during the transition:
 
 ```ts
 import { CanaryGate } from '@canarygate/js'
@@ -53,52 +53,52 @@ const client = new CanaryGate(process.env.CANARYGATE_KEY!)
 await client.init()
 
 function isFeatureEnabled(key: string, envFallback?: string): boolean {
-  // Tenta o CanaryGate primeiro
+  // Try CanaryGate first
   const flag = client.getFlag(key)
   if (flag !== undefined) return flag.enabled
 
-  // Fallback para env var durante a transição
+  // Fallback to env var during the transition
   if (envFallback) return process.env[envFallback] === 'true'
 
   return false
 }
 ```
 
-### 4. Substitua progressivamente
+### 4. Replace progressively
 
-Antes:
+Before:
 
 ```ts
 if (process.env.ENABLE_NEW_CHECKOUT === 'true') {
 ```
 
-Depois (fase de transição):
+After (transition phase):
 
 ```ts
 if (isFeatureEnabled('new-checkout', 'ENABLE_NEW_CHECKOUT')) {
 ```
 
-Depois (migrado completamente):
+After (fully migrated):
 
 ```ts
 if (client.getFlag('new-checkout')?.enabled ?? false) {
 ```
 
-### 5. Remova as env vars
+### 5. Remove the env vars
 
-Quando todas as flags estiverem no CanaryGate e o wrapper não for mais necessário, remova as env vars do `.env` e dos secrets de CI/CD.
+Once all flags are in CanaryGate and the wrapper is no longer needed, remove the env vars from `.env` and CI/CD secrets.
 
-## Tabela de equivalências
+## Equivalence table
 
-| Padrão env var         | Equivalente CanaryGate        |
+| Env var pattern        | CanaryGate equivalent         |
 | ---------------------- | ----------------------------- |
-| `ENABLE_X=true`        | Flag Boolean, enabled = true  |
-| `ENABLE_X=false`       | Flag Boolean, enabled = false |
-| `FEATURE_X_ROLLOUT=25` | Flag Rollout, percentage = 25 |
+| `ENABLE_X=true`        | Boolean flag, enabled = true  |
+| `ENABLE_X=false`       | Boolean flag, enabled = false |
+| `FEATURE_X_ROLLOUT=25` | Rollout flag, percentage = 25 |
 
-## Vantagens após a migração
+## Advantages after migration
 
-- Mude features **sem redesploiar** — ideal para hotfixes e kill switches
-- **Histórico completo** de quem ativou o quê e quando
-- **Rollout gradual** nativo para features de risco
-- **SSE em tempo real** — o SDK atualiza sem polling ou restart
+- Change features **without redeploying** — ideal for hotfixes and kill switches
+- **Full history** of who activated what and when
+- Native **gradual rollout** for risky features
+- **Real-time SSE** — the SDK updates without polling or restart

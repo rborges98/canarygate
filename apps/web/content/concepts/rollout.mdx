@@ -1,6 +1,6 @@
 ---
-title: Rollout Gradual
-description: Como funciona o rollout por porcentagem e o hash determinístico por userId.
+title: Gradual Rollout
+description: How percentage-based rollout works and the deterministic userId hash.
 keywords:
   [
     'rollout',
@@ -12,52 +12,52 @@ keywords:
 aliases: ['percentage rollout', 'gradual rollout']
 ---
 
-## Como o rollout funciona
+## How rollout works
 
-Quando uma flag é do tipo `rollout`, o CanaryGate calcula se um usuário específico deve ver a feature baseado em:
+When a flag is of type `rollout`, CanaryGate determines whether a specific user should see the feature based on:
 
-1. O **userId** do usuário (passado nas options do SDK ou implícito)
-2. A **chave da flag** (`key`)
-3. A **porcentagem** configurada no painel
+1. The user's **userId** (passed in the SDK options or implicit)
+2. The **flag key** (`key`)
+3. The **percentage** configured in the dashboard
 
-O cálculo é um hash determinístico: o mesmo usuário com o mesmo userId sempre receberá o mesmo resultado para a mesma porcentagem. Isso garante **stickiness** — o usuário não fica alternando entre versões.
+The calculation uses a deterministic hash: the same user with the same userId will always receive the same result for the same percentage. This ensures **stickiness** — the user does not alternate between versions.
 
-## Configurando no SDK
+## Configuring in the SDK
 
 ```ts
 const canary = new CanaryGate('cg_api_key', {
-  userId: currentUser.id // ou string anônima estável
+  userId: currentUser.id // or a stable anonymous string
 })
 await canary.init()
 
 const flag = canary.getFlag('new-dashboard')
 if (flag?.enabled) {
-  // este usuário está no rollout
+  // this user is in the rollout
 }
 ```
 
 <Callout type="info">
-  Se você não passar `userId`, o SDK usa um ID anônimo estável gerado e
-  persistido em `localStorage` (browser) ou em memória (Node.js). Usuários
-  anônimos são tratados de forma determinística também.
+  If you do not pass a `userId`, the SDK uses a stable anonymous ID generated and
+  persisted in `localStorage` (browser) or in memory (Node.js). Anonymous users
+  are also handled deterministically.
 </Callout>
 
-## Aumentando a porcentagem
+## Increasing the percentage
 
-O workflow típico de canary deploy:
+Typical canary deploy workflow:
 
-| Fase     | Porcentagem | Ação                          |
-| -------- | ----------- | ----------------------------- |
-| Beta     | 5%          | Monitorar métricas e erros    |
-| Expansão | 25%         | Confirmar estabilidade        |
-| Ramp     | 50%         | Metade do tráfego             |
-| GA       | 100%        | Feature disponível para todos |
+| Phase      | Percentage | Action                                |
+| ---------- | ---------- | ------------------------------------- |
+| Beta       | 5%         | Monitor metrics and errors            |
+| Expansion  | 25%        | Confirm stability                     |
+| Ramp       | 50%        | Half the traffic                      |
+| GA         | 100%       | Feature available to everyone         |
 
-Cada ajuste de porcentagem é entregue em tempo real via SSE para todos os clientes conectados.
+Each percentage adjustment is delivered in real time via SSE to all connected clients.
 
-## Rollout manual vs automático
+## Manual vs automatic rollout
 
-- **Manual**: Você ajusta a porcentagem manualmente pelo painel
-- **Automático** (plano Pro): Configure um schedule que aumenta a porcentagem automaticamente em horários definidos
+- **Manual**: You adjust the percentage manually through the dashboard
+- **Automatic** (Pro plan): Configure a schedule that increases the percentage automatically at defined times
 
-Veja [Schedule e Auto-rollout](/docs/concepts/schedule-auto-rollout) para mais detalhes.
+See [Schedule and Auto-rollout](/docs/concepts/schedule-auto-rollout) for more details.

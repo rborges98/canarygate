@@ -81,12 +81,16 @@ export async function getOrgBySlug(orgSlug: string): Promise<OrgDetail | null> {
   const res = await apiFetch(`${API_BASE}/orgs/slug/${orgSlug}`, {
     cache: 'no-store'
   })
+
+  console.log(res)
   if (!res.ok) {
     if (res.status === 404) {
       return null
     }
 
-    const payload = (await res.json().catch(() => null)) as ApiErrorPayload | null
+    const payload = (await res
+      .json()
+      .catch(() => null)) as ApiErrorPayload | null
     throw new Error(payload?.message ?? `Failed to load org ${orgSlug}`)
   }
 
@@ -98,6 +102,7 @@ export async function getOrgBySlugOrName(
   orgSlug: string
 ): Promise<OrgDetail | null> {
   const org = await getOrgBySlug(orgSlug)
+  console.log(' e aqui?' + orgSlug)
   if (org) {
     return org
   }

@@ -1,6 +1,6 @@
 ---
 title: Webhooks API
-description: Endpoints para gerenciar webhooks via API REST.
+description: Endpoints for managing webhooks via REST API.
 keywords:
   [
     'webhooks api',
@@ -12,7 +12,7 @@ keywords:
 aliases: ['webhook api', 'webhook deliveries']
 ---
 
-## Listar webhooks
+## List webhooks
 
 ```http
 GET /webhooks
@@ -32,7 +32,7 @@ GET /webhooks
 ]
 ```
 
-## Criar webhook
+## Create webhook
 
 ```http
 POST /webhooks
@@ -60,17 +60,17 @@ POST /webhooks
 ```
 
 <Callout type="warning">
-  O campo `secret` é retornado **apenas na criação**. Guarde-o em variável de
-  ambiente — não é possível recuperá-lo depois.
+  The `secret` field is returned **only on creation**. Store it in an environment
+  variable — it cannot be retrieved afterwards.
 </Callout>
 
-## Atualizar webhook
+## Update webhook
 
 ```http
 PATCH /webhooks/:id
 ```
 
-**Body** (campos opcionais)
+**Body** (optional fields)
 
 ```json
 {
@@ -79,17 +79,17 @@ PATCH /webhooks/:id
 }
 ```
 
-## Deletar webhook
+## Delete webhook
 
 ```http
 DELETE /webhooks/:id
 ```
 
-**Response 204** — sem corpo.
+**Response 204** — no body.
 
-## Validando a assinatura
+## Validating the signature
 
-Cada request do webhook inclui o header `X-Canarygate-Signature`:
+Each webhook request includes the `X-Canarygate-Signature` header:
 
 ```ts
 import { createHmac, timingSafeEqual } from 'crypto'
@@ -107,4 +107,4 @@ export function verifyWebhookSignature(
 }
 ```
 
-Use `timingSafeEqual` para evitar timing attacks.
+Use `timingSafeEqual` to prevent timing attacks.

@@ -15,7 +15,7 @@ export function Nav({ org, project, className, user }: NavProps) {
   return (
     <nav
       className={cn(
-        'border-cg-bg-100 relative z-30 flex items-center justify-between border-b px-4 py-3 sm:px-8 sm:py-4',
+        'border-cg-bg-100 relative z-30 flex h-[60px] items-center justify-between border-b px-4 sm:px-8',
         className
       )}
     >
@@ -52,7 +52,17 @@ export function Nav({ org, project, className, user }: NavProps) {
         )}
       </div>
 
-      <UserMenu initialUser={user} />
+      <div className="flex items-center gap-4">
+        <Link
+          href="/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cg-neutral-400 hover:text-white text-[13px] transition-colors"
+        >
+          Docs
+        </Link>
+        <UserMenu initialUser={user} />
+      </div>
     </nav>
   )
 }

@@ -31,7 +31,11 @@ export function ProjectAccessForm({
   confirmLabel = 'Save',
   dashed = false
 }: ProjectAccessFormProps) {
-  const { control, handleSubmit } = useForm<ProjectFormState>({ defaultValues })
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting }
+  } = useForm<ProjectFormState>({ defaultValues })
 
   return (
     <form
@@ -80,9 +84,10 @@ export function ProjectAccessForm({
       <div className="flex shrink-0 items-center gap-2">
         <button
           type="submit"
-          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-md px-3 py-1 font-sans text-[11px] font-semibold text-white transition-colors"
+          disabled={isSubmitting}
+          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-md px-3 py-1 font-sans text-[11px] font-semibold text-white transition-colors disabled:opacity-50"
         >
-          {confirmLabel}
+          {isSubmitting ? 'Saving...' : confirmLabel}
         </button>
         <button
           type="button"

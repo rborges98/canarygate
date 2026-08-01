@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { and, eq, isNotNull, lte } from 'drizzle-orm'
+import { Client } from '@upstash/qstash'
 import { db } from '@canarygate/database/client'
 import {
   environments,
@@ -11,12 +12,26 @@ import {
   type AutoRolloutJobData,
   type ScheduleJobData
 } from '@canarygate/messaging-utils'
-import {
-  enqueueAutoRolloutJob,
-  enqueueScheduleJob
-} from '../queues/flag-jobs.ts'
+import { getRequiredUrl } from '../utils/env.ts'
 
 type AppLogger = FastifyInstance['log']
+
+const qstash = new Client({ token: process.env.QSTASH_TOKEN! })
+
+async function publishJobToQStash(
+  type: 'schedule' | 'auto-rollout',
+  jobData: ScheduleJobData | AutoRolloutJobData
+): Promise<void> {
+  const dueAt = new Date(jobData.dueAt)
+  const delayInSeconds = Math.floor((dueAt.getTime() - Date.now()) / 1000)
+  const apiUrl = getRequiredUrl('API_URL', 'http://localhost:3001', 'schedule-processor')
+
+  await qstash.publishJSON({
+    url: `${apiUrl}/webhook`,
+    body: { type, jobData },
+    ...(delayInSeconds > 0 ? { delay: delayInSeconds } : {})
+  })
+}
 
 async function processSchedules(logger: AppLogger): Promise<void> {
   const now = new Date()
@@ -83,7 +98,7 @@ async function processSchedules(logger: AppLogger): Promise<void> {
     }
 
     try {
-      await enqueueScheduleJob(jobData, logger)
+      await publishJobToQStash('schedule', jobData)
       enqueuedCount += 1
     } catch (err) {
       logger.error(
@@ -179,7 +194,7 @@ async function processAutoRollouts(logger: AppLogger): Promise<void> {
     }
 
     try {
-      await enqueueAutoRolloutJob(jobData, logger)
+      await publishJobToQStash('auto-rollout', jobData)
       enqueuedCount += 1
     } catch (err) {
       logger.error(

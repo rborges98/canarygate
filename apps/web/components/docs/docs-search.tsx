@@ -124,7 +124,6 @@ async function loadDocsSearch() {
     return { payload: cachedPayload, index: cachedIndex }
   }
 
-  // Single fetch (no-store) to always get fresh data; log errors for debugging.
   let response: Response
 
   try {
@@ -135,7 +134,7 @@ async function loadDocsSearch() {
   } catch (err) {
     console.error('[docs-search] fetch failed', err)
     throw new Error(
-      'Falha ao buscar o indice de busca: ' +
+      'Failed to fetch the search index: ' +
         (err instanceof Error ? err.message : String(err))
     )
   }
@@ -147,7 +146,7 @@ async function loadDocsSearch() {
       .text()
       .catch(() => '')
     console.error('[docs-search] bad response', { status, bodyText })
-    throw new Error(`Falha ao carregar o indice de busca (${status})`)
+    throw new Error(`Failed to load the search index (${status})`)
   }
 
   const payload = (await response.json()) as DocsSearchPayload
@@ -229,7 +228,7 @@ function searchDocs(
 }
 
 function formatSearchLabel(query: string) {
-  return query.trim().length > 0 ? 'Resultados' : 'Sugestoes'
+  return query.trim().length > 0 ? 'Results' : 'Suggestions'
 }
 
 export default function DocsSearch() {
@@ -294,7 +293,7 @@ export default function DocsSearch() {
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : 'Nao foi possivel carregar a busca da documentacao.'
+            : 'Could not load the documentation search.'
         )
       })
 
@@ -315,8 +314,6 @@ export default function DocsSearch() {
     return () => window.clearTimeout(timeoutId)
   }, [open])
 
-  // Clear query and any previous error when the modal is closed so
-  // reopening starts with a clean state.
   useEffect(() => {
     if (!open) {
       setQuery('')
@@ -349,7 +346,7 @@ export default function DocsSearch() {
         type="button"
         onClick={() => setOpen(true)}
         className="border-cg-bg-100 bg-cg-bg-300/80 hover:bg-cg-bg-200 hidden min-w-55 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition md:flex"
-        aria-label="Abrir busca da documentacao"
+        aria-label="Open documentation search"
       >
         <span className="flex items-center gap-2">
           <svg
@@ -377,7 +374,7 @@ export default function DocsSearch() {
         type="button"
         onClick={() => setOpen(true)}
         className="border-cg-bg-100 bg-cg-bg-300/80 hover:bg-cg-bg-200 flex h-10 w-10 items-center justify-center rounded-xl border transition md:hidden"
-        aria-label="Abrir busca da documentacao"
+        aria-label="Open documentation search"
       >
         <svg
           className="text-cg-neutral-300 h-4 w-4"
@@ -417,7 +414,7 @@ export default function DocsSearch() {
             <div className="flex min-h-50 items-center justify-center px-6 text-center">
               <div>
                 <p className="text-cg-neutral-100 font-sans text-[14px] font-semibold">
-                  Busca indisponivel
+                  Search unavailable
                 </p>
                 <p className="text-cg-neutral-500 mt-2 font-sans text-[12px] leading-relaxed">
                   {errorMessage}
@@ -428,10 +425,10 @@ export default function DocsSearch() {
             <div className="flex min-h-50 items-center justify-center px-6 text-center">
               <div>
                 <p className="text-cg-neutral-100 font-sans text-[14px] font-semibold">
-                  Preparando indice da documentacao
+                  Preparing search index
                 </p>
                 <p className="text-cg-neutral-500 mt-2 font-sans text-[12px] leading-relaxed">
-                  Carregando os termos e sinônimos extraídos do conteúdo.
+                  Loading terms and synonyms extracted from the content.
                 </p>
               </div>
             </div>
@@ -439,12 +436,12 @@ export default function DocsSearch() {
             <div className="flex min-h-50 items-center justify-center px-6 text-center">
               <div>
                 <p className="text-cg-neutral-100 font-sans text-[14px] font-semibold">
-                  Nenhum resultado encontrado
+                  No results found
                 </p>
                 <p className="text-cg-neutral-500 mt-2 font-sans text-[12px] leading-relaxed">
-                  Tente termos mais amplos como{' '}
+                  Try broader terms like{' '}
                   <span className="font-mono">rollout</span>,{' '}
-                  <span className="font-mono">environment</span> ou{' '}
+                  <span className="font-mono">environment</span> or{' '}
                   <span className="font-mono">webhooks</span>.
                 </p>
               </div>

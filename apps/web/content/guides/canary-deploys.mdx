@@ -1,6 +1,6 @@
 ---
 title: Canary Deploys
-description: Use rollout flags para expor novas versões gradualmente e reverter sem redesploiar.
+description: Use rollout flags to expose new versions gradually and roll back without redeploying.
 keywords:
   [
     'canary deploy',
@@ -12,42 +12,42 @@ keywords:
 aliases: ['progressive delivery', 'canary release']
 ---
 
-## O que é um canary deploy
+## What is a canary deploy
 
-Um **canary deploy** é a prática de expor uma nova versão do software para uma pequena porcentagem de usuários antes de fazer o rollout completo. Se algo der errado, você reverte instantaneamente — sem redesploiar.
+A **canary deploy** is the practice of exposing a new version of software to a small percentage of users before doing a full rollout. If something goes wrong, you revert instantly — without redeploying.
 
-Com o CanaryGate, você faz canary deploys no nível de feature, não de infraestrutura.
+With CanaryGate, you do canary deploys at the feature level, not the infrastructure level.
 
-## Configurando o canary
+## Setting up the canary
 
-### 1. Crie uma rollout flag
+### 1. Create a rollout flag
 
 ```ts
-// No painel: New Flag → Type: Rollout
+// In the dashboard: New Flag → Type: Rollout
 // key: "v2-engine"
 ```
 
-### 2. Inicialize com o userId
+### 2. Initialize with userId
 
 ```ts
 const client = new CanaryGate(process.env.CANARYGATE_KEY!, {
-  userId: currentUser.id // ID estável — mesmo usuário sempre vê o mesmo resultado
+  userId: currentUser.id // Stable ID — the same user always sees the same result
 })
 await client.init()
 ```
 
-### 3. Rampeie gradualmente
+### 3. Ramp up gradually
 
-| Fase           | %    | Duração sugerida       |
-| -------------- | ---- | ---------------------- |
-| Canary inicial | 5%   | 1-2h monitorando erros |
-| Expansão       | 20%  | 4-8h                   |
-| Ramp           | 50%  | 24h                    |
-| GA             | 100% | —                      |
+| Phase           | %    | Suggested duration          |
+| --------------- | ---- | --------------------------- |
+| Initial canary  | 5%   | 1-2h monitoring errors      |
+| Expansion       | 20%  | 4-8h                        |
+| Ramp            | 50%  | 24h                         |
+| GA              | 100% | —                           |
 
-Ajuste a porcentagem no painel. A mudança chega para os clientes em tempo real.
+Adjust the percentage in the dashboard. The change reaches clients in real time.
 
-### 4. Avalie no código
+### 4. Evaluate in code
 
 ```ts
 const useV2 = client.getFlag('v2-engine')?.enabled ?? false
@@ -59,32 +59,32 @@ if (useV2) {
 }
 ```
 
-## Rollback instantâneo
+## Instant rollback
 
-Se você detectar um problema, volte a porcentagem para 0% no painel — sem redesploiar, sem downtime.
+If you detect a problem, set the percentage back to 0% in the dashboard — no redeployment, no downtime.
 
-## Com auto-rollout (plano Pro)
+## With auto-rollout (Pro plan)
 
-Configure o aumento automático de porcentagem com um schedule:
+Configure automatic percentage increases with a schedule:
 
 ```
 10:00 → 5%
 14:00 → 25%
-amanhã 09:00 → 50%
-48h depois → 100%
+next day 09:00 → 50%
+48h later → 100%
 ```
 
-O CanaryGate executa cada etapa automaticamente. Você ainda pode pausar ou reverter manualmente a qualquer momento.
+CanaryGate executes each step automatically. You can still pause or revert manually at any time.
 
-## Limpeza
+## Cleanup
 
-Quando a feature estiver em 100% e estável, remova a flag do código e delete-a no painel para manter o projeto organizado.
+Once the feature is at 100% and stable, remove the flag from the code and delete it in the dashboard to keep the project tidy.
 
 ```ts
-// Antes (com flag):
+// Before (with flag):
 const isNewEngine = client.getFlag('v2-engine')?.enabled ?? false
 if (isNewEngine) { ... }
 
-// Depois (100% rollout, flag removida):
-// Código permanente sem condicional
+// After (100% rollout, flag removed):
+// Permanent code without conditional
 ```

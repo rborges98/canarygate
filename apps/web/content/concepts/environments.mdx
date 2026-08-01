@@ -1,45 +1,43 @@
 ---
 title: Environments
-description: Isole flags por ambiente para evitar que mudanças de produção afetem desenvolvimento.
+description: Isolate flags by environment to prevent production changes from affecting development.
 keywords:
   ['environment', 'environments', 'production', 'staging', 'development']
 aliases: ['env', 'environments']
 searchBoost: 7
 ---
 
-## O que são environments
+## What are environments
 
-Cada projeto no CanaryGate tem environments independentes. Uma flag com o mesmo nome pode ter **estados completamente diferentes** em cada environment — assim você pode testar em `staging` antes de ativar em `production`.
+Each project in CanaryGate has independent environments. A flag with the same name can have **completely different states** in each environment — so you can test in `staging` before activating in `production`.
 
-Por padrão, cada projeto tem:
+By default, each project has:
 
 - `production`
 - `staging`
 
-## Como funciona
+## How it works
 
-Cada environment tem sua própria **API Key**. Ao inicializar o SDK, você especifica implicitamente o environment pela key usada:
+Each environment has its own **API Key**. When initializing the SDK, you implicitly specify the environment by the key you use:
 
 ```ts
-// SDK production
+// Production SDK
 const canary = new CanaryGate(process.env.CANARYGATE_PRODUCTION_KEY!)
 
-// SDK staging
+// Staging SDK
 const canary = new CanaryGate(process.env.CANARYGATE_STAGING_KEY!)
 ```
 
-## Isolamento de estado
+## State isolation
 
-Ativar uma flag em `staging` **não afeta** `production`. Cada environment tem:
+Activating a flag in `staging` **does not affect** `production`. Each environment has:
 
-- Estado próprio de cada flag (enabled/disabled, porcentagem)
-- Histórico de auditoria separado
-- Webhooks configurados independentemente
+- Its own flag state (enabled/disabled, percentage)
+- Separate audit history
+- Webhooks configured independently
 
-## Boas práticas
+## Best practices
 
-<Cards>
-  <Cards.Card title="Teste em staging primeiro" />
-  <Cards.Card title="Use nomes de environment nos .env" />
-  <Cards.Card title="Cuidado com sincronizar manualmente" />
-</Cards>
+- Always test flag changes in `staging` before activating in `production`
+- Use environment-specific variable names in `.env` (e.g. `CANARYGATE_PRODUCTION_KEY`, `CANARYGATE_STAGING_KEY`)
+- Avoid manually syncing flag states between environments — treat each environment independently

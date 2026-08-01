@@ -1,13 +1,13 @@
 ---
-title: Tipos TypeScript
-description: Referência completa dos tipos exportados pelo SDK @canarygate/js.
+title: TypeScript Types
+description: Complete reference for the types exported by the @canarygate/js SDK.
 keywords: ['typescript types', 'ts types', 'typings', 'sdk types', 'TypeScript']
 aliases: ['ts types', 'typing', 'types']
 ---
 
 ## `CanaryGate`
 
-Classe principal do SDK.
+The main SDK class.
 
 ```ts
 class CanaryGate {
@@ -25,18 +25,18 @@ class CanaryGate {
 
 ```ts
 interface CanaryGateOptions {
-  /** ID do usuário para hashing determinístico de rollout. */
+  /** User ID for deterministic rollout hashing. */
   userId?: string
-  /** URL base da API. Padrão: 'https://api.canarygate.io' */
+  /** API base URL. Default: 'https://api.canarygate.io' */
   baseUrl?: string
-  /** Tempo em ms para considerar o SDK como stale. Padrão: 60000 */
+  /** Time in ms before considering the SDK stale. Default: 60000 */
   staleThreshold?: number
 }
 ```
 
 ## `FlagData`
 
-Union type que representa qualquer flag.
+Union type representing any flag.
 
 ```ts
 type FlagData = BooleanFlagData | RolloutFlagData
@@ -65,20 +65,20 @@ interface RolloutFlagData {
 }
 ```
 
-## Narrowing por tipo
+## Narrowing by type
 
-Use `type` para narrowing seguro:
+Use `type` for safe narrowing:
 
 ```ts
 const flag = canary.getFlag('new-dashboard')
 
 if (flag?.type === 'rollout') {
-  // TypeScript sabe que flag é RolloutFlagData aqui
+  // TypeScript knows flag is RolloutFlagData here
   console.log(flag.percentage)
 }
 ```
 
-## Exportações completas
+## Full exports
 
 ```ts
 import {

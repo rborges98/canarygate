@@ -13,9 +13,10 @@ type Tab = {
 type TabNavProps = {
   tabs: Tab[]
   className?: string
+  prefetch?: boolean
 }
 
-export function TabNav({ tabs, className }: TabNavProps) {
+export function TabNav({ tabs, className, prefetch }: TabNavProps) {
   const pathname = usePathname()
   const containerRef = useRef<HTMLDivElement>(null)
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
@@ -58,6 +59,7 @@ export function TabNav({ tabs, className }: TabNavProps) {
           <Link
             key={tab.href}
             href={tab.href}
+            prefetch={prefetch}
             ref={(el) => {
               linkRefs.current[tab.href] = el
             }}

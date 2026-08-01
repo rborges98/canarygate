@@ -7,7 +7,11 @@ import {
   flagEnvironments,
   environments
 } from '@canarygate/database/schema'
-import { subscribe, unsubscribe } from '../sse/flag-emitter.ts'
+import {
+  subscribe,
+  unsubscribe,
+  getDetailedSseMetrics
+} from '../sse/flag-emitter.ts'
 
 const SDK_FLAGS_RATE_LIMIT = { max: 60, timeWindow: '1 minute' }
 const SDK_STREAM_RATE_LIMIT = { max: 10, timeWindow: '1 minute' }
@@ -77,6 +81,32 @@ async function resolveProjectAndEnvironment(
 }
 
 export default async function sdkRoutes(app: FastifyInstance) {
+  // ROTA DE MÉTRICAS ANÔNIMA COM NOMES DE AMBIENTE
+  app.get('/api/metrics', async () => {
+    const sseMetrics = getDetailedSseMetrics()
+    const memoryUsage = process?.memoryUsage
+      ? process.memoryUsage()
+      : { heapUsed: 0 }
+    const ramInMB = memoryUsage.heapUsed / 1024 / 1024
+
+    const efficiency =
+      sseMetrics.totalConnections > 0
+        ? `${(ramInMB / sseMetrics.totalConnections).toFixed(3)} MB por conexão`
+        : '0 MB (Nenhuma conexão ativa)'
+
+    return {
+      status: 'healthy',
+      uptime: `${process.uptime().toFixed(0)} segundos`,
+      memoryUsed: `${ramInMB.toFixed(2)} MB`,
+      efficiency,
+      summary: {
+        totalConnections: sseMetrics.totalConnections,
+        totalActiveProjects: sseMetrics.totalActiveProjects
+      },
+      projects: sseMetrics.projects
+    }
+  })
+
   // Header: X-Api-Key: <project api key>
   // Header: X-Environment: <environment slug> (optional, defaults to production)
   app.get('/sdk/flags', {
@@ -165,6 +195,19 @@ export default async function sdkRoutes(app: FastifyInstance) {
       }
     },
     handler: async (request, reply) => {
+      const headers = request.headers
+
+      // TRAVA DE SEGURANÇA: Rejeita requisições originárias de navegadores
+      const isBrowserRequest = headers['sec-fetch-dest'] || headers['origin']
+
+      if (isBrowserRequest) {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message:
+            'Real-time streams (SSE) are not allowed from browser environments to protect system architecture.'
+        })
+      }
+
       const query = request.query as { apiKey?: string; environment?: string }
       const auth = resolveSdkStreamAuthentication({
         headerApiKey: request.headers['x-api-key'] as string | undefined,
@@ -198,10 +241,13 @@ export default async function sdkRoutes(app: FastifyInstance) {
       const { project, env } = resolved
       const channelKey = `${project.id}:${env.id}`
       const raw = reply.raw
+
+      // Enviando o env.slug nas opções para o emissor conseguir catalogar as métricas
       const subscription = subscribe(channelKey, raw, {
         ip: request.ip,
-        apiKey
-      })
+        apiKey,
+        environmentSlug: env.slug
+      } as any)
 
       if (!subscription.ok) {
         return reply.status(429).send({ message: subscription.message })

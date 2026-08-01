@@ -1,25 +1,25 @@
 ---
-title: Tempo Real e SSE
-description: Como reagir a atualizações de flags em tempo real.
+title: Real-time and SSE
+description: How to react to real-time flag updates.
 keywords: ['sse', 'realtime', 'real-time', 'live updates', 'subscriptions']
 aliases: ['server-sent events', 'realtime', 'real-time']
 ---
 
-## Conexão automática
+## Automatic connection
 
-O SDK abre automaticamente uma conexão SSE durante `init()`. Você não precisa configurar nada — as flags são atualizadas em background sem polling.
+The SDK automatically opens an SSE connection during `init()`. You do not need to configure anything — flags are updated in the background without polling.
 
 ```ts
 const client = new CanaryGate('cg_key')
-await client.init() // abre SSE aqui
+await client.init() // opens SSE here
 
-// A partir deste momento, client.getFlag() sempre retorna
-// o valor mais recente sem precisar de refetch manual
+// From this point on, client.getFlag() always returns
+// the latest value without needing a manual refetch
 ```
 
-## Reagindo a mudanças (React)
+## Reacting to changes (React)
 
-Para que componentes React reflitam mudanças de flags em tempo real, você precisa de um mecanismo de reatividade. O SDK não inclui bindings React nativos, mas é simples de implementar:
+For React components to reflect real-time flag changes, you need a reactivity mechanism. The SDK does not include native React bindings, but it is straightforward to implement:
 
 ```tsx
 import { CanaryGate } from '@canarygate/js'
@@ -44,38 +44,38 @@ function useFlagEnabled(client: CanaryGate, key: string): boolean {
 ```
 
 <Callout type="info">
-  Uma abordagem mais eficiente é usar um event emitter. O SDK emite eventos
-  internamente — consulte a documentação avançada para escutar mudanças
-  diretamente via callback.
+  A more efficient approach is to use an event emitter. The SDK emits events
+  internally — see the advanced documentation to listen for changes
+  directly via callback.
 </Callout>
 
 ## `isStale()`
 
-Retorna `true` se o SDK não recebeu nenhuma atualização SSE dentro do `staleThreshold` (padrão: 60 segundos).
+Returns `true` if the SDK has not received any SSE update within the `staleThreshold` (default: 60 seconds).
 
 ```ts
 if (client.isStale()) {
-  // Dados podem estar desatualizados
-  // Considere recarregar ou mostrar aviso ao usuário
+  // Data may be stale
+  // Consider reloading or showing a warning to the user
 }
 ```
 
-Use `isStale()` para monitorar a saúde da conexão em dashboards críticos.
+Use `isStale()` to monitor connection health in critical dashboards.
 
 ## `getLastSyncAt()`
 
-Retorna a `Date` da última sincronização bem-sucedida, ou `null` se `init()` ainda não completou.
+Returns the `Date` of the last successful sync, or `null` if `init()` has not completed yet.
 
 ```ts
 const lastSync = client.getLastSyncAt()
 if (lastSync) {
-  console.log('Flags atualizadas há:', Date.now() - lastSync.getTime(), 'ms')
+  console.log('Flags updated', Date.now() - lastSync.getTime(), 'ms ago')
 }
 ```
 
 ## `disconnect()`
 
-Fecha a conexão SSE e libera os recursos. Sempre chame ao desmontar:
+Closes the SSE connection and releases resources. Always call this on teardown:
 
 ```ts
 // React:
@@ -87,4 +87,4 @@ useEffect(() => {
 process.on('SIGTERM', () => client.disconnect())
 ```
 
-Após `disconnect()`, `getFlag()` continua retornando os últimos valores conhecidos, mas não receberá mais atualizações.
+After `disconnect()`, `getFlag()` continues to return the last known values, but will no longer receive updates.

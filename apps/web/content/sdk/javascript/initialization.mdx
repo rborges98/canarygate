@@ -1,31 +1,31 @@
 ---
-title: Inicialização
-description: Como criar e configurar o cliente CanaryGate.
+title: Initialization
+description: How to create and configure the CanaryGate client.
 keywords:
   ['sdk initialization', 'client setup', 'init', 'api key', 'configuration']
 aliases: ['sdk setup', 'client setup', 'init']
 ---
 
-## Construtor
+## Constructor
 
 ```ts
 new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 ```
 
-### Parâmetros
+### Parameters
 
-| Parâmetro | Tipo                | Obrigatório | Descrição                                                  |
-| --------- | ------------------- | ----------- | ---------------------------------------------------------- |
-| `apiKey`  | `string`            | Sim         | API Key do environment. Criada em **Settings → API Keys**. |
-| `options` | `CanaryGateOptions` | Não         | Opções de configuração. Ver abaixo.                        |
+| Parameter | Type                | Required | Description                                                    |
+| --------- | ------------------- | -------- | -------------------------------------------------------------- |
+| `apiKey`  | `string`            | Yes      | Environment API Key. Created under **Settings → API Keys**.    |
+| `options` | `CanaryGateOptions` | No       | Configuration options. See below.                              |
 
 ### `CanaryGateOptions`
 
-| Opção            | Tipo     | Padrão                      | Descrição                                                             |
-| ---------------- | -------- | --------------------------- | --------------------------------------------------------------------- |
-| `userId`         | `string` | Auto-gerado                 | ID do usuário para hashing de rollout. Use um ID estável por usuário. |
-| `baseUrl`        | `string` | `https://api.canarygate.io` | URL base da API (útil para ambientes self-hosted ou proxies).         |
-| `staleThreshold` | `number` | `60000`                     | Tempo em ms sem sync para considerar stale.                           |
+| Option           | Type     | Default                     | Description                                                              |
+| ---------------- | -------- | --------------------------- | ------------------------------------------------------------------------ |
+| `userId`         | `string` | Auto-generated              | User ID for rollout hashing. Use a stable ID per user.                   |
+| `baseUrl`        | `string` | `https://api.canarygate.io` | API base URL (useful for self-hosted environments or proxies).           |
+| `staleThreshold` | `number` | `60000`                     | Time in ms without sync before considering stale.                        |
 
 ## `init()`
 
@@ -33,14 +33,14 @@ new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 await canary.init()
 ```
 
-Executa duas ações em sequência:
+Executes two actions in sequence:
 
-1. Faz um fetch HTTP para carregar todas as flags do environment
-2. Abre a conexão SSE para receber atualizações em tempo real
+1. Makes an HTTP fetch to load all flags for the environment
+2. Opens the SSE connection to receive real-time updates
 
-Sempre `await` o `init()` antes de ler flags — caso contrário, `getFlag()` pode retornar `undefined` antes da carga inicial completar.
+Always `await` `init()` before reading flags — otherwise, `getFlag()` may return `undefined` before the initial load completes.
 
-## Exemplos
+## Examples
 
 ### Browser (React)
 
@@ -85,7 +85,7 @@ export async function getCanaryGate() {
 }
 ```
 
-### Script one-shot (sem SSE)
+### One-shot script (no SSE)
 
 ```ts
 import { CanaryGate } from '@canarygate/js'
@@ -98,6 +98,6 @@ if (flag?.enabled) {
   await runMigration()
 }
 
-// Fecha a conexão SSE para o processo terminar
+// Close the SSE connection so the process can exit
 client.disconnect()
 ```

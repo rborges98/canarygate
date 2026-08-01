@@ -1,5 +1,7 @@
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify'
+import { Client } from '@upstash/qstash'
 import { requireSession } from '../plugins/require-session.ts'
+import { IS_PRODUCTION } from '../utils/env.ts'
 import {
   requireProjectAccess,
   requireProjectAdmin
@@ -21,6 +23,8 @@ import {
 } from './validation.ts'
 
 const BASE = '/orgs/:orgId/projects/:projectId/flags'
+
+const qstash = new Client({ token: process.env.QSTASH_TOKEN! })
 
 function getFlagMutationPreHandler(mutation: FlagMutation) {
   return getFlagPermissionRequirement(mutation) === 'project-admin'
@@ -77,6 +81,55 @@ async function resolveEnvironmentWithLog(
 
   const envs = await environmentsDb.getOrCreateEnvironments(projectId, log)
   return envs.find((e) => e.isDefault) ?? envs[0] ?? null
+}
+
+function calculateNextRolloutDate(
+  value: number,
+  unit: 'hours' | 'days' | 'weeks'
+) {
+  const multiplier =
+    unit === 'hours' ? 3600000 : unit === 'days' ? 86400000 : 604800000
+  return new Date(Date.now() + value * multiplier)
+}
+
+async function dispatchQStashJob(
+  type: 'schedule' | 'auto-rollout',
+  targetDate: string | Date,
+  jobData: {
+    flagId: string
+    projectId: string
+    environmentId: string
+    environmentSlug: string
+  },
+  log: FastifyBaseLogger
+) {
+  console.log('passa aq?')
+  const date = new Date(targetDate)
+  const delayInSeconds = Math.floor((date.getTime() - Date.now()) / 1000)
+  const callbackUrl = IS_PRODUCTION
+    ? process.env.API_URL
+    : process.env.NGROK_URL
+
+  if (delayInSeconds <= 0) return
+
+  try {
+    await qstash.publishJSON({
+      url: `${callbackUrl}/webhook`,
+      body: {
+        type,
+        jobData: {
+          ...jobData,
+          dueAt: date.toISOString()
+        }
+      },
+      delay: delayInSeconds
+    })
+  } catch (err) {
+    log.error(
+      { err, scope: 'qstash.publish', flagId: jobData.flagId, type },
+      'Failed to schedule QStash job'
+    )
+  }
 }
 
 export default async function flagsRoutes(app: FastifyInstance) {
@@ -266,6 +319,40 @@ export default async function flagsRoutes(app: FastifyInstance) {
             },
             request.log
           )
+
+          const jobIdentifiers = {
+            projectId,
+            flagId: flag.id,
+            environmentId: env.id,
+            environmentSlug: env.slug
+          }
+          console.log('kkjkasnaknakjnfjnajnsfkjnsfkjnkajnsfkj')
+
+          if (flagData.scheduleEnabled && flagData.scheduleDate) {
+            await dispatchQStashJob(
+              'schedule',
+              flagData.scheduleDate,
+              jobIdentifiers,
+              request.log
+            )
+          }
+
+          if (
+            flagData.autoRolloutEnabled &&
+            flagData.autoRolloutEveryValue &&
+            flagData.autoRolloutEveryUnit
+          ) {
+            const nextDate = calculateNextRolloutDate(
+              flagData.autoRolloutEveryValue,
+              flagData.autoRolloutEveryUnit
+            )
+            await dispatchQStashJob(
+              'auto-rollout',
+              nextDate,
+              jobIdentifiers,
+              request.log
+            )
+          }
         }
 
         reply.status(201)
@@ -419,6 +506,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
           request.body,
           request.log
         )
+
         if (!flag) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
@@ -445,6 +533,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
+
         await publishFlagEvent(
           projectId,
           env.id,
@@ -458,6 +547,41 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
+
+        // 🔥 INTEGRAÇÃO QSTASH (PUT)
+        const jobIdentifiers = {
+          projectId,
+          flagId: flag.id,
+          environmentId: env.id,
+          environmentSlug: env.slug
+        }
+
+        if (request.body.scheduleEnabled && request.body.scheduleDate) {
+          await dispatchQStashJob(
+            'schedule',
+            request.body.scheduleDate,
+            jobIdentifiers,
+            request.log
+          )
+        }
+
+        if (
+          request.body.autoRolloutEnabled &&
+          request.body.autoRolloutEveryValue &&
+          request.body.autoRolloutEveryUnit
+        ) {
+          const nextDate = calculateNextRolloutDate(
+            request.body.autoRolloutEveryValue,
+            request.body.autoRolloutEveryUnit
+          )
+          await dispatchQStashJob(
+            'auto-rollout',
+            nextDate,
+            jobIdentifiers,
+            request.log
+          )
+        }
+
         return flag
       } catch (error) {
         request.log.error(

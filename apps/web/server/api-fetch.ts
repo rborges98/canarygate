@@ -108,6 +108,7 @@ export async function apiFetch(
 
       return res
     } catch (err) {
+      console.log(err)
       if (isNextRedirectError(err)) {
         throw err
       }

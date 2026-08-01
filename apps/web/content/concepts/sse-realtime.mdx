@@ -1,68 +1,68 @@
 ---
-title: SSE e Tempo Real
-description: Como o CanaryGate entrega atualizações de flags em tempo real via Server-Sent Events.
+title: SSE and Real-time
+description: How CanaryGate delivers flag updates in real time via Server-Sent Events.
 keywords: ['sse', 'server-sent events', 'realtime', 'real-time', 'live updates']
 aliases: ['server-sent events', 'realtime', 'real-time']
 ---
 
-## Como funciona
+## How it works
 
-Quando você chama `canary.init()`, o SDK abre uma conexão **SSE (Server-Sent Events)** com a API do CanaryGate. Essa conexão permanece aberta e recebe eventos automaticamente quando flags mudam.
+When you call `canary.init()`, the SDK opens an **SSE (Server-Sent Events)** connection to the CanaryGate API. This connection stays open and automatically receives events when flags change.
 
 ```
-SDK → init() → HTTP fetch (carga inicial de flags)
+SDK → init() → HTTP fetch (initial flag load)
              ↓
-          SSE stream (conexão persistente)
+          SSE stream (persistent connection)
              ↓
-     mudança no painel → evento SSE → SDK atualiza cache local
+     dashboard change → SSE event → SDK updates local cache
 ```
 
-## Do painel ao cliente: latência
+## From dashboard to client: latency
 
-Quando você muda uma flag no painel:
+When you change a flag in the dashboard:
 
-1. A mudança é salva no banco de dados
-2. Um evento é publicado no Redis Pub/Sub
-3. O servidor SSE recebe o evento e transmite para todos os clientes conectados
-4. O SDK do cliente recebe e atualiza o cache local
+1. The change is saved in the database
+2. An event is published to Redis Pub/Sub
+3. The SSE server receives the event and broadcasts it to all connected clients
+4. The client SDK receives it and updates the local cache
 
-Latência típica: **< 500ms** da mudança no painel até o cliente receber.
+Typical latency: **< 500ms** from the dashboard change to the client receiving it.
 
-## Reconexão automática
+## Automatic reconnection
 
-O `EventSource` nativo reconecta automaticamente em caso de queda de rede. O SDK também detecta quando a conexão expira e reconecta — você não precisa gerenciar isso manualmente.
+The native `EventSource` reconnects automatically in case of a network drop. The SDK also detects when the connection expires and reconnects — you do not need to manage this manually.
 
-## Verificando se os dados estão frescos
+## Checking whether data is fresh
 
 ```ts
-// Verifica se os dados podem estar desatualizados
+// Check if data might be stale
 if (canary.isStale()) {
-  // A conexão SSE foi interrompida por mais de X tempo
-  // Você pode recarregar ou mostrar um aviso ao usuário
+  // The SSE connection has been interrupted for longer than X time
+  // You may want to reload or show a warning to the user
 }
 
-// Última sincronização bem-sucedida
+// Last successful sync
 const lastSync = canary.getLastSyncAt()
-console.log('Dados sincronizados em:', lastSync)
+console.log('Data synchronized at:', lastSync)
 ```
 
-## Comportamento offline
+## Offline behavior
 
-Se a conexão SSE for perdida:
+If the SSE connection is lost:
 
-- As flags retornam os **últimos valores conhecidos** (cache local)
-- `isStale()` retorna `true` após o timeout configurado
-- A reconexão é automática quando a rede voltar
+- Flags return the **last known values** (local cache)
+- `isStale()` returns `true` after the configured timeout
+- Reconnection is automatic when the network comes back
 
-## Desconectando
+## Disconnecting
 
 ```ts
-// Importante: desconecte quando não precisar mais do SDK
-// (ex: desmontagem de componente, shutdown do servidor)
+// Important: disconnect when you no longer need the SDK
+// (e.g., component unmount, server shutdown)
 canary.disconnect()
 ```
 
 <Callout type="info">
-  Em ambientes de teste ou scripts one-shot, chame `disconnect()` logo após
-  `init()` para evitar que o processo fique aberto esperando eventos SSE.
+  In test environments or one-shot scripts, call `disconnect()` right after
+  `init()` to prevent the process from staying open waiting for SSE events.
 </Callout>

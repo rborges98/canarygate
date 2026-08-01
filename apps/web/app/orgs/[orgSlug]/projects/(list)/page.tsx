@@ -34,9 +34,24 @@ export default async function OrgProjectsPage({ params }: Props) {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <ProjectCard key={project.projectId} orgSlug={orgSlug} {...project} />
-        ))}
+        {projects.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-20 text-center col-span-full">
+            <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">No projects yet</p>
+            <p className="text-cg-neutral-500 font-sans text-[12px] leading-relaxed max-w-xs">
+              Projects organize your feature flags. Create your first project to get started.
+            </p>
+            <Link
+              href={`/orgs/${orgSlug}/projects/new`}
+              className="bg-cg-indigo-300 hover:bg-cg-indigo-400 mt-1 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-colors"
+            >
+              + Create project
+            </Link>
+          </div>
+        ) : (
+          projects.map((project) => (
+            <ProjectCard key={project.projectId} orgSlug={orgSlug} {...project} />
+          ))
+        )}
       </div>
     </div>
   )

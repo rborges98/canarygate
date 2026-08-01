@@ -1,6 +1,6 @@
 ---
-title: Avaliando Flags
-description: Como ler o estado de flags usando o SDK.
+title: Evaluating Flags
+description: How to read flag states using the SDK.
 keywords:
   ['evaluate flags', 'getFlag', 'getFlags', 'read flags', 'flag evaluation']
 aliases: ['getFlag', 'getFlags', 'read flags']
@@ -8,27 +8,27 @@ aliases: ['getFlag', 'getFlags', 'read flags']
 
 ## `getFlag(key)`
 
-Retorna os dados de uma flag específica, ou `undefined` se a flag não existir.
+Returns the data for a specific flag, or `undefined` if the flag does not exist.
 
 ```ts
 const flag = canary.getFlag('new-checkout')
 // FlagData | undefined
 ```
 
-### Verificação segura com nullish coalescing
+### Safe check with nullish coalescing
 
 ```ts
 const isEnabled = canary.getFlag('new-checkout')?.enabled ?? false
 ```
 
 <Callout type="warning">
-  O SDK não expõe um método `isEnabled()`. Use sempre o padrão
+  The SDK does not expose an `isEnabled()` method. Always use the pattern
   `getFlag(key)?.enabled ?? false`.
 </Callout>
 
 ## `getFlags()`
 
-Retorna todas as flags do environment como array.
+Returns all flags for the environment as an array.
 
 ```ts
 const flags = canary.getFlags()
@@ -39,7 +39,7 @@ for (const flag of flags) {
 }
 ```
 
-## Exemplos por tipo de flag
+## Examples by flag type
 
 ### Boolean flag
 
@@ -56,36 +56,36 @@ if (maintenance?.enabled) {
 ```ts
 const newDashboard = canary.getFlag('new-dashboard')
 
-// flag.enabled é true ou false baseado no userId e percentage
+// flag.enabled is true or false based on userId and percentage
 if (newDashboard?.enabled) {
   return <NewDashboard />
 }
 
-// Para ver a porcentagem configurada:
+// To see the configured percentage:
 if (newDashboard?.type === 'rollout') {
-  console.log(`${newDashboard.percentage}% dos usuários verão esta feature`)
+  console.log(`${newDashboard.percentage}% of users will see this feature`)
 }
 ```
 
-## Antes do `init()`
+## Before `init()`
 
-Se você chamar `getFlag()` antes de `await init()`, a flag retornará `undefined` (o cache local ainda está vazio).
+If you call `getFlag()` before `await init()`, the flag will return `undefined` (the local cache is still empty).
 
 ```ts
 const client = new CanaryGate('cg_key')
-// Não faça isso:
+// Do not do this:
 client.getFlag('feature') // undefined!
 
-// Faça isso:
+// Do this instead:
 await client.init()
 client.getFlag('feature') // FlagData | undefined ✓
 ```
 
-## Flags que não existem
+## Flags that do not exist
 
-Se a flag não existir no environment, `getFlag()` retorna `undefined`. Sempre use `?? false` como fallback para não quebrar o fluxo da aplicação:
+If the flag does not exist in the environment, `getFlag()` returns `undefined`. Always use `?? false` as a fallback to avoid breaking the application flow:
 
 ```ts
-// Se 'new-feature' não existe no environment, isEnabled será false
+// If 'new-feature' does not exist in the environment, isEnabled will be false
 const isEnabled = canary.getFlag('new-feature')?.enabled ?? false
 ```

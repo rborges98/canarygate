@@ -47,7 +47,9 @@ describe('apiFetch', () => {
   })
 
   it('returns response on success', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('{"ok":true}', { status: 200 }))
+    fetchMock.mockResolvedValueOnce(
+      new Response('{"ok":true}', { status: 200 })
+    )
     const res = await apiFetch('http://api.example.com/test')
     expect(res.status).toBe(200)
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -62,7 +64,10 @@ describe('apiFetch', () => {
     } as never)
     fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }))
     await apiFetch('http://api.example.com/test')
-    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<
+      string,
+      string
+    >
     expect(calledHeaders?.cookie).toBe('session=my-cookie')
   })
 
@@ -93,7 +98,6 @@ describe('apiFetch', () => {
       .mockRejectedValueOnce(networkError)
       .mockRejectedValueOnce(networkError)
       .mockRejectedValueOnce(networkError)
-    // Attach rejection handler immediately to prevent unhandled rejection warning
     const rejectedPromise = expect(
       apiFetch('http://api.example.com/test')
     ).rejects.toThrow(TypeError)
@@ -104,12 +108,16 @@ describe('apiFetch', () => {
 
   it('does not retry on non-retryable errors', async () => {
     fetchMock.mockRejectedValueOnce(new SyntaxError('Unexpected token'))
-    await expect(apiFetch('http://api.example.com/test')).rejects.toThrow(SyntaxError)
+    await expect(apiFetch('http://api.example.com/test')).rejects.toThrow(
+      SyntaxError
+    )
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it('redirects to /login on 401', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('Unauthorized', { status: 401 }))
+    fetchMock.mockResolvedValueOnce(
+      new Response('Unauthorized', { status: 401 })
+    )
     await expect(apiFetch('http://api.example.com/test')).rejects.toThrow()
     expect(vi.mocked(redirect)).toHaveBeenCalledWith('/login')
   })
@@ -117,9 +125,15 @@ describe('apiFetch', () => {
   it('merges custom headers with forwarded cookie', async () => {
     fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }))
     await apiFetch('http://api.example.com/test', {
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer token' }
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer token'
+      }
     })
-    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<
+      string,
+      string
+    >
     expect(calledHeaders?.['Content-Type']).toBe('application/json')
     expect(calledHeaders?.['Authorization']).toBe('Bearer token')
   })
@@ -130,7 +144,10 @@ describe('apiFetch', () => {
     } as never)
     fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }))
     await apiFetch('http://api.example.com/test')
-    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+    const calledHeaders = fetchMock.mock.calls[0][1]?.headers as Record<
+      string,
+      string
+    >
     expect(calledHeaders?.cookie).toBeUndefined()
   })
 })

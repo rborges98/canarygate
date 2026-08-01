@@ -25,12 +25,18 @@ describe('subscribe', () => {
     for (let i = 0; i < 10; i++) {
       const res = createMockResponse()
       responses.push(res)
-      const result = subscribe(projectId, res, { ip, apiKey: `key-ip-limit-${i}` })
+      const result = subscribe(projectId, res, {
+        ip,
+        apiKey: `key-ip-limit-${i}`
+      })
       expect(result.ok).toBe(true)
     }
 
     const extra = createMockResponse()
-    const result = subscribe(projectId, extra, { ip, apiKey: 'key-ip-limit-extra' })
+    const result = subscribe(projectId, extra, {
+      ip,
+      apiKey: 'key-ip-limit-extra'
+    })
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.message).toMatch(/too many/i)
@@ -73,7 +79,6 @@ describe('unsubscribe', () => {
     subscribe(projectId, res, { ip: '1.2.3.4', apiKey: 'key-unsub-1' })
     unsubscribe(projectId, res)
 
-    // after unsubscribing, emitting should not call write
     emitFlagEvent(projectId, 'flag-updated', { key: 'my-flag' })
     expect(res.write).not.toHaveBeenCalled()
   })
@@ -81,7 +86,6 @@ describe('unsubscribe', () => {
   it('does nothing when subscriber not found', () => {
     const projectId = `project-${crypto.randomUUID()}`
     const res = createMockResponse()
-    // should not throw
     expect(() => unsubscribe(projectId, res)).not.toThrow()
   })
 
@@ -91,7 +95,6 @@ describe('unsubscribe', () => {
     subscribe(projectId, res, { ip: '1.2.3.4', apiKey: 'key-cleanup' })
     unsubscribe(projectId, res)
 
-    // emitting to a removed project should be a no-op
     expect(() => emitFlagEvent(projectId, 'flag-updated', {})).not.toThrow()
     expect(res.write).not.toHaveBeenCalled()
   })
@@ -135,7 +138,9 @@ describe('emitFlagEvent', () => {
 
   it('does nothing when no subscribers exist for projectId', () => {
     const projectId = `project-${crypto.randomUUID()}`
-    expect(() => emitFlagEvent(projectId, 'flag-updated', { key: 'ghost' })).not.toThrow()
+    expect(() =>
+      emitFlagEvent(projectId, 'flag-updated', { key: 'ghost' })
+    ).not.toThrow()
   })
 
   it('formats payload as SSE with event and data fields', () => {
