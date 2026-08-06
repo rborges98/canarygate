@@ -48,6 +48,11 @@ function validateFlagConfigPayload(body: {
       return 'scheduleDate and scheduleAction are required when scheduleEnabled is true'
     }
 
+    const scheduleDate = new Date(body.scheduleDate)
+    if (isNaN(scheduleDate.getTime()) || scheduleDate <= new Date()) {
+      return 'scheduleDate must be a future date'
+    }
+
     if (
       body.scheduleAction === 'rollout' &&
       typeof body.scheduleRolloutPercent !== 'number'
@@ -103,7 +108,6 @@ async function dispatchQStashJob(
   },
   log: FastifyBaseLogger
 ) {
-  console.log('passa aq?')
   const date = new Date(targetDate)
   const delayInSeconds = Math.floor((date.getTime() - Date.now()) / 1000)
   const callbackUrl = IS_PRODUCTION
@@ -113,7 +117,7 @@ async function dispatchQStashJob(
   if (delayInSeconds <= 0) return
 
   try {
-    await qstash.publishJSON({
+    const res = await qstash.publishJSON({
       url: `${callbackUrl}/webhook`,
       body: {
         type,
@@ -124,6 +128,8 @@ async function dispatchQStashJob(
       },
       delay: delayInSeconds
     })
+
+    console.log(res.messageId + 'from ' + callbackUrl)
   } catch (err) {
     log.error(
       { err, scope: 'qstash.publish', flagId: jobData.flagId, type },
