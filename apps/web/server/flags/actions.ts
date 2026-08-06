@@ -111,6 +111,7 @@ export async function updateFlag(
 ) {
   const parsed = updateFlagSchema.safeParse(data)
   if (!parsed.success) {
+    console.log('deu ruim no parsed')
     return false
   }
 
