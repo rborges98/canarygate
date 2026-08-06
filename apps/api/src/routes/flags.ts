@@ -488,6 +488,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
       }
     },
     handler: async (request, reply) => {
+      console.log('chegou na api')
       const { projectId, flagId } = request.params
       const validationError = validateFlagConfigPayload(request.body)
       if (validationError) {
@@ -513,6 +514,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!before) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
+        console.log('ate aqui tudo bem')
 
         const flag = await flagsDb.updateFlag(
           flagId,
@@ -525,7 +527,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!flag) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
-
+        console.log('atualizou a flag')
         await historyDb.insertHistory(
           {
             projectId,
@@ -548,6 +550,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
+        console.log('atualizou o historico')
 
         await publishFlagEvent(
           projectId,
@@ -562,6 +565,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
+        console.log('publicou o evento')
 
         const jobIdentifiers = {
           projectId,
@@ -596,6 +600,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
             request.log
           )
         }
+        console.log('deu tudo certo')
 
         return flag
       } catch (error) {

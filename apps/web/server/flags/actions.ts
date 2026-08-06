@@ -128,6 +128,7 @@ export async function updateFlag(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed.data)
     })
+    console.log('res', res)
     return res.ok
   } catch (error) {
     logServerError('updateFlag falhou', error, {
