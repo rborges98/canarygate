@@ -114,6 +114,15 @@ async function dispatchQStashJob(
     ? process.env.API_URL
     : process.env.NGROK_URL
 
+  console.log(
+    'callbackUrl',
+    callbackUrl,
+    'delay',
+    delayInSeconds,
+    'qstashtoken',
+    process.env.QSTASH_TOKEN
+  )
+
   if (delayInSeconds <= 0) return
 
   try {
@@ -332,9 +341,9 @@ export default async function flagsRoutes(app: FastifyInstance) {
             environmentId: env.id,
             environmentSlug: env.slug
           }
-          console.log('kkjkasnaknakjnfjnajnsfkjnsfkjnkajnsfkj')
 
           if (flagData.scheduleEnabled && flagData.scheduleDate) {
+            console.log('=======POST=====')
             await dispatchQStashJob(
               'schedule',
               flagData.scheduleDate,
@@ -554,7 +563,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
           request.log
         )
 
-        // 🔥 INTEGRAÇÃO QSTASH (PUT)
         const jobIdentifiers = {
           projectId,
           flagId: flag.id,
@@ -563,6 +571,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         }
 
         if (request.body.scheduleEnabled && request.body.scheduleDate) {
+          console.log('========PUT=========')
           await dispatchQStashJob(
             'schedule',
             request.body.scheduleDate,
