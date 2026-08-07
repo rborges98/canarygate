@@ -491,9 +491,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
       console.log('chegou na api')
       const { projectId, flagId } = request.params
       const validationError = validateFlagConfigPayload(request.body)
+      console.log('payload', request.body)
       if (validationError) {
         return reply.status(400).send({ message: validationError })
       }
+      console.log('validou certinho o payload')
 
       try {
         const env = await resolveEnvironmentWithLog(
@@ -504,7 +506,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!env) {
           return reply.status(404).send({ message: 'Environment not found' })
         }
-
+        console.log('passou pelo check do enviroment')
         const before = await flagsDb.getFlagById(
           flagId,
           projectId,
