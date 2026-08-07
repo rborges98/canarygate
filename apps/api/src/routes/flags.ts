@@ -491,6 +491,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
       console.log('chegou na api')
       const { projectId, flagId } = request.params
       const validationError = validateFlagConfigPayload(request.body)
+      console.log('validationError', validationError)
       console.log('payload', request.body)
       if (validationError) {
         return reply.status(400).send({ message: validationError })
@@ -503,10 +504,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
           request.query.environmentSlug,
           request.log
         )
+
         if (!env) {
           return reply.status(404).send({ message: 'Environment not found' })
         }
-        console.log('passou pelo check do enviroment')
+
         const before = await flagsDb.getFlagById(
           flagId,
           projectId,
@@ -516,7 +518,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!before) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
-        console.log('ate aqui tudo bem')
 
         const flag = await flagsDb.updateFlag(
           flagId,
@@ -529,7 +530,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!flag) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
-        console.log('atualizou a flag')
+
         await historyDb.insertHistory(
           {
             projectId,
@@ -552,7 +553,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        console.log('atualizou o historico')
 
         await publishFlagEvent(
           projectId,
@@ -567,7 +567,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
           },
           request.log
         )
-        console.log('publicou o evento')
 
         const jobIdentifiers = {
           projectId,
@@ -577,7 +576,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
         }
 
         if (request.body.scheduleEnabled && request.body.scheduleDate) {
-          console.log('========PUT=========')
           await dispatchQStashJob(
             'schedule',
             request.body.scheduleDate,
@@ -602,7 +600,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
             request.log
           )
         }
-        console.log('deu tudo certo')
 
         return flag
       } catch (error) {
