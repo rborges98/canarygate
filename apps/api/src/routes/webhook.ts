@@ -25,11 +25,8 @@ type QStashWebhookBody =
   | { type: 'schedule'; jobData: ScheduleJobData }
   | { type: 'auto-rollout'; jobData: AutoRolloutJobData }
 
-// Helper para encapsular a chamada de agendamento do QStash
-
 export async function webhookRoutes(app: FastifyInstance) {
   app.post<{ Body: QStashWebhookBody }>('/webhook', async (request, reply) => {
-    // 1. Validar a assinatura do QStash por segurança
     const signature = request.headers['upstash-signature'] as string
     const isValid = await receiver
       .verify({
@@ -49,9 +46,6 @@ export async function webhookRoutes(app: FastifyInstance) {
     const { type, jobData } = request.body
     const log = request.log
 
-    // ----------------------------------------------------------------
-    // CENÁRIO 1: SCHEDULE JOB
-    // ----------------------------------------------------------------
     if (type === 'schedule') {
       const state = await getWorkerFlagState(jobData, log)
 
@@ -189,9 +183,6 @@ export async function webhookRoutes(app: FastifyInstance) {
       return reply.status(200).send({ success: true })
     }
 
-    // ----------------------------------------------------------------
-    // CENÁRIO 2: AUTO-ROLLOUT JOB
-    // ----------------------------------------------------------------
     if (type === 'auto-rollout') {
       const state = await getWorkerFlagState(jobData, log)
 
@@ -326,7 +317,6 @@ export async function webhookRoutes(app: FastifyInstance) {
         'Processed auto-rollout job'
       )
 
-      // 🔥 Lógica da esteira: Se NÃO chegou no limite máximo, agenda dinamicamente o próximo step
       if (!reachedMax && nextAutoRolloutAt) {
         await scheduleNextAutoRollout(nextAutoRolloutAt, jobData, log)
       }

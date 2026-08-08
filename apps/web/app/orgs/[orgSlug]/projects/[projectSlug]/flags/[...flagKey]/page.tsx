@@ -62,8 +62,6 @@ export default async function EditFlagPage({ params, searchParams }: Props) {
     scheduleRolloutPercent: flag.scheduleRolloutPercent ?? 0
   }
 
-  console.log(flag.scheduleDate, initialData.scheduleDate)
-
   return (
     <FlagForm
       mode="edit"

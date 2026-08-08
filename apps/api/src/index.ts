@@ -17,7 +17,6 @@ async function shutdown(signal: NodeJS.Signals) {
   shuttingDown = true
   app.log.info({ signal }, 'Shutting down API')
 
-  // Encerra apenas o que sobrou: o PubSub e o servidor Fastify
   await Promise.allSettled([stopFlagEventsPubSub(), app.close()])
 
   process.exit(0)

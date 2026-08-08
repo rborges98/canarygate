@@ -82,7 +82,6 @@ export async function getOrgBySlug(orgSlug: string): Promise<OrgDetail | null> {
     cache: 'no-store'
   })
 
-  console.log(res)
   if (!res.ok) {
     if (res.status === 404) {
       return null
@@ -102,7 +101,6 @@ export async function getOrgBySlugOrName(
   orgSlug: string
 ): Promise<OrgDetail | null> {
   const org = await getOrgBySlug(orgSlug)
-  console.log(' e aqui?' + orgSlug)
   if (org) {
     return org
   }

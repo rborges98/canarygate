@@ -31,7 +31,7 @@ export function ShimmerBadge({ label, className }: ShimmerBadgeProps) {
           transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.span
-          className="from-cg-yellow-100 to-cg-yellow-100 bg-size-[200%_100%] bg-linear-to-r via-white bg-clip-text font-mono text-[11px] font-semibold tracking-wide text-transparent uppercase"
+          className="from-cg-yellow-100 to-cg-yellow-100 bg-linear-to-r via-white bg-size-[200%_100%] bg-clip-text font-mono text-[11px] font-semibold tracking-wide text-transparent uppercase"
           animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
         >

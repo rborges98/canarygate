@@ -114,15 +114,6 @@ async function dispatchQStashJob(
     ? process.env.API_URL
     : process.env.NGROK_URL
 
-  console.log(
-    'callbackUrl',
-    callbackUrl,
-    'delay',
-    delayInSeconds,
-    'qstashtoken',
-    process.env.QSTASH_TOKEN
-  )
-
   if (delayInSeconds <= 0) return
 
   try {
@@ -137,8 +128,6 @@ async function dispatchQStashJob(
       },
       delay: delayInSeconds
     })
-
-    console.log(res.messageId + 'from ' + callbackUrl)
   } catch (err) {
     log.error(
       { err, scope: 'qstash.publish', flagId: jobData.flagId, type },
@@ -343,7 +332,6 @@ export default async function flagsRoutes(app: FastifyInstance) {
           }
 
           if (flagData.scheduleEnabled && flagData.scheduleDate) {
-            console.log('=======POST=====')
             await dispatchQStashJob(
               'schedule',
               flagData.scheduleDate,
@@ -488,15 +476,12 @@ export default async function flagsRoutes(app: FastifyInstance) {
       }
     },
     handler: async (request, reply) => {
-      console.log('chegou na api')
       const { projectId, flagId } = request.params
+
       const validationError = validateFlagConfigPayload(request.body)
-      console.log('validationError', validationError)
-      console.log('payload', request.body)
       if (validationError) {
         return reply.status(400).send({ message: validationError })
       }
-      console.log('validou certinho o payload')
 
       try {
         const env = await resolveEnvironmentWithLog(
