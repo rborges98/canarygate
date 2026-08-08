@@ -37,14 +37,14 @@ export function MemberDetail({
   }
 
   const saveEdit = async (data: ProjectFormState) => {
-    const ok = await updateProjectAccess(
+    const res = await updateProjectAccess(
       orgId,
       member.id,
       data.selectedProjectId,
       data.isAdmin ? 'ADMIN' : 'MEMBER'
     )
-    if (!ok) {
-      toast.error('Failed to update project access')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to update project access')
       return
     }
     setProjects((prev) =>
@@ -58,9 +58,9 @@ export function MemberDetail({
   }
 
   const removeProject = async (projectId: string) => {
-    const ok = await removeProjectAccess(orgId, member.id, projectId)
-    if (!ok) {
-      toast.error('Failed to remove project access')
+    const res = await removeProjectAccess(orgId, member.id, projectId)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to remove project access')
       return
     }
     setProjects((prev) => prev.filter((p) => p.projectId !== projectId))
@@ -72,12 +72,12 @@ export function MemberDetail({
   }
 
   const saveAdd = async (data: ProjectFormState) => {
-    const ok = await addProjectAccess(orgId, member.id, {
+    const res = await addProjectAccess(orgId, member.id, {
       projectId: data.selectedProjectId,
       role: data.isAdmin ? 'ADMIN' : 'MEMBER'
     })
-    if (!ok) {
-      toast.error('Failed to add project access')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to add project access')
       return
     }
     setProjects((prev) => [

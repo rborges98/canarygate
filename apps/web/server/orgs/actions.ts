@@ -7,6 +7,15 @@ import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
+async function getErrorMessage(res: Response) {
+  try {
+    const body = (await res.json()) as { message?: string }
+    return body.message
+  } catch {
+    return undefined
+  }
+}
+
 const orgSchema = z.object({
   name: z.string().min(1).max(100),
   slug: z
@@ -16,10 +25,17 @@ const orgSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 })
 
-export async function createOrg(data: { name: string; slug: string }) {
+type OrgResult =
+  | { ok: true; data: { id: string; name: string; slug: string } }
+  | { ok: false; message?: string }
+
+export async function createOrg(data: {
+  name: string
+  slug: string
+}): Promise<OrgResult> {
   const parsed = orgSchema.safeParse(data)
   if (!parsed.success) {
-    return null
+    return { ok: false }
   }
 
   try {
@@ -29,25 +45,25 @@ export async function createOrg(data: { name: string; slug: string }) {
       body: JSON.stringify(parsed.data)
     })
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    const org = (await res.json()) as { id: string; name: string; slug: string }
+    const data = (await res.json()) as { id: string; name: string; slug: string }
     revalidatePath('/orgs')
-    return org
+    return { ok: true, data }
   } catch (error) {
     logServerError('createOrg falhou', error)
-    return null
+    return { ok: false }
   }
 }
 
 export async function updateOrg(
   orgId: string,
   data: { name: string; slug: string }
-) {
+): Promise<OrgResult> {
   const parsed = orgSchema.safeParse(data)
   if (!parsed.success) {
-    return null
+    return { ok: false }
   }
 
   try {
@@ -57,15 +73,15 @@ export async function updateOrg(
       body: JSON.stringify(parsed.data)
     })
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    const org = (await res.json()) as { id: string; name: string; slug: string }
+    const data = (await res.json()) as { id: string; name: string; slug: string }
     revalidatePath('/orgs')
-    return org
+    return { ok: true, data }
   } catch (error) {
     logServerError('updateOrg falhou', error, { orgId })
-    return null
+    return { ok: false }
   }
 }
 
@@ -74,12 +90,13 @@ export async function deleteOrg(orgId: string) {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}`, {
       method: 'DELETE'
     })
-    if (res.ok) {
-      revalidatePath('/orgs')
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
     }
-    return res.ok
+    revalidatePath('/orgs')
+    return { ok: true }
   } catch (error) {
     logServerError('deleteOrg falhou', error, { orgId })
-    return false
+    return { ok: false }
   }
 }

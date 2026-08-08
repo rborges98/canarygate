@@ -17,6 +17,14 @@ import { ENVIRONMENTS } from '@/shared/environments'
 
 export type { FlagFormData } from './shared'
 
+function toIsoScheduleDate(scheduleDate: string) {
+  const date = new Date(scheduleDate)
+  if (isNaN(date.getTime())) {
+    return scheduleDate
+  }
+  return date.toISOString()
+}
+
 export function FlagForm({
   mode,
   orgId,
@@ -74,7 +82,9 @@ export function FlagForm({
             enabled: data.defaultEnabled,
             rolloutPercent: data.rolloutPercent,
             scheduleEnabled: data.scheduleEnabled,
-            scheduleDate: data.scheduleEnabled ? data.scheduleDate : null,
+            scheduleDate: data.scheduleEnabled
+              ? toIsoScheduleDate(data.scheduleDate)
+              : null,
             scheduleAction: data.scheduleAction,
             scheduleRolloutPercent: data.scheduleRolloutPercent,
             autoRolloutEnabled: data.autoRolloutEnabled,
@@ -85,8 +95,8 @@ export function FlagForm({
           },
           environmentSlug
         )
-        if (!res) {
-          toast.error('Something went wrong')
+        if (!res.ok) {
+          toast.error(res.message ?? 'Something went wrong')
           return
         }
         toast.success('Flag saved')
@@ -106,7 +116,9 @@ export function FlagForm({
           enabled: data.defaultEnabled,
           rolloutPercent: data.rolloutPercent,
           scheduleEnabled: data.scheduleEnabled,
-          scheduleDate: data.scheduleEnabled ? data.scheduleDate : null,
+          scheduleDate: data.scheduleEnabled
+            ? toIsoScheduleDate(data.scheduleDate)
+            : null,
           scheduleAction: data.scheduleAction,
           scheduleRolloutPercent: data.scheduleRolloutPercent,
           autoRolloutEnabled: data.autoRolloutEnabled,
@@ -116,8 +128,8 @@ export function FlagForm({
           autoRolloutUntilMax: data.untilMax,
           environments: targetEnvs
         })
-        if (!res) {
-          toast.error('Something went wrong')
+        if (!res.ok) {
+          toast.error(res.message ?? 'Something went wrong')
           return
         }
         toast.success('Flag created')
@@ -134,9 +146,9 @@ export function FlagForm({
       return false
     }
 
-    const ok = await deleteFlag(orgId, projectId, flagId)
-    if (!ok) {
-      toast.error('Failed to delete flag')
+    const res = await deleteFlag(orgId, projectId, flagId)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to delete flag')
       return false
     }
     router.push(flagsHref)

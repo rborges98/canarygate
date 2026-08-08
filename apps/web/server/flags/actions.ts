@@ -6,6 +6,15 @@ import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
+async function getErrorMessage(res: Response) {
+  try {
+    const body = (await res.json()) as { message?: string }
+    return body.message
+  } catch {
+    return undefined
+  }
+}
+
 const createFlagSchema = z.object({
   name: z.string().min(1).max(100),
   key: z.string().min(1).max(100),
@@ -42,6 +51,10 @@ const updateFlagSchema = z.object({
   autoRolloutUntilMax: z.number().min(1).max(100).optional()
 })
 
+type CreateFlagResult =
+  | { ok: true; data: { id: string } }
+  | { ok: false; message?: string }
+
 export async function createFlag(
   orgId: string,
   projectId: string,
@@ -63,10 +76,10 @@ export async function createFlag(
     autoRolloutUntilMax?: number
     environments?: string[]
   }
-) {
+): Promise<CreateFlagResult> {
   const parsed = createFlagSchema.safeParse(data)
   if (!parsed.success) {
-    return null
+    return { ok: false }
   }
 
   try {
@@ -77,13 +90,14 @@ export async function createFlag(
       body: JSON.stringify(parsed.data)
     })
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    return res.json() as Promise<{ id: string }>
+    const data = (await res.json()) as { id: string }
+    return { ok: true, data }
   } catch (error) {
     logServerError('createFlag falhou', error, { orgId, projectId })
-    return null
+    return { ok: false }
   }
 }
 
@@ -111,8 +125,7 @@ export async function updateFlag(
 ) {
   const parsed = updateFlagSchema.safeParse(data)
   if (!parsed.success) {
-    console.log('deu ruim no parsed')
-    return false
+    return { ok: false }
   }
 
   try {
@@ -128,8 +141,10 @@ export async function updateFlag(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed.data)
     })
-    console.log('res', res)
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('updateFlag falhou', error, {
       orgId,
@@ -137,7 +152,7 @@ export async function updateFlag(
       flagId,
       environmentSlug
     })
-    return false
+    return { ok: false }
   }
 }
 
@@ -151,9 +166,12 @@ export async function deleteFlag(
       `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`,
       { method: 'DELETE' }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('deleteFlag falhou', error, { orgId, projectId, flagId })
-    return false
+    return { ok: false }
   }
 }

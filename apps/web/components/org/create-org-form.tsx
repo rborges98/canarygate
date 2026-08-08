@@ -43,12 +43,12 @@ export function CreateOrgForm({ user }: CreateOrgFormProps) {
 
   async function onSubmit({ name }: FormValues) {
     const finalSlug = slugTouched ? watchedSlug : deriveSlug(name)
-    const org = await createOrg({ name: name.trim(), slug: finalSlug })
-    if (org) {
-      router.push(`/orgs/${org.slug}/projects`)
-    } else {
-      toast.error('Failed to create organization')
+    const result = await createOrg({ name: name.trim(), slug: finalSlug })
+    if (!result.ok) {
+      toast.error(result.message ?? 'Failed to create organization')
+      return
     }
+    router.push(`/orgs/${result.data.slug}/projects`)
   }
 
   return (

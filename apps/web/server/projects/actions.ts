@@ -6,6 +6,15 @@ import { apiFetch } from '../api-fetch'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
+async function getErrorMessage(res: Response) {
+  try {
+    const body = (await res.json()) as { message?: string }
+    return body.message
+  } catch {
+    return undefined
+  }
+}
+
 const projectSchema = z.object({
   name: z.string().min(1).max(100),
   slug: z
@@ -19,13 +28,25 @@ const webhookSchema = z.object({
   webhookUrl: z.string().url().startsWith('https://').nullable()
 })
 
+type ProjectResult =
+  | { ok: true; data: { id: string; name: string; slug: string } }
+  | { ok: false; message?: string }
+
+type ToggleProjectResult =
+  | { ok: true; data: { active: boolean } }
+  | { ok: false; message?: string }
+
+type RegenerateKeyResult =
+  | { ok: true; data: string }
+  | { ok: false; message?: string }
+
 export async function createProject(
   orgId: string,
   data: { name: string; slug: string }
-) {
+): Promise<ProjectResult> {
   const parsed = projectSchema.safeParse(data)
   if (!parsed.success) {
-    return null
+    return { ok: false }
   }
 
   try {
@@ -35,13 +56,14 @@ export async function createProject(
       body: JSON.stringify(parsed.data)
     })
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    return res.json() as Promise<{ id: string; name: string; slug: string }>
+    const data = (await res.json()) as { id: string; name: string; slug: string }
+    return { ok: true, data }
   } catch (error) {
     logServerError('createProject falhou', error, { orgId })
-    return null
+    return { ok: false }
   }
 }
 
@@ -52,7 +74,7 @@ export async function updateProject(
 ) {
   const parsed = projectSchema.safeParse(data)
   if (!parsed.success) {
-    return false
+    return { ok: false }
   }
 
   try {
@@ -64,10 +86,13 @@ export async function updateProject(
         body: JSON.stringify(parsed.data)
       }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('updateProject falhou', error, { orgId, projectId })
-    return false
+    return { ok: false }
   }
 }
 
@@ -77,46 +102,55 @@ export async function deleteProject(orgId: string, projectId: string) {
       `${API_BASE}/orgs/${orgId}/projects/${projectId}`,
       { method: 'DELETE' }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('deleteProject falhou', error, { orgId, projectId })
-    return false
+    return { ok: false }
   }
 }
 
-export async function toggleProjectActive(orgId: string, projectId: string) {
+export async function toggleProjectActive(
+  orgId: string,
+  projectId: string
+): Promise<ToggleProjectResult> {
   try {
     const res = await apiFetch(
       `${API_BASE}/orgs/${orgId}/projects/${projectId}/toggle`,
       { method: 'PATCH' }
     )
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    const data: { active: boolean } = await res.json()
-    return { active: data.active }
+    const data = (await res.json()) as { active: boolean }
+    return { ok: true, data }
   } catch (error) {
     logServerError('toggleProjectActive falhou', error, { orgId, projectId })
-    return null
+    return { ok: false }
   }
 }
 
-export async function regenerateApiKey(orgId: string, projectId: string) {
+export async function regenerateApiKey(
+  orgId: string,
+  projectId: string
+): Promise<RegenerateKeyResult> {
   try {
     const res = await apiFetch(
       `${API_BASE}/orgs/${orgId}/projects/${projectId}/api-key/regenerate`,
       { method: 'POST' }
     )
     if (!res.ok) {
-      return null
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
-    const data: { apiKey: string } = await res.json()
-    return data.apiKey
+    const data = (await res.json()) as { apiKey: string }
+    return { ok: true, data: data.apiKey }
   } catch (error) {
     logServerError('regenerateApiKey falhou', error, { orgId, projectId })
-    return null
+    return { ok: false }
   }
 }
 
@@ -127,7 +161,7 @@ export async function updateWebhook(
 ) {
   const parsed = webhookSchema.safeParse({ webhookUrl })
   if (!parsed.success) {
-    return false
+    return { ok: false }
   }
 
   try {
@@ -139,9 +173,12 @@ export async function updateWebhook(
         body: JSON.stringify(parsed.data)
       }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('updateWebhook falhou', error, { orgId, projectId })
-    return false
+    return { ok: false }
   }
 }

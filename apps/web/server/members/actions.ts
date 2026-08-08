@@ -10,6 +10,15 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+async function getErrorMessage(res: Response) {
+  try {
+    const body = (await res.json()) as { message?: string }
+    return body.message
+  } catch {
+    return undefined
+  }
+}
+
 const inviteSchema = z.object({
   email: z.string().email().max(255),
   orgRole: z.enum(['OWNER', 'MEMBER']),
@@ -28,10 +37,13 @@ export async function makeOwner(orgId: string, userId: string) {
       `${API_BASE}/orgs/${orgId}/members/${userId}/make-owner`,
       { method: 'PUT' }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('makeOwner falhou', error, { orgId, userId })
-    return false
+    return { ok: false }
   }
 }
 
@@ -40,10 +52,13 @@ export async function removeMember(orgId: string, userId: string) {
     const res = await apiFetch(`${API_BASE}/orgs/${orgId}/members/${userId}`, {
       method: 'DELETE'
     })
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('removeMember falhou', error, { orgId, userId })
-    return false
+    return { ok: false }
   }
 }
 
@@ -54,7 +69,7 @@ export async function addProjectAccess(
 ) {
   const parsed = projectAccessSchema.safeParse(data)
   if (!parsed.success) {
-    return false
+    return { ok: false }
   }
 
   try {
@@ -66,10 +81,13 @@ export async function addProjectAccess(
         body: JSON.stringify(parsed.data)
       }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('addProjectAccess falhou', error, { orgId, userId })
-    return false
+    return { ok: false }
   }
 }
 
@@ -88,14 +106,17 @@ export async function updateProjectAccess(
         body: JSON.stringify({ role })
       }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('updateProjectAccess falhou', error, {
       orgId,
       userId,
       projectId
     })
-    return false
+    return { ok: false }
   }
 }
 
@@ -109,14 +130,17 @@ export async function removeProjectAccess(
       `${API_BASE}/orgs/${orgId}/members/${userId}/projects/${projectId}`,
       { method: 'DELETE' }
     )
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('removeProjectAccess falhou', error, {
       orgId,
       userId,
       projectId
     })
-    return false
+    return { ok: false }
   }
 }
 
@@ -131,7 +155,7 @@ export async function sendInvite(
 ) {
   const parsed = inviteSchema.safeParse(data)
   if (!parsed.success) {
-    return false
+    return { ok: false }
   }
 
   try {
@@ -142,7 +166,7 @@ export async function sendInvite(
     })
 
     if (!res.ok) {
-      return false
+      return { ok: false, message: await getErrorMessage(res) }
     }
 
     const invite = (await res.json()) as { token: string }
@@ -155,13 +179,13 @@ export async function sendInvite(
       text: `You've been invited to join an organization on CanaryGate.\n\nAccept your invite:\n${inviteUrl}\n\nThis invite expires in 7 days.`
     })
 
-    return true
+    return { ok: true }
   } catch (error) {
     logServerError('sendInvite falhou', error, {
       orgId,
       email: parsed.data.email
     })
-    return false
+    return { ok: false }
   }
 }
 
@@ -170,10 +194,13 @@ export async function acceptInvite(token: string) {
     const res = await apiFetch(`${API_BASE}/invites/${token}/accept`, {
       method: 'POST'
     })
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('acceptInvite falhou', error, { tokenPresent: true })
-    return false
+    return { ok: false }
   }
 }
 
@@ -182,9 +209,12 @@ export async function declineInvite(token: string) {
     const res = await apiFetch(`${API_BASE}/invites/${token}/decline`, {
       method: 'POST'
     })
-    return res.ok
+    if (!res.ok) {
+      return { ok: false, message: await getErrorMessage(res) }
+    }
+    return { ok: true }
   } catch (error) {
     logServerError('declineInvite falhou', error, { tokenPresent: true })
-    return false
+    return { ok: false }
   }
 }

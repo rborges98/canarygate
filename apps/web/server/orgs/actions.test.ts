@@ -41,14 +41,14 @@ describe('createOrg', () => {
     expect(JSON.parse(options?.body as string)).toEqual(validOrgData)
   })
 
-  it('returns created org on success', async () => {
+  it('returns { ok: true, data } with created org on success', async () => {
     mockApiFetch.mockResolvedValueOnce(
       new Response(JSON.stringify(orgResponse), { status: 200 })
     )
 
     const result = await createOrg(validOrgData)
 
-    expect(result).toEqual(orgResponse)
+    expect(result).toEqual({ ok: true, data: orgResponse })
   })
 
   it('calls revalidatePath after successful creation', async () => {
@@ -61,30 +61,30 @@ describe('createOrg', () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith('/orgs')
   })
 
-  it('returns null when name is empty (invalid input)', async () => {
+  it('returns { ok: false } when name is empty (invalid input)', async () => {
     const result = await createOrg({ name: '', slug: 'my-org' })
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
     expect(mockApiFetch).not.toHaveBeenCalled()
   })
 
-  it('returns null when apiFetch returns status 400', async () => {
+  it('returns { ok: false, message } with the API message when apiFetch returns 400', async () => {
     mockApiFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400 })
+      new Response(JSON.stringify({ message: 'Bad Request' }), { status: 400 })
     )
 
     const result = await createOrg(validOrgData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false, message: 'Bad Request' })
     expect(mockRevalidatePath).not.toHaveBeenCalled()
   })
 
-  it('returns null when apiFetch throws an exception', async () => {
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await createOrg(validOrgData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 })
 
@@ -102,14 +102,14 @@ describe('updateOrg', () => {
     expect(options?.method).toBe('PUT')
   })
 
-  it('returns updated org on success', async () => {
+  it('returns { ok: true, data } with updated org on success', async () => {
     mockApiFetch.mockResolvedValueOnce(
       new Response(JSON.stringify(orgResponse), { status: 200 })
     )
 
     const result = await updateOrg('org-1', validOrgData)
 
-    expect(result).toEqual(orgResponse)
+    expect(result).toEqual({ ok: true, data: orgResponse })
   })
 
   it('calls revalidatePath after successful update', async () => {
@@ -122,29 +122,29 @@ describe('updateOrg', () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith('/orgs')
   })
 
-  it('returns null when slug is invalid', async () => {
+  it('returns { ok: false } when slug is invalid', async () => {
     const result = await updateOrg('org-1', { name: 'My Org', slug: 'INVALID SLUG!' })
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
     expect(mockApiFetch).not.toHaveBeenCalled()
   })
 
-  it('returns null when apiFetch returns non-ok status', async () => {
+  it('returns { ok: false } when apiFetch returns non-ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(
       new Response(null, { status: 500 })
     )
 
     const result = await updateOrg('org-1', validOrgData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 
-  it('returns null when apiFetch throws an exception', async () => {
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await updateOrg('org-1', validOrgData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 })
 
@@ -160,29 +160,29 @@ describe('deleteOrg', () => {
     expect(options?.method).toBe('DELETE')
   })
 
-  it('returns true and calls revalidatePath on success', async () => {
+  it('returns { ok: true } and calls revalidatePath on success', async () => {
     mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 200 }))
 
     const result = await deleteOrg('org-1')
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
     expect(mockRevalidatePath).toHaveBeenCalledWith('/orgs')
   })
 
-  it('returns false when apiFetch returns non-ok status', async () => {
+  it('returns { ok: false } when apiFetch returns non-ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 404 }))
 
     const result = await deleteOrg('org-1')
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false })
     expect(mockRevalidatePath).not.toHaveBeenCalled()
   })
 
-  it('returns false when apiFetch throws an exception', async () => {
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await deleteOrg('org-1')
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false })
   })
 })

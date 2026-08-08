@@ -46,41 +46,51 @@ describe('createFlag', () => {
     expect(options?.method).toBe('POST')
   })
 
-  it('returns { id } when apiFetch returns 200', async () => {
+  it('returns { ok: true, data } when apiFetch returns 200', async () => {
     mockApiFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ id: 'flag-1' }), { status: 200 })
     )
 
     const result = await createFlag('org-1', 'proj-1', validFlagData)
 
-    expect(result).toEqual({ id: 'flag-1' })
+    expect(result).toEqual({ ok: true, data: { id: 'flag-1' } })
   })
 
-  it('returns null when apiFetch returns non-ok status', async () => {
+  it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: 'Conflict' }), { status: 409 })
+      new Response(JSON.stringify({ message: 'Conflict' }), { status: 409 })
     )
 
     const result = await createFlag('org-1', 'proj-1', validFlagData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false, message: 'Conflict' })
   })
 
-  it('returns null when apiFetch throws an exception', async () => {
+  it('returns { ok: false } without message when the API body is not JSON', async () => {
+    mockApiFetch.mockResolvedValueOnce(
+      new Response('internal error', { status: 500 })
+    )
+
+    const result = await createFlag('org-1', 'proj-1', validFlagData)
+
+    expect(result).toEqual({ ok: false })
+  })
+
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await createFlag('org-1', 'proj-1', validFlagData)
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 
-  it('returns null when required fields are missing (invalid input)', async () => {
+  it('returns { ok: false } when required fields are missing (invalid input)', async () => {
     const result = await createFlag('org-1', 'proj-1', {
       ...validFlagData,
       name: '',
     })
 
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
     expect(mockApiFetch).not.toHaveBeenCalled()
   })
 
@@ -118,20 +128,22 @@ describe('updateFlag', () => {
     expect(options?.method).toBe('PUT')
   })
 
-  it('returns true when apiFetch returns ok status', async () => {
+  it('returns { ok: true } when apiFetch returns ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 200 }))
 
     const result = await updateFlag('org-1', 'proj-1', 'flag-1', updateData)
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
   })
 
-  it('returns false when apiFetch returns non-ok status', async () => {
-    mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 400 }))
+  it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {
+    mockApiFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'Bad request' }), { status: 400 })
+    )
 
     const result = await updateFlag('org-1', 'proj-1', 'flag-1', updateData)
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false, message: 'Bad request' })
   })
 
   it('appends environmentSlug to query string when provided', async () => {
@@ -143,12 +155,12 @@ describe('updateFlag', () => {
     expect(url).toContain('environmentSlug=production')
   })
 
-  it('returns false when apiFetch throws an exception', async () => {
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await updateFlag('org-1', 'proj-1', 'flag-1', updateData)
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false })
   })
 })
 
@@ -164,27 +176,29 @@ describe('deleteFlag', () => {
     expect(options?.method).toBe('DELETE')
   })
 
-  it('returns true when apiFetch returns ok status', async () => {
+  it('returns { ok: true } when apiFetch returns ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 200 }))
 
     const result = await deleteFlag('org-1', 'proj-1', 'flag-1')
 
-    expect(result).toBe(true)
+    expect(result).toEqual({ ok: true })
   })
 
-  it('returns false when apiFetch returns non-ok status', async () => {
-    mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 404 }))
+  it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {
+    mockApiFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'Not found' }), { status: 404 })
+    )
 
     const result = await deleteFlag('org-1', 'proj-1', 'flag-1')
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false, message: 'Not found' })
   })
 
-  it('returns false when apiFetch throws an exception', async () => {
+  it('returns { ok: false } when apiFetch throws an exception', async () => {
     mockApiFetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await deleteFlag('org-1', 'proj-1', 'flag-1')
 
-    expect(result).toBe(false)
+    expect(result).toEqual({ ok: false })
   })
 })

@@ -61,12 +61,12 @@ export function ProjectSettingsForm({
   const [copied, setCopied] = useState(false)
 
   async function onSaveGeneral(data: GeneralFormValues) {
-    const ok = await updateProject(orgId, projectId, {
+    const res = await updateProject(orgId, projectId, {
       name: data.name,
       slug: data.slug
     })
-    if (!ok) {
-      toast.error('Failed to save project')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to save project')
       return
     }
     toast.success('Project saved')
@@ -75,14 +75,14 @@ export function ProjectSettingsForm({
 
   const handleRegenerate = async () => {
     setIsRegenerating(true)
-    const newKey = await regenerateApiKey(orgId, projectId)
+    const res = await regenerateApiKey(orgId, projectId)
     setIsRegenerating(false)
-    if (newKey) {
-      setApiKey(newKey)
+    if (res.ok) {
+      setApiKey(res.data)
       setApiKeyRevealed(true)
       toast.success('API key regenerated')
     } else {
-      toast.error('Failed to regenerate API key')
+      toast.error(res.message ?? 'Failed to regenerate API key')
     }
   }
 
@@ -93,18 +93,18 @@ export function ProjectSettingsForm({
   }
 
   async function onSaveWebhook(data: WebhookFormValues) {
-    const ok = await updateWebhook(orgId, projectId, data.webhookUrl || null)
-    if (!ok) {
-      toast.error('Failed to save webhook')
+    const res = await updateWebhook(orgId, projectId, data.webhookUrl || null)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to save webhook')
       return
     }
     toast.success('Webhook saved')
   }
 
   const handleDelete = async () => {
-    const ok = await deleteProject(orgId, projectId)
-    if (!ok) {
-      toast.error('Failed to delete project')
+    const res = await deleteProject(orgId, projectId)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to delete project')
       return false
     }
     router.push(`/orgs/${orgSlug}/projects`)
@@ -117,18 +117,16 @@ export function ProjectSettingsForm({
     }
 
     setIsTogglePending(true)
-    const nextProjectState = await toggleProjectActive(orgId, projectId)
+    const res = await toggleProjectActive(orgId, projectId)
     setIsTogglePending(false)
 
-    if (!nextProjectState) {
-      toast.error('Failed to update project status')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to update project status')
       return false
     }
 
-    setIsActive(nextProjectState.active)
-    toast.success(
-      nextProjectState.active ? 'Project reactivated' : 'Project deactivated'
-    )
+    setIsActive(res.data.active)
+    toast.success(res.data.active ? 'Project reactivated' : 'Project deactivated')
     router.refresh()
     return true
   }

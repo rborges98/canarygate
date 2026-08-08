@@ -30,22 +30,25 @@ describe('createOrg via MSW', () => {
       })
     )
     const result = await createOrg({ name: 'Test Org', slug: 'test-org' })
-    expect(result).toEqual({ id: 'org-123', name: 'Test Org', slug: 'test-org' })
+    expect(result).toEqual({
+      ok: true,
+      data: { id: 'org-123', name: 'Test Org', slug: 'test-org' }
+    })
     expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith('/orgs')
   })
 
-  it('returns null when API returns 500', async () => {
+  it('returns { ok: false } when API returns 500', async () => {
     server.use(
       http.post('http://localhost:3001/orgs', () => {
         return new HttpResponse(null, { status: 500 })
       })
     )
     const result = await createOrg({ name: 'Test Org', slug: 'test-org' })
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 
-  it('returns null when data fails validation', async () => {
+  it('returns { ok: false } when data fails validation', async () => {
     const result = await createOrg({ name: '', slug: 'invalid slug!' })
-    expect(result).toBeNull()
+    expect(result).toEqual({ ok: false })
   })
 })

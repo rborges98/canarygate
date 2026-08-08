@@ -55,15 +55,15 @@ export function ProjectMembersClient({
     }
 
     setInviting(true)
-    const ok = await sendInvite(orgId, {
+    const res = await sendInvite(orgId, {
       email: inviteEmail.trim(),
       orgRole: 'MEMBER',
       projectId,
       projectRole: inviteRole
     })
     setInviting(false)
-    if (!ok) {
-      toast.error('Failed to send invite')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to send invite')
       return
     }
     setInviteEmail('')

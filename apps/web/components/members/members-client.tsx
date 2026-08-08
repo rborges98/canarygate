@@ -54,9 +54,9 @@ export function MembersClient({
       return
     }
 
-    const ok = await makeOwner(orgId, makeOwnerTarget.id)
-    if (!ok) {
-      toast.error('Failed to make owner')
+    const res = await makeOwner(orgId, makeOwnerTarget.id)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to make owner')
       setMakeOwnerTarget(null)
       return
     }
@@ -74,9 +74,9 @@ export function MembersClient({
       return
     }
 
-    const ok = await removeMember(orgId, removeTarget.id)
-    if (!ok) {
-      toast.error('Failed to remove member')
+    const res = await removeMember(orgId, removeTarget.id)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to remove member')
       setRemoveTarget(null)
       return
     }
@@ -93,13 +93,13 @@ export function MembersClient({
     }
 
     setInviting(true)
-    const ok = await sendInvite(orgId, {
+    const res = await sendInvite(orgId, {
       email: inviteEmail.trim(),
       orgRole: inviteRole
     })
     setInviting(false)
-    if (!ok) {
-      toast.error('Failed to send invite')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to send invite')
       return
     }
     setInviteEmail('')

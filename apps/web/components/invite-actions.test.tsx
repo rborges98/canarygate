@@ -10,14 +10,14 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/server/members/actions', () => ({
-  acceptInvite: vi.fn().mockResolvedValue(undefined),
-  declineInvite: vi.fn().mockResolvedValue(undefined)
+  acceptInvite: vi.fn().mockResolvedValue({ ok: true }),
+  declineInvite: vi.fn().mockResolvedValue({ ok: true })
 }))
 
 beforeEach(() => {
   pushMock.mockReset()
-  vi.mocked(acceptInvite).mockResolvedValue(undefined)
-  vi.mocked(declineInvite).mockResolvedValue(undefined)
+  vi.mocked(acceptInvite).mockResolvedValue({ ok: true })
+  vi.mocked(declineInvite).mockResolvedValue({ ok: true })
 })
 
 describe('InviteActions', () => {
@@ -71,8 +71,8 @@ describe('InviteActions', () => {
   it('shows loading state "Accepting..." while accepting', async () => {
     let resolveAccept!: () => void
     vi.mocked(acceptInvite).mockReturnValueOnce(
-      new Promise<undefined>((resolve) => {
-        resolveAccept = () => resolve(undefined)
+      new Promise<{ ok: boolean }>((resolve) => {
+        resolveAccept = () => resolve({ ok: true })
       })
     )
 
@@ -96,8 +96,8 @@ describe('InviteActions', () => {
   it('shows loading state "Declining..." while declining', async () => {
     let resolveDecline!: () => void
     vi.mocked(declineInvite).mockReturnValueOnce(
-      new Promise<undefined>((resolve) => {
-        resolveDecline = () => resolve(undefined)
+      new Promise<{ ok: boolean }>((resolve) => {
+        resolveDecline = () => resolve({ ok: true })
       })
     )
 
@@ -121,8 +121,8 @@ describe('InviteActions', () => {
   it('disables both buttons while loading', async () => {
     let resolveAccept!: () => void
     vi.mocked(acceptInvite).mockReturnValueOnce(
-      new Promise<undefined>((resolve) => {
-        resolveAccept = () => resolve(undefined)
+      new Promise<{ ok: boolean }>((resolve) => {
+        resolveAccept = () => resolve({ ok: true })
       })
     )
 

@@ -41,15 +41,15 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
 
   async function onSubmit({ name }: FormValues) {
     const finalSlug = slugTouched ? watchedSlug : deriveSlug(name)
-    const project = await createProject(orgId, {
+    const res = await createProject(orgId, {
       name: name.trim(),
       slug: finalSlug
     })
-    if (project) {
-      router.push(`/orgs/${orgSlug}/projects/${project.slug}/flags`)
-    } else {
-      toast.error('Failed to create project')
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to create project')
+      return
     }
+    router.push(`/orgs/${orgSlug}/projects/${res.data.slug}/flags`)
   }
 
   return (

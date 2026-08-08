@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { acceptInvite, declineInvite } from '@/server/members/actions'
 
 interface Props {
@@ -14,15 +15,23 @@ export function InviteActions({ token }: Props) {
 
   const handleAccept = async () => {
     setLoading('accept')
-    await acceptInvite(token)
+    const res = await acceptInvite(token)
     setLoading(null)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to accept invite')
+      return
+    }
     router.push('/orgs')
   }
 
   const handleDecline = async () => {
     setLoading('decline')
-    await declineInvite(token)
+    const res = await declineInvite(token)
     setLoading(null)
+    if (!res.ok) {
+      toast.error(res.message ?? 'Failed to decline invite')
+      return
+    }
     router.push('/login')
   }
 
