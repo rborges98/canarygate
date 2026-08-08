@@ -8,7 +8,7 @@ type PricingCardHiddenProps = {
 
 export function PricingCardHidden({ plan, index }: PricingCardHiddenProps) {
   return (
-    <div className="relative h-full">
+    <div className="relative h-full min-w-0">
       <PricingCard
         plan={plan}
         index={index}

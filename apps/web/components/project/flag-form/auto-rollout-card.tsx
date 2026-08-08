@@ -211,8 +211,8 @@ export function AutoRolloutCard() {
 
         <div>
           <label className={labelCls}>Interval</label>
-          <div className="flex items-stretch gap-2">
-            <div className="w-28 shrink-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="w-full sm:w-28 sm:shrink-0">
               <Controller
                 name="everyValue"
                 control={control}
@@ -226,21 +226,23 @@ export function AutoRolloutCard() {
                 )}
               />
             </div>
-            <Controller
-              name="everyUnit"
-              control={control}
-              render={({ field }) => (
-                <SegmentedControl
-                  options={[
-                    { label: 'Hours', value: 'hours' as EveryUnit },
-                    { label: 'Days', value: 'days' as EveryUnit },
-                    { label: 'Weeks', value: 'weeks' as EveryUnit }
-                  ]}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
+            <div className="min-w-0 flex-1">
+              <Controller
+                name="everyUnit"
+                control={control}
+                render={({ field }) => (
+                  <SegmentedControl
+                    options={[
+                      { label: 'Hours', value: 'hours' as EveryUnit },
+                      { label: 'Days', value: 'days' as EveryUnit },
+                      { label: 'Weeks', value: 'weeks' as EveryUnit }
+                    ]}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
           </div>
         </div>
 

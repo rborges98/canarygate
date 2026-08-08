@@ -159,7 +159,7 @@ export function ProjectSettingsForm({
   }
 
   return (
-    <div className="flex flex-col gap-4 px-8 py-6">
+    <div className="flex flex-col gap-4 px-4 py-6 sm:px-8">
       <form
         onSubmit={generalForm.handleSubmit(onSaveGeneral)}
         className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5"
@@ -180,11 +180,11 @@ export function ProjectSettingsForm({
               Slug
             </label>
             <div className="border-cg-bg-100 flex overflow-hidden rounded-lg border">
-              <span className="border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-500 shrink-0 border-r px-3 py-2.5 font-mono text-[12px]">
+              <span className="border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-500 max-w-[40%] shrink-0 truncate border-r px-3 py-2.5 font-mono text-[12px]">
                 {orgSlug}/
               </span>
               <input
-                className="bg-cg-white-200 text-cg-indigo-100 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
+                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
                 {...generalForm.register('slug', { required: true })}
               />
             </div>
@@ -240,16 +240,16 @@ export function ProjectSettingsForm({
         <p className="text-cg-neutral-300 mb-4 text-[11px]">
           Receive a POST request when a flag changes.
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
-            className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-500 focus:border-cg-indigo-300 focus:text-cg-neutral-100 flex-1 rounded-lg border px-4 py-2.5 font-mono text-[12px] outline-none"
+            className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-500 focus:border-cg-indigo-300 focus:text-cg-neutral-100 w-full min-w-0 rounded-lg border px-4 py-2.5 font-mono text-[12px] outline-none sm:flex-1"
             placeholder="https://your-app.com/webhook"
             {...webhookForm.register('webhookUrl')}
           />
           <button
             type="submit"
             disabled={webhookForm.formState.isSubmitting}
-            className="bg-cg-indigo-300 hover:bg-cg-indigo-400 rounded-lg px-3 py-2.5 text-[12px] font-semibold text-white transition-colors disabled:opacity-50"
+            className="bg-cg-indigo-300 hover:bg-cg-indigo-400 w-full rounded-lg px-3 py-2.5 text-[12px] font-semibold text-white transition-colors disabled:opacity-50 sm:w-auto"
           >
             {webhookForm.formState.isSubmitting ? 'Saving...' : 'Save'}
           </button>

@@ -21,8 +21,8 @@ export default function FlagsLoading() {
           >
             <Skeleton className="h-2 w-2 rounded-full" />
             <div>
-              <Skeleton className="h-3.5 w-32" />
-              <Skeleton className="mt-1.5 h-3 w-48" />
+              <Skeleton className="h-3.5 w-24 sm:w-32" />
+              <Skeleton className="mt-1.5 h-3 w-32 sm:w-48" />
             </div>
             <Skeleton className="h-5 w-16 rounded-full" />
           </div>

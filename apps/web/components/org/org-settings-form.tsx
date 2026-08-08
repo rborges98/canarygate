@@ -54,7 +54,7 @@ export function OrgSettingsForm({ orgId, initialName, initialSlug }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 px-8 py-6">
+    <div className="flex flex-col gap-4 px-4 py-6 sm:px-8">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5"
@@ -85,7 +85,7 @@ export function OrgSettingsForm({ orgId, initialName, initialSlug }: Props) {
                 canarygate.com/
               </span>
               <input
-                className="bg-cg-white-200 text-cg-indigo-100 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
+                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
                 {...register('slug', { required: true })}
               />
             </div>

@@ -603,7 +603,7 @@ export function V2InteractiveTabs() {
     <div
       ref={containerRef}
       style={{ height: `${TABS.length * 100}vh` }}
-      className="relative"
+      className="relative hidden md:block"
     >
       <section className="border-cg-bg-100 bg-cg-bg-600 sticky top-0 h-screen overflow-hidden border-t">
         <div className="mx-auto flex h-full max-w-6xl flex-col justify-center px-4 sm:px-8">

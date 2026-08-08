@@ -41,9 +41,7 @@ export function PricingCard({
               <span className="text-cg-neutral-100 text-3xl font-bold">
                 {plan.price}
               </span>
-              <span className="text-cg-neutral-500 text-sm">
-                {plan.period}
-              </span>
+              <span className="text-cg-neutral-500 text-sm">{plan.period}</span>
             </div>
           )}
           <p className="text-cg-neutral-400 mt-1 text-xs">{plan.tagline}</p>

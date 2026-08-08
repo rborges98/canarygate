@@ -8,7 +8,7 @@ import { PricingCardHidden } from './pricing-card-hidden'
 
 export function V2Pricing() {
   return (
-    <section className="border-cg-bg-100 border-t py-20 sm:py-28">
+    <section className="border-cg-bg-100 border-t py-16 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -30,7 +30,7 @@ export function V2Pricing() {
             <ShimmerBadge label="🚀 Early access · everything free" />
           </div>
 
-          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 pt-10 sm:grid-cols-3 sm:pt-0">
             {PRICING_PLANS.map((plan, i) => (
               <PricingCardHidden key={plan.name} plan={plan} index={i} />
             ))}

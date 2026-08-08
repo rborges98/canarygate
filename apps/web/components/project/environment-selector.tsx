@@ -43,7 +43,7 @@ export function EnvironmentSelector({ currentSlug }: Props) {
   }
 
   return (
-    <div ref={containerRef} className="relative flex items-center">
+    <div ref={containerRef} className="relative flex w-full items-center overflow-x-auto">
       {ENVIRONMENTS.map((env) => (
         <button
           key={env.slug}

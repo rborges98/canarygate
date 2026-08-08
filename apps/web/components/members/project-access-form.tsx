@@ -41,7 +41,7 @@ export function ProjectAccessForm({
     <form
       onSubmit={handleSubmit(onConfirm)}
       className={cn(
-        'border-cg-indigo-700 bg-cg-indigo-950 flex items-center gap-3 rounded-lg border px-3 py-2.5',
+        'border-cg-indigo-700 bg-cg-indigo-950 flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5',
         dashed && 'border-dashed'
       )}
     >
@@ -51,7 +51,7 @@ export function ProjectAccessForm({
         render={({ field }) => (
           <Select
             autoFocus
-            containerClassName="flex-1"
+            containerClassName="min-w-0 flex-1"
             className="border-cg-indigo-700 bg-cg-bg-200 text-cg-indigo-100 focus:border-cg-indigo-500 rounded-md px-2 py-1.5 font-sans text-[11px]"
             options={availableProjects.map((p) => ({
               value: p.projectId,

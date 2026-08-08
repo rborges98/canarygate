@@ -315,7 +315,7 @@ export function HistoryList({
             />
 
             <div className="min-w-0 flex-1">
-              <div className="flex gap-2 text-[12px] text-white">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-white">
                 <span className="text-cg-indigo-200 font-mono font-semibold">
                   {entry.actorEmail}
                 </span>

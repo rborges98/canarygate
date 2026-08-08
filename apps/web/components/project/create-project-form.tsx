@@ -83,7 +83,7 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
               Slug
             </label>
             <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">
-              <span className="text-cg-neutral-400 border-cg-bg-100 border-r px-3 py-2.5 font-mono text-[11px] whitespace-nowrap">
+              <span className="text-cg-neutral-400 border-cg-bg-100 border-r px-3 py-2.5 font-mono text-[11px] max-w-[50%] truncate whitespace-nowrap">
                 {orgSlug}/
               </span>
               <input

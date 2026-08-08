@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ProjectSettingsLoading() {
   return (
-    <div className="flex flex-col gap-4 px-8 py-6">
+    <div className="flex flex-col gap-4 px-4 py-6 sm:px-8">
       {/* General */}
       <div className="border-cg-bg-100 bg-cg-white-300 rounded-xl border p-5">
         <Skeleton className="mb-4 h-4 w-16" />

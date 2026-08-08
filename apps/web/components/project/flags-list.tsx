@@ -119,11 +119,11 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
                     flag.status === 'enabled' && 'animate-pulse'
                   )}
                 />
-                <div>
-                  <div className="font-mono text-[13px] font-semibold text-white">
+                <div className="min-w-0">
+                  <div className="truncate font-mono text-[13px] font-semibold text-white">
                     {flag.key}
                   </div>
-                  <div className="text-cg-neutral-300 mt-0.5 text-[11px]">
+                  <div className="text-cg-neutral-300 mt-0.5 truncate text-[11px]">
                     {flag.description}
                   </div>
                 </div>

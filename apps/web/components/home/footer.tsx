@@ -54,7 +54,7 @@ export function LandingFooter() {
                 Sign up
               </Link>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="col-span-2 flex flex-col gap-3 sm:col-span-1">
               <span className="text-cg-neutral-500 text-xs font-semibold tracking-wider uppercase">
                 Resources
               </span>
