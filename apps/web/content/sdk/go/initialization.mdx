@@ -1,0 +1,99 @@
+---
+title: Initialization
+description: How to create and configure the CanaryGate Go client.
+keywords:
+  ['sdk initialization', 'client setup', 'init', 'api key', 'configuration', 'go']
+aliases: ['sdk setup', 'client setup', 'init']
+---
+
+## Constructor
+
+```go
+client := canarygate.New("cg_api_key", canarygate.Options{})
+```
+
+### Parameters
+
+| Parameter | Type                   | Required | Description                                                    |
+| --------- | ---------------------- | -------- | -------------------------------------------------------------- |
+| `apiKey`  | `string`               | Yes      | Environment API Key. Created under **Settings → API Keys**.    |
+| `options` | `canarygate.Options`   | No       | Configuration options. See below.                              |
+
+### `Options`
+
+| Field               | Type          | Default                  | Description                                                                 |
+| ------------------- | ------------- | ------------------------ | --------------------------------------------------------------------------- |
+| `BaseURL`           | `string`      | `http://localhost:3001`  | API base URL (useful for self-hosted environments or proxies).              |
+| `Environment`       | `string`      | default environment      | Environment slug, sent via the `X-Environment` header.                      |
+| `Stream`            | `bool`        | `false`                  | Opt in to real-time SSE streaming.                                          |
+| `ReconnectDelay`    | `time.Duration` | `5 * time.Second`       | Initial delay before reconnecting a dropped stream.                         |
+| `MaxReconnectDelay` | `time.Duration` | `30 * time.Second`      | Maximum backoff delay for stream reconnection.                              |
+| `HeartbeatTimeoutMs`| `time.Duration` | `65 * time.Second`      | Time without a server heartbeat before the stream is considered dead and reconnects. |
+
+## `Init()`
+
+```go
+if err := client.Init(); err != nil {
+    log.Fatal(err)
+}
+```
+
+Executes two actions in sequence:
+
+1. Makes an HTTP fetch to load all flags for the environment (snapshot)
+2. Opens the SSE connection — only when `Stream` is enabled. Otherwise flags come from the snapshot request only.
+
+Unlike the JavaScript SDK, `Init()` returns an error if the initial snapshot request fails. After a successful `Init()`, `GetFlag()` reads from the local cache; if the connection degrades later, `IsStale()` reports it and `GetFlag()` continues to return the last known values.
+
+## Examples
+
+### Server (HTTP handler with streaming)
+
+```go
+package main
+
+import (
+    "log"
+    "net/http"
+
+    "github.com/canarygate/sdk-go"
+)
+
+func main() {
+    client := canarygate.New("cg_api_key", canarygate.Options{
+        Environment: "production",
+        Stream:      true,
+    })
+
+    if err := client.Init(); err != nil {
+        log.Fatal(err)
+    }
+    defer client.Disconnect()
+
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        flag := client.GetFlag("new-checkout", &canarygate.FlagEvaluationContext{
+            UserID: "user-42",
+        })
+        if flag != nil && flag.Enabled {
+            // Serve the new checkout
+        }
+    })
+
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+```
+
+### One-shot script (no stream)
+
+```go
+client := canarygate.New("cg_api_key", canarygate.Options{})
+if err := client.Init(); err != nil {
+    log.Fatal(err)
+}
+defer client.Disconnect()
+
+flag := client.GetFlag("run-migration", nil)
+if flag != nil && flag.Enabled {
+    runMigration()
+}
+```

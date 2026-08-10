@@ -22,7 +22,7 @@ If you have not done that yet, go back to [Installation](/docs/getting-started/i
 Create an API Key in **Settings -> API Keys** and initialize the SDK:
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/client'
 
 const canary = new CanaryGate('cg_your_api_key')
 
@@ -33,7 +33,7 @@ try {
 }
 ```
 
-`init()` performs the initial flag fetch and opens the SSE connection for real-time updates. If it fails, your application should decide whether to continue with a local fallback, temporarily disable the feature, or show an operational message.
+`init()` performs the initial flag fetch and caches the snapshot. For real-time updates, use the server entry (`@canarygate/sdk/js/server`) with `stream: true`. If `init()` fails, your application should decide whether to continue with a local fallback, temporarily disable the feature, or show an operational message.
 
 ## 2. Evaluate a flag with a safe fallback
 

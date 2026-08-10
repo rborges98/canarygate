@@ -1,0 +1,64 @@
+---
+title: Real-time and SSE
+description: How to react to real-time flag updates with the Java SDK.
+keywords: ['sse', 'realtime', 'real-time', 'live updates', 'subscriptions', 'java']
+aliases: ['server-sent events', 'realtime', 'real-time']
+---
+
+## Automatic connection
+
+`init()` always starts with a snapshot request that loads the current flags. When `Options.stream` is `true`, the client then opens an SSE connection (`/sdk/stream`) and flags are updated in the background without polling.
+
+```java
+import com.canarygate.CanaryGateClient;
+import com.canarygate.Options;
+
+var client = new CanaryGateClient("cg_key", new Options(
+    null, "production", true, 5000, 30000, 65000
+));
+
+client.init();
+
+// From this point on, client.getFlag() always returns the latest
+// value without needing a manual refetch
+
+client.disconnect();
+```
+
+If the connection drops, the client reconnects with exponential backoff (`reconnectDelayMs`, capped at `maxReconnectDelayMs`). When the cache is stale at reconnect time, the snapshot is re-fetched before stream events are processed. If no data arrives within `heartbeatTimeoutMs`, the connection is aborted and a reconnect is triggered.
+
+## `isStale()`
+
+Returns `true` when the last flags sync failed or the stream connection is down (for example, while reconnecting). Use it to detect a degraded state.
+
+```java
+if (client.isStale()) {
+    // Data may be stale
+    // Consider reloading or showing a warning to the user
+}
+```
+
+## `getLastSyncAt()`
+
+Returns the ISO timestamp (`String`) of the last successful sync, or `null` if `init()` has not completed yet.
+
+```java
+String lastSync = client.getLastSyncAt();
+if (lastSync != null) {
+    System.out.println("Flags updated at " + lastSync);
+}
+```
+
+## `disconnect()`
+
+Closes the stream connection (if any) and releases resources. Always call this on teardown:
+
+```java
+// The client implements AutoCloseable, so you can also rely on try-with-resources:
+try (var client = new CanaryGateClient("cg_key", new Options())) {
+    client.init();
+    // ...
+}
+```
+
+After `disconnect()`, `getFlag()` continues to return the last known values, but the client no longer receives updates.

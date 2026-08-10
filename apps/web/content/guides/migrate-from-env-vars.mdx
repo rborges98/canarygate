@@ -35,7 +35,7 @@ This works initially, but brings problems:
 ### 1. Install the SDK
 
 ```bash
-npm install @canarygate/js
+npm install @canarygate/sdk/js
 ```
 
 ### 2. Create the flags in the dashboard
@@ -47,7 +47,7 @@ For each `process.env.ENABLE_*` you use as a toggle, create an equivalent Boolea
 Create a wrapper that reads from both sources during the transition:
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/server'
 
 const client = new CanaryGate(process.env.CANARYGATE_KEY!)
 await client.init()

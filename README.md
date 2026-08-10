@@ -103,7 +103,7 @@ Serviços locais esperados:
 ```sh
 pnpm --filter @canarygate/web build
 pnpm --filter @canarygate/api build
-pnpm --filter @canarygate/sdk build
+pnpm --filter @canarygate/sdk/js build
 ```
 
 ## Documentação operacional

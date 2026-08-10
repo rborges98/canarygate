@@ -1,0 +1,95 @@
+---
+title: Initialization
+description: How to create and configure the CanaryGate Python client.
+keywords:
+  ['sdk initialization', 'client setup', 'init', 'api key', 'configuration', 'python']
+aliases: ['sdk setup', 'client setup', 'init']
+---
+
+## Constructor
+
+```python
+from canarygate import CanaryGate, Options
+
+client = CanaryGate("cg_api_key", Options())
+```
+
+### Parameters
+
+| Parameter | Type             | Required | Description                                                    |
+| --------- | ---------------- | -------- | -------------------------------------------------------------- |
+| `api_key` | `str`            | Yes      | Environment API Key. Created under **Settings → API Keys**.    |
+| `options` | `Options`        | No       | Configuration options. See below.                              |
+
+### `Options`
+
+| Option                 | Type    | Default                  | Description                                                                 |
+| ---------------------- | ------- | ------------------------ | --------------------------------------------------------------------------- |
+| `base_url`             | `str`   | `http://localhost:3001`  | API base URL (useful for self-hosted environments or proxies).              |
+| `environment`          | `str`   | default environment      | Environment slug, sent via the `X-Environment` header.                      |
+| `stream`               | `bool`  | `False`                  | Opt in to real-time SSE streaming.                                          |
+| `reconnect_delay`      | `int`   | `5000`                   | Initial delay in ms before reconnecting a dropped stream.                   |
+| `max_reconnect_delay`  | `int`   | `30000`                  | Maximum backoff delay in ms for stream reconnection.                        |
+| `heartbeat_timeout_ms` | `int`   | `65000`                  | Time in ms without a server heartbeat before the stream is considered dead and reconnects. |
+
+## `init()`
+
+```python
+client.init()
+```
+
+Executes two actions in sequence:
+
+1. Makes an HTTP fetch to load all flags for the environment (snapshot)
+2. Opens the SSE connection — only when `stream` is enabled. Otherwise flags come from the snapshot request only.
+
+Unlike the JavaScript SDK, `init()` raises a `RuntimeError` if the initial snapshot request fails. After a successful `init()`, `get_flag()` reads from the local cache; if the connection degrades later, `is_stale()` reports it and `get_flag()` continues to return the last known values.
+
+## Examples
+
+### Server (FastAPI with streaming)
+
+```python
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from canarygate import CanaryGate, FlagEvaluationContext, Options
+
+client = CanaryGate("cg_api_key", Options(
+    environment="production",
+    stream=True,
+))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    client.init()
+    yield
+    client.disconnect()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/")
+def read_root():
+    flag = client.get_flag("new-checkout", FlagEvaluationContext(user_id="user-42"))
+    return {"new_checkout": flag.enabled if flag else False}
+```
+
+### One-shot script (no stream)
+
+```python
+from canarygate import CanaryGate
+
+client = CanaryGate("cg_api_key")
+client.init()
+
+flag = client.get_flag("run-migration")
+if flag and flag.enabled:
+    run_migration()
+
+# Disconnect (closes any active stream) so the process can exit
+client.disconnect()
+```

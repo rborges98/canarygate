@@ -1,0 +1,95 @@
+---
+title: Evaluating Flags
+description: How to read flag states using the Go SDK.
+keywords:
+  ['evaluate flags', 'getFlag', 'getFlags', 'read flags', 'flag evaluation', 'go']
+aliases: ['getFlag', 'getFlags', 'read flags']
+---
+
+## `GetFlag(key, ctx)`
+
+Returns the data for a specific flag, or `nil` if the flag does not exist.
+
+```go
+flag := client.GetFlag("new-checkout", &canarygate.FlagEvaluationContext{
+    UserID: "user-42",
+})
+// *FlagData or nil
+```
+
+The `UserID` in the context is used to evaluate rollout flags consistently: the same user always gets the same result. When the context or `UserID` is empty, a per-instance anonymous ID is used.
+
+### Safe check
+
+```go
+if flag != nil && flag.Enabled {
+    // Flag is enabled for this user
+}
+```
+
+## `GetFlags(ctx)`
+
+Returns all flags for the environment as a slice.
+
+```go
+flags := client.GetFlags(&canarygate.FlagEvaluationContext{UserID: "user-42"})
+
+for _, flag := range flags {
+    fmt.Println(flag.Key, flag.Enabled)
+}
+```
+
+## Examples by flag type
+
+### Boolean flag
+
+```go
+maintenance := client.GetFlag("maintenance-mode", ctx)
+if maintenance != nil && maintenance.Enabled {
+    return maintenancePage()
+}
+```
+
+### Rollout flag
+
+```go
+newDashboard := client.GetFlag("new-dashboard", ctx)
+
+// flag.Enabled is true or false based on userId and percentage
+if newDashboard != nil && newDashboard.Enabled {
+    return newDashboardPage()
+}
+
+// To see the configured percentage:
+if newDashboard != nil && newDashboard.Type == "rollout" {
+    fmt.Printf("%d%% of users will see this feature\n", newDashboard.Percent)
+}
+```
+
+## Before `Init()`
+
+If you call `GetFlag()` before `Init()`, the flag will return `nil` (the local cache is still empty).
+
+```go
+client := canarygate.New("cg_key", canarygate.Options{})
+// Do not do this:
+client.GetFlag("feature", ctx) // nil
+
+// Do this instead:
+if err := client.Init(); err != nil {
+    log.Fatal(err)
+}
+client.GetFlag("feature", ctx) // *FlagData or nil
+```
+
+## Flags that do not exist
+
+If the flag does not exist in the environment, `GetFlag()` returns `nil`. Always guard with a nil check to avoid breaking the application flow:
+
+```go
+// If 'new-feature' does not exist in the environment, enabled will be false
+enabled := false
+if flag := client.GetFlag("new-feature", ctx); flag != nil {
+    enabled = flag.Enabled
+}
+```

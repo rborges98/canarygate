@@ -20,20 +20,20 @@ The API Key identifies the project and environment the SDK should query. Without
 
 - **Node.js 18+** or a modern browser (current Chrome, Firefox, Safari, Edge)
 - **TypeScript 5+** (optional, but fully typed)
-- The SDK uses `EventSource` internally for SSE, which is available natively in browsers and in Node.js 18+
+- The browser client SDK fetches flag snapshots via HTTP requests. Real-time updates (SSE) are exclusive to the server SDK entry.
 
 ## 1. Install the SDK
 
 ```bash
-npm install @canarygate/js
+npm install @canarygate/sdk/js
 ```
 
 ```bash
-pnpm add @canarygate/js
+pnpm add @canarygate/sdk/js
 ```
 
 ```bash
-yarn add @canarygate/js
+yarn add @canarygate/sdk/js
 ```
 
 ## 2. Import the client
@@ -41,7 +41,7 @@ yarn add @canarygate/js
 The package is published as ESM + CJS with bundled type declarations. It does not require extra configuration.
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/client'
 ```
 
 ## 3. Have your API Key ready
@@ -57,7 +57,7 @@ In the web dashboard, go to **Settings -> API Keys** and create a key for the co
 In client applications, you usually only need to import the class and initialize the SDK once during application bootstrap.
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/client'
 
 const canary = new CanaryGate(import.meta.env.VITE_CANARYGATE_KEY)
 ```
@@ -67,7 +67,7 @@ const canary = new CanaryGate(import.meta.env.VITE_CANARYGATE_KEY)
 In Next.js App Router, the SDK should be initialized inside a **Client Component** or in controlled Node.js code such as a singleton. The important part is: do not create new SSE connections on every render.
 
 ```tsx filename="lib/canary.ts"
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/server'
 
 let instance: CanaryGate | null = null
 

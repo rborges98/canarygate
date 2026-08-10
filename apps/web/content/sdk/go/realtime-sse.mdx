@@ -1,0 +1,57 @@
+---
+title: Real-time and SSE
+description: How to react to real-time flag updates with the Go SDK.
+keywords: ['sse', 'realtime', 'real-time', 'live updates', 'subscriptions', 'go']
+aliases: ['server-sent events', 'realtime', 'real-time']
+---
+
+## Automatic connection
+
+`Init()` always starts with a snapshot request that loads the current flags. When `Options.Stream` is `true`, the client then opens an SSE connection (`/sdk/stream`) and flags are updated in the background without polling.
+
+```go
+client := canarygate.New("cg_key", canarygate.Options{
+    Stream: true,
+})
+
+if err := client.Init(); err != nil {
+    log.Fatal(err)
+}
+defer client.Disconnect()
+
+// From this point on, client.GetFlag() always returns the latest
+// value without needing a manual refetch
+```
+
+If the connection drops, the client reconnects with exponential backoff (`ReconnectDelay`, capped at `MaxReconnectDelay`). When the cache is stale at reconnect time, the snapshot is re-fetched before stream events are processed. If no data arrives within `HeartbeatTimeoutMs`, the connection is aborted and a reconnect is triggered.
+
+## `IsStale()`
+
+Returns `true` when the last flags sync failed or the stream connection is down (for example, while reconnecting). Use it to detect a degraded state.
+
+```go
+if client.IsStale() {
+    // Data may be stale
+    // Consider reloading or showing a warning to the user
+}
+```
+
+## `GetLastSyncAt()`
+
+Returns the ISO timestamp (`*string`) of the last successful sync, or `nil` if `Init()` has not completed yet.
+
+```go
+if lastSync := client.GetLastSyncAt(); lastSync != nil {
+    log.Printf("Flags updated at %s", *lastSync)
+}
+```
+
+## `Disconnect()`
+
+Closes the stream connection (if any) and releases resources. Always call this on teardown:
+
+```go
+defer client.Disconnect()
+```
+
+After `Disconnect()`, `GetFlag()` continues to return the last known values, but the client no longer receives updates.

@@ -15,7 +15,8 @@ const STEPS: Step[] = [
     title: 'Install the SDK',
     description:
       'Works with any JavaScript or TypeScript project. One package, no peer dependencies.',
-    code: 'npm install @canarygate/sdk',
+    code:
+      'npm install @canarygate/sdk/js\nimport { CanaryGate } from \'@canarygate/sdk/js/client\'',
   },
   {
     number: '02',
@@ -43,10 +44,16 @@ function CodeBlock({ code }: { code: string }) {
         </span>
       </div>
       <div className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-cg-neutral-600 font-mono text-xs">$</span>
-          <span className="text-cg-neutral-200 font-mono text-xs">{code}</span>
-        </div>
+        {code.split('\n').map((line, i) => (
+          <div key={i} className="flex items-center gap-2">
+            {i === 0 && (
+              <span className="text-cg-neutral-600 font-mono text-xs">$</span>
+            )}
+            <span className="text-cg-neutral-200 font-mono text-xs">
+              {line}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )

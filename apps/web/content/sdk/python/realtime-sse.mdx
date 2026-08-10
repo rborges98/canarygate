@@ -1,0 +1,58 @@
+---
+title: Real-time and SSE
+description: How to react to real-time flag updates with the Python SDK.
+keywords: ['sse', 'realtime', 'real-time', 'live updates', 'subscriptions', 'python']
+aliases: ['server-sent events', 'realtime', 'real-time']
+---
+
+## Automatic connection
+
+`init()` always starts with a snapshot request that loads the current flags. When `Options.stream` is `True`, the client then opens an SSE connection (`/sdk/stream`) and flags are updated in the background without polling.
+
+```python
+from canarygate import CanaryGate, Options
+
+client = CanaryGate("cg_key", Options(stream=True))
+client.init()
+
+# From this point on, client.get_flag() always returns the latest
+# value without needing a manual refetch
+
+client.disconnect()
+```
+
+If the connection drops, the client reconnects with exponential backoff (`reconnect_delay`, capped at `max_reconnect_delay`). When the cache is stale at reconnect time, the snapshot is re-fetched before stream events are processed. If no data arrives within `heartbeat_timeout_ms`, the connection is aborted and a reconnect is triggered.
+
+## `is_stale()`
+
+Returns `True` when the last flags sync failed or the stream connection is down (for example, while reconnecting). Use it to detect a degraded state.
+
+```python
+if client.is_stale():
+    # Data may be stale
+    # Consider reloading or showing a warning to the user
+```
+
+## `get_last_sync_at()`
+
+Returns the ISO timestamp (`str`) of the last successful sync, or `None` if `init()` has not completed yet.
+
+```python
+last_sync = client.get_last_sync_at()
+if last_sync:
+    print(f"Flags updated at {last_sync}")
+```
+
+## `disconnect()`
+
+Closes the stream connection (if any) and releases resources. Always call this on teardown:
+
+```python
+try:
+    client.init()
+    ...
+finally:
+    client.disconnect()
+```
+
+After `disconnect()`, `get_flag()` continues to return the last known values, but the client no longer receives updates.

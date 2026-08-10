@@ -1,0 +1,88 @@
+---
+title: Evaluating Flags
+description: How to read flag states using the Python SDK.
+keywords:
+  ['evaluate flags', 'get_flag', 'get_flags', 'read flags', 'flag evaluation', 'python']
+aliases: ['get_flag', 'get_flags', 'read flags']
+---
+
+## `get_flag(key, context)`
+
+Returns the data for a specific flag, or `None` if the flag does not exist.
+
+```python
+from canarygate import FlagEvaluationContext
+
+flag = client.get_flag("new-checkout", FlagEvaluationContext(user_id="user-42"))
+# FlagData or None
+```
+
+The `user_id` in the context is used to evaluate rollout flags consistently: the same user always gets the same result. When the context or `user_id` is empty, a per-instance anonymous ID is used.
+
+### Safe check
+
+```python
+if flag and flag.enabled:
+    # Flag is enabled for this user
+    pass
+```
+
+## `get_flags(context)`
+
+Returns all flags for the environment as a list.
+
+```python
+flags = client.get_flags(FlagEvaluationContext(user_id="user-42"))
+
+for flag in flags:
+    print(flag.key, flag.enabled)
+```
+
+## Examples by flag type
+
+### Boolean flag
+
+```python
+maintenance = client.get_flag("maintenance-mode", context)
+
+if maintenance and maintenance.enabled:
+    return maintenance_page()
+```
+
+### Rollout flag
+
+```python
+new_dashboard = client.get_flag("new-dashboard", context)
+
+# flag.enabled is True or False based on user_id and percentage
+if new_dashboard and new_dashboard.enabled:
+    return new_dashboard_page()
+
+# To see the configured percentage:
+if new_dashboard and new_dashboard.type == "rollout":
+    print(f"{new_dashboard.percent}% of users will see this feature")
+```
+
+## Before `init()`
+
+If you call `get_flag()` before `init()`, the flag will return `None` (the local cache is still empty).
+
+```python
+client = CanaryGate("cg_key")
+# Do not do this:
+client.get_flag("feature")  # None
+
+# Do this instead:
+client.init()
+client.get_flag("feature")  # FlagData or None
+```
+
+## Flags that do not exist
+
+If the flag does not exist in the environment, `get_flag()` returns `None`. Always guard with a truthiness check to avoid breaking the application flow:
+
+```python
+# If 'new-feature' does not exist in the environment, enabled will be False
+flag = client.get_flag("new-feature")
+enabled = flag.enabled if flag else False
+```

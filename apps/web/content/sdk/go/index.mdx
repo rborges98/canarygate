@@ -1,0 +1,55 @@
+---
+title: SDK Go
+description: Overview of the official CanaryGate SDK for Go.
+keywords:
+  ['go sdk', 'golang sdk', 'go feature flags', 'go server sdk']
+aliases: ['go sdk', 'golang sdk']
+searchBoost: 8
+asIndexPage: true
+---
+
+The `github.com/canarygate/sdk-go` module is the official client for integrating CanaryGate into Go applications.
+
+## Compatibility
+
+| Environment                            | Support |
+| -------------------------------------- | ------- |
+| Go 1.21+                               | Yes     |
+| Linux, macOS, Windows                  | Yes     |
+
+The SDK fetches flags via a snapshot request (`/sdk/flags`) and optionally keeps them in sync with the server through SSE streaming when `Stream` is enabled.
+
+## Installation
+
+```bash
+go get github.com/canarygate/sdk-go
+```
+
+## Full API
+
+| Method                            | Description                                    |
+| --------------------------------- | ---------------------------------------------- |
+| `New(apiKey, Options)`            | Creates the client                             |
+| `Init() error`                    | Loads flags via snapshot; starts SSE when `Stream` is enabled |
+| `GetFlag(key, ctx)`               | Returns `*FlagData` or `nil`                   |
+| `GetFlags(ctx)`                   | Returns `[]FlagData` (all flags)               |
+| `IsStale()`                       | `true` if the connection is degraded           |
+| `GetLastSyncAt()`                 | `*string` of the last sync                     |
+| `Disconnect()`                    | Closes the stream connection (if any) and releases resources |
+
+## Next steps
+
+<Cards>
+  <Cards.Card
+    title="Initialization"
+    href="/docs/sdk/go/initialization"
+  />
+  <Cards.Card
+    title="Evaluating flags"
+    href="/docs/sdk/go/evaluate-flags"
+  />
+  <Cards.Card
+    title="Real-time and SSE"
+    href="/docs/sdk/go/realtime-sse"
+  />
+</Cards>
