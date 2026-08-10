@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>CanaryGate</PackageId>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>CanaryGate</RootNamespace>
+    <Description>Official CanaryGate SDK for C# / .NET.</Description>
+    <Authors>CanaryGate</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CanaryGate.Tests" />
+  </ItemGroup>
+
+</Project>
