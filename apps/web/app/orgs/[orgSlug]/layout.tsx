@@ -1,4 +1,5 @@
 import { OrgShell } from '@/components/org-shell'
+import { FlagStreamRefresher } from '@/components/flag-stream-refresher'
 import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { getSessionOrRedirect } from '@/shared/auth'
 
@@ -15,6 +16,7 @@ export default async function OrgLayout({ children, params }: Props) {
 
   return (
     <div className="bg-cg-bg-400 relative flex h-screen flex-col overflow-x-hidden">
+      <FlagStreamRefresher />
       <OrgShell orgSlug={orgSlug} orgName={orgName} user={session.user}>
         {children}
       </OrgShell>

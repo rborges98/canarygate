@@ -126,6 +126,12 @@ importers:
       '@canarygate/logger':
         specifier: workspace:^
         version: link:../../packages/logger
+      '@canarygate/messaging-utils':
+        specifier: workspace:^
+        version: link:../../packages/messaging-utils
+      '@canarygate/redis':
+        specifier: workspace:^
+        version: link:../../packages/redis
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
