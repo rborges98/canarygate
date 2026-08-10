@@ -1,12 +1,13 @@
 {
-  "name": "@canarygate/sdk",
+  "name": "@canarygate/sdk/js",
   "version": "0.1.0",
   "description": "CanaryGate SDK — feature flags with real-time SSE streaming",
   "exports": {
-    "./js": "./src/index.ts"
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --out-dir dist",
+    "build": "tsup src/client.ts src/server.ts --format esm,cjs --dts --out-dir dist",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

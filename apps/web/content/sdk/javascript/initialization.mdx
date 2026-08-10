@@ -9,6 +9,10 @@ aliases: ['sdk setup', 'client setup', 'init']
 ## Constructor
 
 ```ts
+import { CanaryGate } from '@canarygate/sdk/js/client' // browser
+// or
+import { CanaryGate } from '@canarygate/sdk/js/server' // server runtimes
+
 new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 ```
 
@@ -21,11 +25,14 @@ new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 
 ### `CanaryGateOptions`
 
-| Option           | Type     | Default                     | Description                                                              |
-| ---------------- | -------- | --------------------------- | ------------------------------------------------------------------------ |
-| `userId`         | `string` | Auto-generated              | User ID for rollout hashing. Use a stable ID per user.                   |
-| `baseUrl`        | `string` | `https://api.canarygate.io` | API base URL (useful for self-hosted environments or proxies).           |
-| `staleThreshold` | `number` | `60000`                     | Time in ms without sync before considering stale.                        |
+| Option               | Type      | Default                  | Description                                                                 |
+| -------------------- | --------- | ------------------------ | --------------------------------------------------------------------------- |
+| `baseUrl`            | `string`  | `http://localhost:3001`  | API base URL (useful for self-hosted environments or proxies).              |
+| `environment`        | `string`  | default environment      | Environment slug, sent via the `X-Environment` header.                      |
+| `stream`             | `boolean` | `false`                  | Server environments only: opt in to real-time SSE streaming. Ignored in browsers (a warning is logged). |
+| `reconnectDelay`     | `number`  | `5000`                   | Initial delay in ms before reconnecting a dropped stream.                   |
+| `maxReconnectDelay`  | `number`  | `30000`                  | Maximum backoff delay in ms for stream reconnection.                        |
+| `heartbeatTimeoutMs` | `number`  | `65000`                  | Time in ms without a server heartbeat before the stream is considered dead and reconnects. |
 
 ## `init()`
 
@@ -35,8 +42,8 @@ await canary.init()
 
 Executes two actions in sequence:
 
-1. Makes an HTTP fetch to load all flags for the environment
-2. Opens the SSE connection to receive real-time updates
+1. Makes an HTTP fetch to load all flags for the environment (snapshot)
+2. Opens the SSE connection — only in server environments when `stream: true`. In browsers the stream is always disabled; flags come from the snapshot request only.
 
 Always `await` `init()` before reading flags — otherwise, `getFlag()` may return `undefined` before the initial load completes.
 
@@ -44,17 +51,17 @@ Always `await` `init()` before reading flags — otherwise, `getFlag()` may retu
 
 ### Browser (React)
 
+In browsers the SDK always uses the snapshot request — `stream` is ignored and real-time updates are not available.
+
 ```tsx
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/client'
 import { useEffect, useRef } from 'react'
 
-export function useCanaryGate(userId: string) {
+export function useCanaryGate() {
   const ref = useRef<CanaryGate | null>(null)
 
   useEffect(() => {
-    const client = new CanaryGate(process.env.NEXT_PUBLIC_CANARYGATE_KEY!, {
-      userId
-    })
+    const client = new CanaryGate(process.env.NEXT_PUBLIC_CANARYGATE_KEY!)
 
     client.init().then(() => {
       ref.current = client
@@ -63,7 +70,7 @@ export function useCanaryGate(userId: string) {
     return () => {
       client.disconnect()
     }
-  }, [userId])
+  }, [])
 
   return ref
 }
@@ -72,7 +79,7 @@ export function useCanaryGate(userId: string) {
 ### Node.js (singleton)
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/server'
 
 let client: CanaryGate | null = null
 
@@ -88,7 +95,7 @@ export async function getCanaryGate() {
 ### One-shot script (no SSE)
 
 ```ts
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/server'
 
 const client = new CanaryGate('cg_api_key')
 await client.init()
@@ -98,6 +105,6 @@ if (flag?.enabled) {
   await runMigration()
 }
 
-// Close the SSE connection so the process can exit
+// Disconnect (closes any active stream) so the process can exit
 client.disconnect()
 ```

@@ -7,13 +7,21 @@ aliases: ['server-sent events', 'realtime', 'real-time']
 
 ## Automatic connection
 
-The SDK automatically opens an SSE connection during `init()`. You do not need to configure anything — flags are updated in the background without polling.
+SSE streaming is exclusive to the server entry point — it is never available from the browser entry. Import `CanaryGate` from `@canarygate/sdk/js/server` to enable it; `@canarygate/sdk/js/client` always uses the snapshot request only.
+
+`init()` always starts with a snapshot request that loads the current flags. Real-time updates depend on the entry point:
+
+- **Browser (`@canarygate/sdk/js/client`):** streaming is disabled by design. Flags are loaded via a single HTTP snapshot request (`/sdk/flags`), and `stream: true` is ignored (a warning is logged). This prevents thousands of open SSE connections coming from browsers.
+- **Server (`@canarygate/sdk/js/server`, for Node.js, Deno, Bun, Edge):** pass `stream: true` to open an SSE connection after the snapshot. Flags are then updated in the background without polling.
 
 ```ts
-const client = new CanaryGate('cg_key')
-await client.init() // opens SSE here
+// Server, real-time: snapshot + SSE stream
+import { CanaryGate } from '@canarygate/sdk/js/server'
 
-// From this point on, client.getFlag() always returns
+const realtimeClient = new CanaryGate('cg_key', { stream: true })
+await realtimeClient.init()
+
+// From this point on, realtimeClient.getFlag() always returns
 // the latest value without needing a manual refetch
 ```
 
@@ -22,7 +30,7 @@ await client.init() // opens SSE here
 For React components to reflect real-time flag changes, you need a reactivity mechanism. The SDK does not include native React bindings, but it is straightforward to implement:
 
 ```tsx
-import { CanaryGate } from '@canarygate/js'
+import { CanaryGate } from '@canarygate/sdk/js/client'
 import { useState, useEffect, useRef } from 'react'
 
 function useFlagEnabled(client: CanaryGate, key: string): boolean {
@@ -44,14 +52,13 @@ function useFlagEnabled(client: CanaryGate, key: string): boolean {
 ```
 
 <Callout type="info">
-  A more efficient approach is to use an event emitter. The SDK emits events
-  internally — see the advanced documentation to listen for changes
-  directly via callback.
+  In browsers real-time SSE is disabled, so the polling approach above is the
+  recommended way to pick up flag changes. On the server, prefer `stream: true`.
 </Callout>
 
 ## `isStale()`
 
-Returns `true` if the SDK has not received any SSE update within the `staleThreshold` (default: 60 seconds).
+Returns `true` when the last flags sync failed or the stream connection is down (for example, while reconnecting). Use it to detect a degraded state.
 
 ```ts
 if (client.isStale()) {
@@ -64,18 +71,18 @@ Use `isStale()` to monitor connection health in critical dashboards.
 
 ## `getLastSyncAt()`
 
-Returns the `Date` of the last successful sync, or `null` if `init()` has not completed yet.
+Returns the ISO timestamp (`string | null`) of the last successful sync, or `null` if `init()` has not completed yet.
 
 ```ts
 const lastSync = client.getLastSyncAt()
 if (lastSync) {
-  console.log('Flags updated', Date.now() - lastSync.getTime(), 'ms ago')
+  console.log('Flags updated', Date.now() - new Date(lastSync).getTime(), 'ms ago')
 }
 ```
 
 ## `disconnect()`
 
-Closes the SSE connection and releases resources. Always call this on teardown:
+Closes the stream connection (if any) and releases resources. Always call this on teardown:
 
 ```ts
 // React:

@@ -1,6 +1,6 @@
 ---
 title: TypeScript Types
-description: Complete reference for the types exported by the @canarygate/js SDK.
+description: Complete reference for the types exported by the @canarygate/sdk/js SDK.
 keywords: ['typescript types', 'ts types', 'typings', 'sdk types', 'TypeScript']
 aliases: ['ts types', 'typing', 'types']
 ---
@@ -16,7 +16,7 @@ class CanaryGate {
   getFlag(key: string): FlagData | undefined
   getFlags(): FlagData[]
   isStale(): boolean
-  getLastSyncAt(): Date | null
+  getLastSyncAt(): string | null
   disconnect(): void
 }
 ```
@@ -24,13 +24,19 @@ class CanaryGate {
 ## `CanaryGateOptions`
 
 ```ts
-interface CanaryGateOptions {
-  /** User ID for deterministic rollout hashing. */
-  userId?: string
-  /** API base URL. Default: 'https://api.canarygate.io' */
+type CanaryGateOptions = {
+  /** API base URL. Default: 'http://localhost:3001' */
   baseUrl?: string
-  /** Time in ms before considering the SDK stale. Default: 60000 */
-  staleThreshold?: number
+  /** Environment slug. Defaults to the project default environment. */
+  environment?: string
+  /** Server environments only: enable real-time SSE streaming. Default: false */
+  stream?: boolean
+  /** Initial stream reconnect delay in ms. Default: 5000 */
+  reconnectDelay?: number
+  /** Maximum stream reconnect delay in ms. Default: 30000 */
+  maxReconnectDelay?: number
+  /** Time in ms without a server heartbeat before reconnecting the stream. Default: 65000 */
+  heartbeatTimeoutMs?: number
 }
 ```
 
@@ -45,23 +51,21 @@ type FlagData = BooleanFlagData | RolloutFlagData
 ## `BooleanFlagData`
 
 ```ts
-interface BooleanFlagData {
+type BooleanFlagData = {
   key: string
   type: 'boolean'
   enabled: boolean
-  description: string | null
 }
 ```
 
 ## `RolloutFlagData`
 
 ```ts
-interface RolloutFlagData {
+type RolloutFlagData = {
   key: string
   type: 'rollout'
   enabled: boolean
-  percentage: number
-  description: string | null
+  percent: number
 }
 ```
 
@@ -74,7 +78,7 @@ const flag = canary.getFlag('new-dashboard')
 
 if (flag?.type === 'rollout') {
   // TypeScript knows flag is RolloutFlagData here
-  console.log(flag.percentage)
+  console.log(flag.percent)
 }
 ```
 
@@ -87,5 +91,8 @@ import {
   type FlagData,
   type BooleanFlagData,
   type RolloutFlagData
-} from '@canarygate/js'
+} from '@canarygate/sdk/js/client'
+
+// Both entry points export the same types:
+import { type FlagData as ServerFlagData } from '@canarygate/sdk/js/server'
 ```

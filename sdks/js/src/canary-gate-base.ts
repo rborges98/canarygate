@@ -1,112 +1,15 @@
-export type BooleanFlagData = {
-  key: string
-  type: 'boolean'
-  enabled: boolean
-}
+import {
+  ApiFlagRaw,
+  ApiResponse,
+  CanaryGateOptions,
+  FlagData,
+  FlagEvaluationContext
+} from './types'
+import { hashString } from './hash'
+import { parseSseEventBlock } from './sse'
 
-export type RolloutFlagData = {
-  key: string
-  type: 'rollout'
-  enabled: boolean
-  percent: number
-}
-
-export type FlagData = BooleanFlagData | RolloutFlagData
-
-export type FlagEvaluationContext = {
-  userId?: string
-}
-
-export type CanaryGateOptions = {
-  baseUrl?: string
-  environment?: string
-  stream?: boolean
-  reconnectDelay?: number
-  maxReconnectDelay?: number
-  heartbeatTimeoutMs?: number
-}
-
-type ApiFlagRaw = {
-  key: string
-  type: 'boolean' | 'rollout'
-  enabled: boolean
-  rolloutPercent: number
-  updatedAt: string
-}
-
-type ApiResponse = {
-  projectId: string
-  environment: string
-  flags: ApiFlagRaw[]
-}
-
-type ParsedSseEvent = {
-  event: string
-  data: string
-  retryMs?: number
-}
-
-const ANON_ID_KEY = '__cg_anon_id__'
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 65_000
-
-function getOrCreateAnonId(): string {
-  if (typeof localStorage !== 'undefined') {
-    const stored = localStorage.getItem(ANON_ID_KEY)
-    if (stored) return stored
-    const id = crypto.randomUUID()
-    localStorage.setItem(ANON_ID_KEY, id)
-    return id
-  }
-  return crypto.randomUUID()
-}
-
-function hashString(input: string): number {
-  let hash = 5381
-  for (let i = 0; i < input.length; i++) {
-    hash = ((hash << 5) + hash) ^ input.charCodeAt(i)
-    hash = hash >>> 0
-  }
-  return hash % 100
-}
-
-function parseSseEventBlock(block: string): ParsedSseEvent | null {
-  let event = 'message'
-  const dataLines: string[] = []
-  let retryMs: number | undefined
-
-  for (const line of block.split(/\r?\n/)) {
-    if (!line || line.startsWith(':')) continue
-
-    const separatorIndex = line.indexOf(':')
-    const field = separatorIndex === -1 ? line : line.slice(0, separatorIndex)
-    const value =
-      separatorIndex === -1 ? '' : line.slice(separatorIndex + 1).trimStart()
-
-    if (field === 'event') {
-      event = value || 'message'
-      continue
-    }
-
-    if (field === 'data') {
-      dataLines.push(value)
-      continue
-    }
-
-    if (field === 'retry') {
-      const parsedRetryMs = Number.parseInt(value, 10)
-      if (Number.isFinite(parsedRetryMs) && parsedRetryMs > 0) {
-        retryMs = parsedRetryMs
-      }
-    }
-  }
-
-  if (dataLines.length === 0 && retryMs === undefined) {
-    return null
-  }
-
-  return { event, data: dataLines.join('\n'), retryMs }
-}
 
 function isAbortError(error: unknown) {
   return (
@@ -120,15 +23,13 @@ function parseTimestamp(value: string) {
   return Number.isNaN(parsed) ? 0 : parsed
 }
 
-export class CanaryGate {
+export class CanaryGateBase {
   private readonly baseUrl: string
   private readonly environment: string | undefined
-  private readonly streamEnabled: boolean
   private readonly reconnectDelay: number
   private readonly maxReconnectDelay: number
   private readonly heartbeatTimeoutMs: number
 
-  // Cache alterado para guardar os dados brutos da API (ApiFlagRaw)
   private cache = new Map<string, ApiFlagRaw>()
   private cacheVersions = new Map<string, number>()
   private readonly anonId: string
@@ -142,28 +43,16 @@ export class CanaryGate {
   private destroyed = false
 
   constructor(
-    private readonly apiKey: string,
-    options: CanaryGateOptions = {}
+    protected readonly apiKey: string,
+    options: CanaryGateOptions = {},
+    protected readonly streamEnabled: boolean,
+    protected readonly anonIdFactory: () => string
   ) {
     this.baseUrl = (options.baseUrl ?? 'http://localhost:3001').replace(
       /\/$/,
       ''
     )
     this.environment = options.environment
-
-    // TRAVA DE SEGURANÇA: Identifica se o SDK está rodando no Browser (React, Next Client, etc.)
-    const isBrowser =
-      typeof window !== 'undefined' && typeof window.document !== 'undefined'
-
-    // Se for Browser, força FALSE no stream para proteger o servidor. Se for backend, aceita a opção ou assume false.
-    this.streamEnabled = isBrowser ? false : (options.stream ?? false)
-
-    if (isBrowser && options.stream === true) {
-      console.warn(
-        '[canarygate] Real-time streams (SSE) are disabled in browser environments to protect network architecture.'
-      )
-    }
-
     this.reconnectDelay = options.reconnectDelay ?? 5_000
     this.maxReconnectDelay = Math.max(
       options.maxReconnectDelay ?? DEFAULT_MAX_RECONNECT_DELAY_MS,
@@ -172,7 +61,13 @@ export class CanaryGate {
     this.heartbeatTimeoutMs =
       options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS
     this.streamRetryDelay = this.reconnectDelay
-    this.anonId = getOrCreateAnonId()
+    this.anonId = anonIdFactory()
+  }
+
+  protected warnStreamDisabled(): void {
+    console.warn(
+      '[canarygate] Real-time streams (SSE) are disabled in browser environments to protect network architecture.'
+    )
   }
 
   async init(): Promise<void> {
@@ -406,12 +301,10 @@ export class CanaryGate {
     void this.consumeStream(abortController)
   }
 
-  // CÁLCULO DINÂMICO: getFlag resolve o hash do rollout sob demanda
   getFlag(key: string, context?: FlagEvaluationContext): FlagData | undefined {
     const raw = this.cache.get(key)
     if (!raw) return undefined
 
-    // No backend usa o userId passado por parâmetro. No frontend cai no anonId padrão.
     const evaluationId = context?.userId || this.anonId
 
     if (raw.type === 'rollout') {
