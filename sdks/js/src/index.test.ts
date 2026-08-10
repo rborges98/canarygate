@@ -1,4 +1,6 @@
-import { CanaryGate } from './index'
+import { CanaryGate } from './client'
+import { CanaryGate as ServerCanaryGate } from './server'
+import { hashString } from './hash'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,6 +41,11 @@ function mockFetch(flagsResponse?: object, streamBody?: ReadableStream<Uint8Arra
   return fetchMock
 }
 
+function simulateServerEnvironment() {
+  vi.stubGlobal('window', undefined)
+  vi.stubGlobal('document', undefined)
+}
+
 async function flushMicrotasks(cycles = 20) {
   for (let i = 0; i < cycles; i++) {
     await Promise.resolve()
@@ -49,7 +56,25 @@ async function flushMicrotasks(cycles = 20) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('CanaryGate', () => {
+describe('hashString', () => {
+  it('hash of "feature-rollout-a:user-42" matches the contract', () => {
+    expect(hashString('feature-rollout-a:user-42')).toBe(59)
+  })
+
+  it('hash of "new-checkout:vitor-1" matches the contract', () => {
+    expect(hashString('new-checkout:vitor-1')).toBe(20)
+  })
+
+  it('hash of "dark-mode:anon-999" matches the contract', () => {
+    expect(hashString('dark-mode:anon-999')).toBe(71)
+  })
+
+  it('hash of "flag-x:" matches the contract', () => {
+    expect(hashString('flag-x:')).toBe(94)
+  })
+})
+
+describe('CanaryGate (client)', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.unstubAllGlobals()
@@ -376,14 +401,66 @@ describe('CanaryGate', () => {
   })
 
   // -------------------------------------------------------------------------
+  describe('Browser stream behavior', () => {
+    it('never opens the SSE stream in a browser even with stream: true, and logs a warning', async () => {
+      const fetchMock = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+      })
+      vi.stubGlobal('fetch', fetchMock)
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      try {
+        const gate = new CanaryGate('test-key', {
+          stream: true,
+          baseUrl: 'http://localhost:3001'
+        })
+        await gate.init()
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          '[canarygate] Real-time streams (SSE) are disabled in browser environments to protect network architecture.'
+        )
+        expect(fetchMock).toHaveBeenCalledTimes(1)
+        expect(fetchMock).toHaveBeenCalledWith(
+          'http://localhost:3001/sdk/flags',
+          expect.anything()
+        )
+        expect(fetchMock).not.toHaveBeenCalledWith(
+          'http://localhost:3001/sdk/stream',
+          expect.anything()
+        )
+      } finally {
+        warnSpy.mockRestore()
+      }
+    })
+  })
+})
+
+describe('CanaryGate (server)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.unstubAllGlobals()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  // -------------------------------------------------------------------------
   describe('Stream (SSE)', () => {
+    beforeEach(() => {
+      simulateServerEnvironment()
+    })
+
     it('applies a flag-updated event to the flag cache', async () => {
       const sseData =
         'event: flag-updated\ndata: {"key":"feature-x","type":"boolean","enabled":true,"rolloutPercent":0,"updatedAt":"2025-01-01T00:00:00.000Z"}\n\n'
       const stream = createSseStream(sseData)
       mockFetch(undefined, stream)
 
-      const gate = new CanaryGate('test-key', {
+      const gate = new ServerCanaryGate('test-key', {
         stream: true,
         baseUrl: 'http://localhost:3001',
         reconnectDelay: 300_000,
@@ -408,7 +485,7 @@ describe('CanaryGate', () => {
       const stream = createSseStream('event: connected\ndata: {}\n\n')
       mockFetch(undefined, stream)
 
-      const gate = new CanaryGate('test-key', {
+      const gate = new ServerCanaryGate('test-key', {
         stream: true,
         baseUrl: 'http://localhost:3001'
       })
@@ -422,7 +499,7 @@ describe('CanaryGate', () => {
       const stream = createSseStream('retry: 10000\n\n')
       mockFetch(undefined, stream)
 
-      const gate = new CanaryGate('test-key', {
+      const gate = new ServerCanaryGate('test-key', {
         stream: true,
         baseUrl: 'http://localhost:3001',
         reconnectDelay: 300_000,
@@ -433,6 +510,68 @@ describe('CanaryGate', () => {
       await flushMicrotasks(20)
 
       expect(gate.getFlags()).toHaveLength(0)
+      gate.disconnect()
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  describe('Server stream behavior', () => {
+    beforeEach(() => {
+      simulateServerEnvironment()
+    })
+
+    it('does not open the SSE stream in a server environment without the stream option', async () => {
+      const fetchMock = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const gate = new ServerCanaryGate('test-key', {
+        baseUrl: 'http://localhost:3001'
+      })
+      await gate.init()
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(fetchMock).not.toHaveBeenCalledWith(
+        'http://localhost:3001/sdk/stream',
+        expect.anything()
+      )
+    })
+
+    it('opens the SSE stream in a server environment when stream: true', async () => {
+      const fetchMock = vi.fn()
+      fetchMock.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+        })
+      )
+      fetchMock.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          body: createSseStream('event: connected\ndata: {}\n\n')
+        })
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      const gate = new ServerCanaryGate('test-key', {
+        stream: true,
+        baseUrl: 'http://localhost:3001',
+        reconnectDelay: 300_000,
+        maxReconnectDelay: 300_000,
+        heartbeatTimeoutMs: 300_000
+      })
+      await gate.init()
+      await flushMicrotasks(20)
+
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:3001/sdk/stream',
+        expect.anything()
+      )
       gate.disconnect()
     })
   })
