@@ -3,9 +3,31 @@ import { LandingNav } from '@/components/home/nav'
 import { LandingFooter } from '@/components/home/footer'
 
 export const metadata: Metadata = {
-  title: 'Termos de Uso — CanaryGate',
+  title: 'Terms of Use — CanaryGate',
   description:
-    'Termos e condições de uso da plataforma CanaryGate. Leia antes de criar sua conta.'
+    'Terms and conditions of use of the CanaryGate platform. Read before creating your account.',
+  alternates: {
+    canonical: '/terms'
+  },
+  openGraph: {
+    type: 'website',
+    url: '/terms',
+    siteName: 'CanaryGate',
+    locale: 'en_US',
+    title: 'Terms of Use — CanaryGate',
+    description:
+      'Terms and conditions of use of the CanaryGate platform. Read before creating your account.'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Use — CanaryGate',
+    description:
+      'Terms and conditions of use of the CanaryGate platform. Read before creating your account.'
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 }
 
 export default function TermsPage() {
@@ -16,12 +38,12 @@ export default function TermsPage() {
       <div className="mx-auto max-w-3xl px-4 pt-32 pb-24 sm:px-8">
         <div className="border-cg-bg-100 mb-12 border-b pb-8">
           <h1 className="text-cg-neutral-100 text-3xl font-bold">
-            Termos de Uso
+            Terms of Use
           </h1>
           <p className="text-cg-neutral-500 mt-3 text-sm">
-            Versão 1.0 &mdash; Data de vigência:{' '}
+            Version 1.0 &mdash; Effective date:{' '}
             <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-              [DATA: A PREENCHER]
+              [DATE: TO BE FILLED]
             </span>
           </p>
         </div>
@@ -29,81 +51,81 @@ export default function TermsPage() {
         <div className="space-y-12">
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              1. Aceitação dos Termos
+              1. Acceptance of These Terms
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Ao criar uma conta, acessar ou utilizar o CanaryGate
-                (&ldquo;Serviço&rdquo;), você (&ldquo;Usuário&rdquo;) declara
-                ter lido, compreendido e concordado com estes Termos de Uso
-                (&ldquo;Termos&rdquo;) e com a nossa{' '}
+                By creating an account, accessing or using CanaryGate
+                (&ldquo;Service&rdquo;), you (&ldquo;User&rdquo;) declare that
+                you have read, understood and agreed to these Terms of Use
+                (&ldquo;Terms&rdquo;) and to our{' '}
                 <a
                   href="/privacy"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
-                  Política de Privacidade
+                  Privacy Policy
                 </a>
                 .
               </p>
               <p>
-                Se você está aceitando estes Termos em nome de uma empresa ou
-                outra entidade jurídica, você declara ter poderes para
-                vinculá-la a estes Termos.
+                If you are accepting these Terms on behalf of a company or
+                another legal entity, you declare that you have the authority
+                to bind it to these Terms.
               </p>
               <p>
-                Se você não concorda com qualquer disposição destes Termos, não
-                crie uma conta nem utilize o Serviço.
+                If you do not agree with any provision of these Terms, do not
+                create an account or use the Service.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              2. Definições
+              2. Definitions
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Para fins destes Termos, os seguintes termos têm o significado
-                abaixo:
+                For the purposes of these Terms, the following terms have the
+                meanings set out below:
               </p>
               <ul className="border-cg-bg-100 space-y-2 border-l pl-4">
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    &ldquo;CanaryGate&rdquo;, &ldquo;nós&rdquo; ou
-                    &ldquo;nosso&rdquo;
+                    &ldquo;CanaryGate&rdquo;, &ldquo;we&rdquo; or
+                    &ldquo;our&rdquo;
                   </span>{' '}
-                  refere-se a Rafael Castilho e Borges,{' '}
+                  refers to Rafael Castilho e Borges,{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CNPJ: A PREENCHER APÓS ABERTURA]
+                    [CNPJ: TO BE FILLED AFTER COMPANY REGISTRATION]
                   </span>
-                  , com endereço em Rua Gaspar Magalhães, 415, Apto 302, Rio de
+                  , with address at Rua Gaspar Magalhães, 415, Apto 302, Rio de
                   Janeiro, RJ, Brasil,{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CEP: A PREENCHER]
+                    [ZIP CODE: TO BE FILLED]
                   </span>
                   .
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    &ldquo;Serviço&rdquo;
+                    &ldquo;Service&rdquo;
                   </span>{' '}
-                  refere-se à plataforma SaaS de gerenciamento de feature flags
-                  disponível em canarygate.io e suas subpáginas.
+                  refers to the SaaS platform for feature flag management
+                  available at canarygate.io and its subpages.
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    &ldquo;Usuário&rdquo; ou &ldquo;você&rdquo;
+                    &ldquo;User&rdquo; or &ldquo;you&rdquo;
                   </span>{' '}
-                  refere-se a qualquer pessoa física ou jurídica que acessa ou
-                  utiliza o Serviço.
+                  refers to any natural or legal person who accesses or uses
+                  the Service.
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    &ldquo;Dados do Usuário&rdquo;
+                    &ldquo;User Data&rdquo;
                   </span>{' '}
-                  refere-se a todos os dados que o Usuário insere, cria ou
-                  processa por meio do Serviço, incluindo feature flags,
-                  configurações, chaves de API e logs de auditoria.
+                  refers to all data that the User inputs, creates or processes
+                  through the Service, including feature flags, settings, API
+                  keys and audit logs.
                 </li>
               </ul>
             </div>
@@ -111,37 +133,40 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              3. Descrição do Serviço
+              3. Description of the Service
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                O CanaryGate é uma plataforma de gerenciamento de feature flags
-                que permite:
+                CanaryGate is a feature flag management platform that allows:
               </p>
               <ul className="list-inside list-disc space-y-1.5 pl-2">
-                <li>Criar e gerenciar feature flags em múltiplos ambientes;</li>
                 <li>
-                  Realizar rollout gradual e controlado de funcionalidades;
+                  Creating and managing feature flags across multiple
+                  environments;
                 </li>
                 <li>
-                  Receber atualizações em tempo real via SSE (Server-Sent
-                  Events);
+                  Performing gradual and controlled rollouts of features;
                 </li>
-                <li>Auditar alterações com registro de autor e timestamp; e</li>
                 <li>
-                  Integrar o controle de flags às suas aplicações por meio de
-                  SDK e API REST documentada.
+                  Receiving real-time updates via SSE (Server-Sent Events);
+                </li>
+                <li>
+                  Auditing changes with author and timestamp records; and
+                </li>
+                <li>
+                  Integrating flag control into your applications through the
+                  SDK and a documented REST API.
                 </li>
               </ul>
               <p>
-                O Serviço é oferecido no modelo Software as a Service (SaaS),
-                acessível mediante assinatura ou plano gratuito. A
-                funcionalidade exata de cada plano é descrita na{' '}
+                The Service is provided under the Software as a Service (SaaS)
+                model, accessible through a subscription or a free plan. The
+                exact functionality of each plan is described on the{' '}
                 <a
                   href="/#pricing"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
-                  página de preços
+                  pricing page
                 </a>
                 .
               </p>
@@ -150,54 +175,53 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              4. Cadastro e Conta
+              4. Registration and Account
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                4.1. Para utilizar o Serviço, o Usuário deve criar uma conta
-                fornecendo um endereço de e-mail válido.
+                4.1. To use the Service, the User must create an account by
+                providing a valid email address.
               </p>
               <p>
-                4.2. O Usuário é o único responsável por manter a
-                confidencialidade de suas credenciais de acesso. O CanaryGate
-                não se responsabiliza por perdas ou danos decorrentes de uso não
-                autorizado da conta atribuível à falha do Usuário em proteger
-                suas credenciais.
+                4.2. The User is solely responsible for maintaining the
+                confidentiality of their access credentials. CanaryGate is not
+                liable for losses or damages arising from unauthorized use of
+                the account attributable to the User&rsquo;s failure to protect
+                their credentials.
               </p>
               <p>
-                4.3. O Usuário deve notificar imediatamente o CanaryGate, pelo
-                e-mail{' '}
+                4.3. The User must immediately notify CanaryGate, by email{' '}
                 <a
                   href="mailto:rcborges98@gmail.com"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
                   rcborges98@gmail.com
                 </a>
-                , em caso de uso não autorizado de sua conta ou qualquer
-                suspeita de violação de segurança.
+                , in the event of unauthorized use of their account or any
+                suspected security breach.
               </p>
               <p>
-                4.4. Cada conta é pessoal e intransferível, exceto no contexto
-                de organizações, onde membros adicionais podem ser convidados
-                conforme as funcionalidades da plataforma.
+                4.4. Each account is personal and non-transferable, except in
+                the context of organizations, where additional members may be
+                invited in accordance with the platform&rsquo;s features.
               </p>
               <p>
-                4.5. O Usuário concorda em fornecer informações verdadeiras,
-                precisas, atuais e completas durante o cadastro e a manter essas
-                informações atualizadas.
+                4.5. The User agrees to provide true, accurate, current and
+                complete information during registration and to keep such
+                information up to date.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              5. Planos, Preços e Pagamentos
+              5. Plans, Pricing and Payments
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                5.1. O CanaryGate oferece um plano gratuito com funcionalidades
-                limitadas e planos pagos com funcionalidades adicionais. Os
-                valores e as funcionalidades de cada plano estão disponíveis em{' '}
+                5.1. CanaryGate offers a free plan with limited features and
+                paid plans with additional features. The prices and features of
+                each plan are available at{' '}
                 <a
                   href="/#pricing"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
@@ -207,71 +231,72 @@ export default function TermsPage() {
                 .
               </p>
               <p>
-                5.2. Assinaturas pagas são cobradas de forma recorrente (mensal
-                ou anual, conforme selecionado no momento da contratação) e
-                renovadas automaticamente ao final de cada período, salvo
-                cancelamento pelo Usuário.
+                5.2. Paid subscriptions are billed on a recurring basis
+                (monthly or yearly, as selected at the time of purchase) and
+                automatically renewed at the end of each period, unless
+                cancelled by the User.
               </p>
               <p>
-                5.3. O Usuário pode cancelar a renovação automática a qualquer
-                momento nas configurações da conta. O cancelamento é eficaz ao
-                final do período já pago.
+                5.3. The User may cancel automatic renewal at any time in the
+                account settings. Cancellation takes effect at the end of the
+                already-paid period.
               </p>
               <p>
-                5.4. Os preços são informados em reais (BRL) ou dólares
-                americanos (USD) conforme indicado na página de preços. Usuários
-                internacionais estão sujeitos a taxas de câmbio e encargos
-                aplicados pela sua instituição financeira.
+                5.4. Prices are quoted in Brazilian reais (BRL) or US dollars
+                (USD) as indicated on the pricing page. International users are
+                subject to exchange rates and fees applied by their financial
+                institution.
               </p>
               <p>
-                5.5. Em caso de falha no pagamento após as tentativas
-                automáticas de cobrança, o CanaryGate notificará o Usuário e
-                poderá suspender ou reclassificar a conta para o plano gratuito.
+                5.5. In the event of payment failure after automatic billing
+                attempts, CanaryGate will notify the User and may suspend or
+                reclassify the account to the free plan.
               </p>
               <p>
-                5.6. O CanaryGate reserva-se o direito de alterar os preços dos
-                planos com aviso prévio de pelo menos 30 (trinta) dias, conforme
-                descrito na Seção 14.
+                5.6. CanaryGate reserves the right to change plan prices with
+                at least 30 (thirty) days&rsquo; prior notice, as described in
+                Section 14.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              6. Direito de Arrependimento e Cancelamento
+              6. Right of Withdrawal and Cancellation
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
                 <span className="text-cg-neutral-100 font-medium">
-                  6.1. Direito de arrependimento (CDC, art. 49):
+                  6.1. Right of withdrawal (CDC, art. 49):
                 </span>{' '}
-                O Usuário que contratar um plano pago poderá desistir da
-                contratação no prazo de 7 (sete) dias corridos, contados da data
-                da primeira cobrança, nos termos do art. 49 do Código de Defesa
-                do Consumidor (Lei nº 8.078/1990). Para exercer esse direito, o
-                Usuário deve enviar comunicação escrita para{' '}
+                A User who purchases a paid plan may withdraw from the purchase
+                within 7 (seven) calendar days from the date of the first
+                charge, pursuant to art. 49 of the Consumer Protection Code
+                (Código de Defesa do Consumidor &mdash; Law No. 8.078/1990). To
+                exercise this right, the User must send written communication
+                to{' '}
                 <a
                   href="mailto:rcborges98@gmail.com"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
                   rcborges98@gmail.com
                 </a>{' '}
-                com o assunto &ldquo;Arrependimento de Contratação&rdquo;. O
-                valor pago será reembolsado integralmente em até 10 (dez) dias
-                úteis.
+                with the subject &ldquo;Contract Withdrawal&rdquo;. The amount
+                paid will be fully refunded within up to 10 (ten) business
+                days.
               </p>
               <p>
                 <span className="text-cg-neutral-100 font-medium">
-                  6.2. Cancelamento após o prazo de arrependimento:
+                  6.2. Cancellation after the withdrawal period:
                 </span>{' '}
-                Após os 7 dias, não haverá reembolso de valores referentes ao
-                período vigente já pago. O cancelamento interrompe a renovação
-                automática, e o Usuário mantém acesso ao plano até o fim do
-                período pago.
+                After the 7 days, there will be no refund of amounts related to
+                the current already-paid period. Cancellation stops automatic
+                renewal, and the User retains access to the plan until the end
+                of the paid period.
               </p>
               <p>
-                6.3. O cancelamento pode ser realizado a qualquer momento nas
-                configurações da conta ou por e-mail para{' '}
+                6.3. Cancellation can be made at any time in the account
+                settings or by email to{' '}
                 <a
                   href="mailto:rcborges98@gmail.com"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
@@ -281,270 +306,261 @@ export default function TermsPage() {
                 .
               </p>
               <p>
-                6.4. Após o encerramento da conta, os Dados do Usuário serão
-                mantidos por 90 (noventa) dias, período durante o qual o Usuário
-                poderá exportá-los. Após esse prazo, os dados poderão ser
-                excluídos de nossos servidores ativos, ressalvadas as obrigações
-                de retenção previstas em lei.
+                6.4. After account closure, User Data will be kept for 90
+                (ninety) days, during which the User may export it. After that
+                period, the data may be deleted from our active servers,
+                subject to retention obligations provided by law.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              7. Uso Aceitável
+              7. Acceptable Use
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                7.1. O Usuário concorda em utilizar o Serviço apenas para fins
-                lícitos e de acordo com estes Termos, as leis aplicáveis e as
-                boas práticas de uso de serviços de internet.
+                7.1. The User agrees to use the Service only for lawful
+                purposes and in accordance with these Terms, applicable laws
+                and good practices for the use of internet services.
               </p>
               <p>
                 7.2.{' '}
                 <span className="text-cg-neutral-100 font-medium">
-                  É expressamente proibido:
+                  It is expressly forbidden to:
                 </span>
               </p>
               <ul className="border-cg-bg-100 space-y-2 border-l pl-4">
                 <li>
-                  a) Usar o Serviço para qualquer finalidade ilegal ou não
-                  autorizada;
+                  a) Use the Service for any illegal or unauthorized purpose;
                 </li>
                 <li>
-                  b) Realizar engenharia reversa, descompilar, desmontar ou
-                  tentar extrair o código-fonte do Serviço;
+                  b) Reverse engineer, decompile, disassemble or attempt to
+                  extract the source code of the Service;
                 </li>
                 <li>
-                  c) Reproduzir, duplicar, copiar, vender, revender ou explorar
-                  qualquer parte do Serviço sem permissão expressa e por escrito
-                  do CanaryGate;
+                  c) Reproduce, duplicate, copy, sell, resell or exploit any
+                  part of the Service without the express written permission of
+                  CanaryGate;
                 </li>
                 <li>
-                  d) Usar o Serviço para desenvolver produtos ou serviços
-                  concorrentes;
+                  d) Use the Service to develop competing products or services;
                 </li>
                 <li>
-                  e) Realizar ataques de força bruta, tentativas de acesso não
-                  autorizado, injeção de código ou qualquer outra ação que
-                  comprometa a segurança ou a integridade do Serviço;
+                  e) Carry out brute force attacks, unauthorized access
+                  attempts, code injection or any other action that compromises
+                  the security or integrity of the Service;
                 </li>
                 <li>
-                  f) Usar scripts automatizados ou bots para consumir o Serviço
-                  além do uso ordinário previsto na documentação da API;
+                  f) Use automated scripts or bots to consume the Service
+                  beyond the ordinary use provided for in the API
+                  documentation;
                 </li>
                 <li>
-                  g) Transmitir vírus, malware ou qualquer código malicioso;
+                  g) Transmit viruses, malware or any malicious code;
                 </li>
                 <li>
-                  h) Coletar ou armazenar dados pessoais de outros usuários sem
-                  a devida base legal.
+                  h) Collect or store personal data of other users without the
+                  appropriate legal basis.
                 </li>
               </ul>
               <p>
-                7.3. O CanaryGate reserva o direito de investigar e tomar
-                medidas cabíveis diante de violações desta seção, incluindo a
-                suspensão ou encerramento imediato da conta.
+                7.3. CanaryGate reserves the right to investigate and take
+                appropriate action in response to violations of this section,
+                including immediate suspension or termination of the account.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              8. Propriedade Intelectual
+              8. Intellectual Property
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                8.1. O Serviço, incluindo seu software, interface, logotipos,
-                marcas, documentação e todos os materiais a ele associados, é de
-                propriedade exclusiva de Rafael Castilho e Borges e está
-                protegido pelas leis brasileiras e internacionais de propriedade
-                intelectual.
+                8.1. The Service, including its software, interface, logos,
+                trademarks, documentation and all associated materials, is the
+                exclusive property of Rafael Castilho e Borges and is protected
+                by Brazilian and international intellectual property laws.
               </p>
               <p>
-                8.2. Estes Termos concedem ao Usuário uma licença limitada, não
-                exclusiva, intransferível e revogável para utilizar o Serviço
-                exclusivamente nos termos aqui estabelecidos. O Usuário não
-                adquire nenhum direito de propriedade sobre o Serviço ao
-                utilizá-lo.
+                8.2. These Terms grant the User a limited, non-exclusive,
+                non-transferable and revocable license to use the Service
+                exclusively under the terms set out herein. The User acquires
+                no ownership rights over the Service by using it.
               </p>
               <p>
-                8.3. A marca &ldquo;CanaryGate&rdquo; e seu logotipo são marcas
-                de titularidade de Rafael Castilho e Borges. O uso não
-                autorizado é vedado.
+                8.3. The &ldquo;CanaryGate&rdquo; trademark and its logo are
+                trademarks owned by Rafael Castilho e Borges. Unauthorized use
+                is prohibited.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              9. Conteúdo e Dados do Usuário
+              9. User Content and Data
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                9.1. O Usuário retém a titularidade de todos os Dados do Usuário
-                inseridos ou gerados por meio do Serviço.
+                9.1. The User retains ownership of all User Data entered or
+                generated through the Service.
               </p>
               <p>
-                9.2. Ao utilizar o Serviço, o Usuário concede ao CanaryGate uma
-                licença limitada, não exclusiva e gratuita para armazenar,
-                processar e transmitir os Dados do Usuário exclusivamente para a
-                prestação do Serviço.
+                9.2. By using the Service, the User grants CanaryGate a
+                limited, non-exclusive and royalty-free license to store,
+                process and transmit User Data solely for the provision of the
+                Service.
               </p>
               <p>
-                9.3. O CanaryGate não utilizará os Dados do Usuário para nenhuma
-                finalidade comercial além da prestação do Serviço, salvo
-                consentimento expresso.
+                9.3. CanaryGate will not use User Data for any commercial
+                purpose other than the provision of the Service, except with
+                express consent.
               </p>
               <p>
-                9.4. O Usuário declara que possui todos os direitos necessários
-                sobre os dados que insere no Serviço e que esses dados não
-                violam direitos de terceiros nem legislação aplicável.
+                9.4. The User declares that they hold all necessary rights over
+                the data entered into the Service and that such data does not
+                violate third-party rights or applicable legislation.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              10. Privacidade
+              10. Privacy
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                O tratamento de dados pessoais pelo CanaryGate é regido pela
-                nossa{' '}
+                The processing of personal data by CanaryGate is governed by
+                our{' '}
                 <a
                   href="/privacy"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
-                  Política de Privacidade
+                  Privacy Policy
                 </a>
-                , incorporada a estes Termos por referência. Ao utilizar o
-                Serviço, o Usuário concorda com as práticas de tratamento de
-                dados pessoais ali descritas.
+                , incorporated into these Terms by reference. By using the
+                Service, the User agrees to the personal data processing
+                practices described therein.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              11. Disponibilidade do Serviço
+              11. Service Availability
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                11.1. O CanaryGate envidará esforços razoáveis para manter o
-                Serviço disponível. No entanto, não garantimos disponibilidade
-                ininterrupta ou isenta de erros.
+                11.1. CanaryGate will make reasonable efforts to keep the
+                Service available. However, we do not guarantee uninterrupted
+                or error-free availability.
               </p>
               <p>
-                11.2. O Serviço pode ser temporariamente interrompido para
-                manutenção, atualizações ou por circunstâncias fora do nosso
-                controle razoável. Quando possível, manutenções programadas
-                serão comunicadas com antecedência por e-mail ou notificação na
-                plataforma.
+                11.2. The Service may be temporarily interrupted for
+                maintenance, updates or due to circumstances beyond our
+                reasonable control. When possible, scheduled maintenance will
+                be communicated in advance by email or in-app notification.
               </p>
               <p>
-                11.3. Não nos responsabilizamos por danos decorrentes de
-                indisponibilidade do Serviço, exceto nos limites previstos pela
-                legislação brasileira aplicável.
+                11.3. We are not liable for damages arising from Service
+                unavailability, except within the limits provided by applicable
+                Brazilian law.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              12. Limitação de Responsabilidade
+              12. Limitation of Liability
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                12.1. O Serviço é fornecido &ldquo;como está&rdquo; e
-                &ldquo;conforme disponível&rdquo;, sem garantias de qualquer
-                tipo, expressas ou implícitas, incluindo garantias de
-                comerciabilidade, adequação a um propósito específico ou não
-                violação de direitos.
+                12.1. The Service is provided &ldquo;as is&rdquo; and
+                &ldquo;as available&rdquo;, without warranties of any kind,
+                express or implied, including warranties of merchantability,
+                fitness for a particular purpose or non-infringement.
               </p>
-              <p>12.2. O CanaryGate não se responsabiliza por:</p>
+              <p>12.2. CanaryGate is not liable for:</p>
               <ul className="list-inside list-disc space-y-1.5 pl-2">
                 <li>
-                  danos indiretos, incidentais, especiais, punitivos ou
-                  consequentes;
+                  indirect, incidental, special, punitive or consequential
+                  damages;
                 </li>
                 <li>
-                  perda de dados, lucros cessantes ou interrupção de negócios;
+                  loss of data, lost profits or business interruption;
                 </li>
                 <li>
-                  falhas em serviços de infraestrutura de terceiros (provedores
-                  de nuvem, redes, etc.); ou
+                  failures in third-party infrastructure services (cloud
+                  providers, networks, etc.); or
                 </li>
-                <li>uso indevido do Serviço pelo próprio Usuário.</li>
+                <li>improper use of the Service by the User themselves.</li>
               </ul>
               <p>
-                12.3. Em qualquer caso, a responsabilidade máxima do CanaryGate
-                perante o Usuário, por qualquer causa, ficará limitada ao valor
-                total pago pelo Usuário nos 12 (doze) meses anteriores ao evento
-                que originou a responsabilidade, ou R$&nbsp;100,00 (cem reais),
-                o que for maior.
+                12.3. In any case, CanaryGate&rsquo;s maximum liability to the
+                User, for any cause, will be limited to the total amount paid
+                by the User in the 12 (twelve) months preceding the event
+                giving rise to liability, or R$&nbsp;100,00 (cem reais),
+                whichever is higher.
               </p>
               <p>
-                12.4. Nada nesta seção exclui ou limita responsabilidades que
-                não possam ser afastadas pela legislação brasileira aplicável,
-                incluindo o Código de Defesa do Consumidor e a LGPD.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              13. Indenização
-            </h2>
-            <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
-              <p>
-                O Usuário concorda em indenizar, defender e isentar o CanaryGate
-                e seus representantes de quaisquer reivindicações, danos,
-                perdas, responsabilidades, custos e despesas (incluindo
-                honorários advocatícios razoáveis) decorrentes de: (a) uso do
-                Serviço em violação a estes Termos; (b) violação de direitos de
-                terceiros por meio do Serviço; ou (c) Dados do Usuário que
-                infrinjam direitos de propriedade intelectual ou outras leis
-                aplicáveis.
+                12.4. Nothing in this section excludes or limits liabilities
+                that cannot be disclaimed under applicable Brazilian law,
+                including the Consumer Protection Code and the LGPD.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              14. Modificações no Serviço e nos Termos
+              13. Indemnification
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                14.1. O CanaryGate reserva o direito de modificar ou
-                descontinuar, temporária ou permanentemente, o Serviço ou
-                qualquer funcionalidade, com aviso prévio razoável sempre que
-                possível.
-              </p>
-              <p>
-                14.2. Podemos atualizar estes Termos periodicamente. Alterações
-                substanciais (incluindo mudanças de preço, limitações de uso e
-                direitos do Usuário) serão comunicadas com pelo menos 30
-                (trinta) dias de antecedência, por e-mail e/ou notificação na
-                plataforma.
-              </p>
-              <p>
-                14.3. O uso continuado do Serviço após o prazo de aviso
-                constitui aceitação dos novos Termos. Se o Usuário não concordar
-                com as alterações, deve cancelar a conta antes da data de
-                entrada em vigor das mudanças.
+                The User agrees to indemnify, defend and hold harmless
+                CanaryGate and its representatives from any claims, damages,
+                losses, liabilities, costs and expenses (including reasonable
+                attorneys&rsquo; fees) arising from: (a) use of the Service in
+                violation of these Terms; (b) violation of third-party rights
+                through the Service; or (c) User Data that infringes
+                intellectual property rights or other applicable laws.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              15. Rescisão
+              14. Modifications to the Service and the Terms
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                15.1. O Usuário pode cancelar sua conta a qualquer momento nas
-                configurações da conta ou pelo e-mail{' '}
+                14.1. CanaryGate reserves the right to modify or discontinue,
+                temporarily or permanently, the Service or any feature, with
+                reasonable prior notice whenever possible.
+              </p>
+              <p>
+                14.2. We may update these Terms periodically. Substantial
+                changes (including price changes, usage limitations and User
+                rights) will be communicated with at least 30 (thirty)
+                days&rsquo; notice, by email and/or in-app notification.
+              </p>
+              <p>
+                14.3. Continued use of the Service after the notice period
+                constitutes acceptance of the new Terms. If the User does not
+                agree with the changes, they must cancel the account before the
+                effective date of the changes.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
+              15. Termination
+            </h2>
+            <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
+              <p>
+                15.1. The User may cancel their account at any time in the
+                account settings or by email{' '}
                 <a
                   href="mailto:rcborges98@gmail.com"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
@@ -554,89 +570,90 @@ export default function TermsPage() {
                 .
               </p>
               <p>
-                15.2. O CanaryGate pode suspender ou encerrar a conta do
-                Usuário, imediatamente e sem aviso prévio, em caso de violação
-                material destes Termos, incluindo violações de uso aceitável,
-                fraude ou qualquer ato que prejudique o Serviço ou outros
-                usuários.
+                15.2. CanaryGate may suspend or terminate the User&rsquo;s
+                account, immediately and without prior notice, in the event of
+                a material breach of these Terms, including acceptable use
+                violations, fraud or any act that harms the Service or other
+                users.
               </p>
               <p>
-                15.3. Após o encerramento da conta por qualquer motivo,
-                sobreviverão as disposições que, por sua natureza, devem
-                permanecer em vigor, incluindo as seções de propriedade
-                intelectual, limitação de responsabilidade, indenização, lei
-                aplicável e foro.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              16. Lei Aplicável e Foro de Eleição
-            </h2>
-            <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
-              <p>
-                16.1. Estes Termos são regidos pelas leis da República
-                Federativa do Brasil, incluindo o Código de Defesa do Consumidor
-                (Lei nº 8.078/1990), o Marco Civil da Internet (Lei nº
-                12.965/2014) e a Lei Geral de Proteção de Dados Pessoais (Lei nº
-                13.709/2018 — LGPD).
-              </p>
-              <p>
-                16.2. Fica eleito o foro da Comarca do Rio de Janeiro, Estado do
-                Rio de Janeiro, para dirimir quaisquer controvérsias oriundas
-                destes Termos, com renúncia expressa a qualquer outro, por mais
-                privilegiado que seja.
-              </p>
-              <p>
-                16.3. Para Usuários localizados fora do Brasil, na medida em que
-                leis locais imperativas conflitem com estes Termos, tais leis
-                prevalecerão apenas na extensão do conflito.
+                15.3. After account termination for any reason, the provisions
+                that by their nature should remain in force shall survive,
+                including the sections on intellectual property, limitation of
+                liability, indemnification, governing law and jurisdiction.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              17. Disposições Gerais
+              16. Governing Law and Jurisdiction
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                17.1. Estes Termos, juntamente com a Política de Privacidade,
-                constituem o acordo integral entre o Usuário e o CanaryGate em
-                relação ao Serviço.
+                16.1. These Terms are governed by the laws of the Federative
+                Republic of Brazil, including the Consumer Protection Code
+                (Código de Defesa do Consumidor &mdash; Law No. 8.078/1990),
+                the Brazilian Civil Rights Framework for the Internet (Marco
+                Civil da Internet &mdash; Law No. 12.965/2014) and the
+                Brazilian General Data Protection Law (Lei Geral de Proteção de
+                Dados &mdash; Law No. 13.709/2018, LGPD).
               </p>
               <p>
-                17.2. A falha do CanaryGate em exercer ou fazer valer qualquer
-                direito ou disposição destes Termos não constituirá renúncia a
-                tal direito ou disposição.
+                16.2. The courts of the District of Rio de Janeiro, State of
+                Rio de Janeiro, are elected to settle any disputes arising from
+                these Terms, with express waiver of any other forum, no matter
+                how privileged.
               </p>
               <p>
-                17.3. Caso qualquer disposição destes Termos seja declarada
-                inválida ou inexequível por autoridade competente, as demais
-                disposições permanecerão em pleno vigor e efeito.
-              </p>
-              <p>
-                17.4. O Usuário não pode ceder ou transferir seus direitos ou
-                obrigações decorrentes destes Termos sem o consentimento prévio
-                e por escrito do CanaryGate.
+                16.3. For Users located outside Brazil, to the extent that
+                mandatory local laws conflict with these Terms, such laws will
+                prevail only to the extent of the conflict.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              18. Contato
+              17. General Provisions
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Para dúvidas, solicitações ou comunicações formais em relação a
-                estes Termos:
+                17.1. These Terms, together with the Privacy Policy,
+                constitute the entire agreement between the User and CanaryGate
+                regarding the Service.
+              </p>
+              <p>
+                17.2. CanaryGate&rsquo;s failure to exercise or enforce any
+                right or provision of these Terms will not constitute a waiver
+                of such right or provision.
+              </p>
+              <p>
+                17.3. If any provision of these Terms is held to be invalid or
+                unenforceable by a competent authority, the remaining
+                provisions will remain in full force and effect.
+              </p>
+              <p>
+                17.4. The User may not assign or transfer their rights or
+                obligations arising from these Terms without the prior written
+                consent of CanaryGate.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
+              18. Contact
+            </h2>
+            <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
+              <p>
+                For questions, requests or formal communications regarding
+                these Terms:
               </p>
               <ul className="border-cg-bg-100 space-y-1.5 border-l pl-4">
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    E-mail:
+                    Email:
                   </span>{' '}
                   <a
                     href="mailto:rcborges98@gmail.com"
@@ -647,12 +664,12 @@ export default function TermsPage() {
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Endereço:
+                    Address:
                   </span>{' '}
                   Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
                   Brasil —{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CEP: A PREENCHER]
+                    [ZIP CODE: TO BE FILLED]
                   </span>
                 </li>
               </ul>
@@ -662,8 +679,8 @@ export default function TermsPage() {
 
         <div className="border-cg-bg-100 mt-16 border-t pt-8">
           <p className="text-cg-neutral-600 text-xs">
-            © {new Date().getFullYear()} CanaryGate. Ao usar o Serviço, você
-            confirma que leu e concordou com estes Termos.
+            © {new Date().getFullYear()} CanaryGate. By using the Service, you
+            confirm that you have read and agreed to these Terms.
           </p>
         </div>
       </div>

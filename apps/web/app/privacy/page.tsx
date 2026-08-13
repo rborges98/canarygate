@@ -3,9 +3,31 @@ import { LandingNav } from '@/components/home/nav'
 import { LandingFooter } from '@/components/home/footer'
 
 export const metadata: Metadata = {
-  title: 'Política de Privacidade — CanaryGate',
+  title: 'Privacy Policy — CanaryGate',
   description:
-    'Como o CanaryGate coleta, usa e protege seus dados pessoais, em conformidade com a LGPD (Lei nº 13.709/2018).'
+    'How CanaryGate collects, uses, and protects your personal data, in compliance with the LGPD (Law No. 13.709/2018).',
+  alternates: {
+    canonical: '/privacy'
+  },
+  openGraph: {
+    type: 'website',
+    url: '/privacy',
+    siteName: 'CanaryGate',
+    locale: 'en_US',
+    title: 'Privacy Policy — CanaryGate',
+    description:
+      'How CanaryGate collects, uses, and protects your personal data, in compliance with the LGPD (Law No. 13.709/2018).'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy — CanaryGate',
+    description:
+      'How CanaryGate collects, uses, and protects your personal data, in compliance with the LGPD (Law No. 13.709/2018).'
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 }
 
 export default function PrivacyPage() {
@@ -16,55 +38,56 @@ export default function PrivacyPage() {
       <div className="mx-auto max-w-3xl px-4 pt-32 pb-24 sm:px-8">
         <div className="border-cg-bg-100 mb-12 border-b pb-8">
           <h1 className="text-cg-neutral-100 text-3xl font-bold">
-            Política de Privacidade
+            Privacy Policy
           </h1>
           <p className="text-cg-neutral-500 mt-3 text-sm">
-            Versão 1.0 &mdash; Data de vigência:{' '}
+            Version 1.0 &mdash; Effective date:{' '}
             <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-              [DATA: A PREENCHER]
+              [DATE: TO BE FILLED]
             </span>
           </p>
           <p className="text-cg-neutral-400 mt-3 text-sm leading-relaxed">
-            Esta Política descreve como tratamos os dados pessoais dos usuários
-            da plataforma CanaryGate, em conformidade com a{' '}
+            This Policy describes how we process the personal data of users of
+            the CanaryGate platform, in compliance with the{' '}
             <span className="text-cg-neutral-300">
-              Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 —
-              LGPD)
+              Brazilian General Data Protection Law (Lei Geral de Proteção de
+              Dados — Law No. 13.709/2018, LGPD)
             </span>
-            , o Marco Civil da Internet (Lei nº 12.965/2014) e demais
-            legislações aplicáveis.
+            , the Brazilian Civil Rights Framework for the Internet (Marco
+            Civil da Internet — Law No. 12.965/2014), and other applicable
+            legislation.
           </p>
         </div>
 
         <div className="space-y-12">
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              1. Identificação do Controlador
+              1. Controller Identification
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                O controlador dos dados pessoais tratados por meio deste Serviço
-                é:
+                The controller of the personal data processed through this
+                Service is:
               </p>
               <ul className="border-cg-bg-100 space-y-1.5 border-l pl-4">
                 <li>
-                  <span className="text-cg-neutral-100 font-medium">Nome:</span>{' '}
+                  <span className="text-cg-neutral-100 font-medium">Name:</span>{' '}
                   Rafael Castilho e Borges
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">CNPJ:</span>{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CNPJ: A PREENCHER APÓS ABERTURA]
+                    [CNPJ: TO BE FILLED AFTER COMPANY REGISTRATION]
                   </span>
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Endereço:
+                    Address:
                   </span>{' '}
                   Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
                   Brasil —{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CEP: A PREENCHER]
+                    [ZIP CODE: TO BE FILLED]
                   </span>
                 </li>
                 <li>
@@ -80,9 +103,9 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Serviço:
+                    Service:
                   </span>{' '}
-                  CanaryGate — plataforma SaaS de gerenciamento de feature flags
+                  CanaryGate — SaaS platform for feature flag management
                   (canarygate.io)
                 </li>
               </ul>
@@ -91,16 +114,16 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              2. Encarregado de Proteção de Dados (DPO)
+              2. Data Protection Officer (DPO)
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Nos termos do art. 41 da LGPD, o Encarregado pelo tratamento de
-                dados pessoais é:
+                Under Article 41 of the LGPD, the Data Protection Officer
+                responsible for the processing of personal data is:
               </p>
               <ul className="border-cg-bg-100 space-y-1.5 border-l pl-4">
                 <li>
-                  <span className="text-cg-neutral-100 font-medium">Nome:</span>{' '}
+                  <span className="text-cg-neutral-100 font-medium">Name:</span>{' '}
                   Rafael Castilho e Borges
                 </li>
                 <li>
@@ -116,181 +139,180 @@ export default function PrivacyPage() {
                 </li>
               </ul>
               <p>
-                O Encarregado é o canal de comunicação entre o CanaryGate, os
-                titulares dos dados e a Agência Nacional de Proteção de Dados
-                (ANPD).
+                The Data Protection Officer is the channel of communication
+                between CanaryGate, the data subjects, and the National Data
+                Protection Authority (ANPD).
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              3. Dados Pessoais que Coletamos
+              3. Personal Data We Collect
             </h2>
             <div className="text-cg-neutral-300 space-y-4 text-sm leading-relaxed">
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  3.1 Dados de identificação e cadastro
+                  3.1 Identification and registration data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
-                  <li>Nome completo (quando fornecido voluntariamente);</li>
-                  <li>Endereço de e-mail;</li>
+                  <li>Full name (when voluntarily provided);</li>
+                  <li>E-mail address;</li>
                   <li>
-                    Dados de autenticação — senhas armazenadas em formato hash
-                    (nunca em texto claro).
+                    Authentication data — passwords stored in hashed format
+                    (never in plain text).
                   </li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  3.2 Dados de pagamento
+                  3.2 Payment data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
-                  <li>Nome e endereço de cobrança;</li>
+                  <li>Billing name and address;</li>
                   <li>
-                    Dados de cartão de crédito — processados diretamente pelo
-                    processador de pagamentos; <em>não armazenamos</em> dados de
-                    cartão em nossos servidores;
+                    Credit card data — processed directly by the payment
+                    processor; <em>we do not store</em> card data on our
+                    servers;
                   </li>
-                  <li>Histórico de transações e status de assinatura.</li>
+                  <li>Transaction history and subscription status.</li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  3.3 Dados de uso do Serviço
+                  3.3 Service usage data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
-                  <li>Feature flags criadas, configuradas e modificadas;</li>
-                  <li>Logs de auditoria (quem realizou cada ação e quando);</li>
+                  <li>Feature flags created, configured, and modified;</li>
+                  <li>Audit logs (who performed each action and when);</li>
                   <li>
-                    Logs de acesso à API (chaves utilizadas, ambientes,
-                    timestamps);
+                    API access logs (keys used, environments, timestamps);
                   </li>
-                  <li>Configurações de organizações e projetos.</li>
+                  <li>Organization and project settings.</li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  3.4 Dados técnicos
+                  3.4 Technical data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
-                  <li>Endereço IP;</li>
-                  <li>User agent (navegador e sistema operacional);</li>
+                  <li>IP address;</li>
+                  <li>User agent (browser and operating system);</li>
                   <li>
-                    Cookies de sessão necessários para autenticação (ver Seção
+                    Session cookies required for authentication (see Section
                     10);
                   </li>
                   <li>
-                    Logs de aplicação para monitoramento de performance e erros.
+                    Application logs for performance and error monitoring.
                   </li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  3.5 Dados de comunicação
+                  3.5 Communication data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
                   <li>
-                    E-mails trocados com nossa equipe (suporte, convites de
-                    membros, notificações da conta).
+                    E-mails exchanged with our team (support, member
+                    invitations, account notifications).
                   </li>
                 </ul>
               </div>
               <p className="text-cg-neutral-500 italic">
-                Não coletamos dados pessoais sensíveis conforme definidos no
-                art. 5, II da LGPD (saúde, biometria, origem étnica, crenças
-                religiosas, dados genéticos, etc.).
+                We do not collect sensitive personal data as defined in Article
+                5, II of the LGPD (health, biometrics, ethnic origin, religious
+                beliefs, genetic data, etc.).
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              4. Finalidades e Bases Legais (LGPD)
+              4. Purposes and Legal Bases (LGPD)
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Tratamos dados pessoais somente quando há uma base legal
-                adequada, nos termos do art. 7 da LGPD:
+                We process personal data only when there is an adequate legal
+                basis, under Article 7 of the LGPD:
               </p>
               <div className="border-cg-bg-100 overflow-x-auto rounded-lg border">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-cg-bg-100 bg-cg-bg-100/50 border-b">
                       <th className="text-cg-neutral-200 w-3/5 px-4 py-3 font-semibold">
-                        Finalidade
+                        Purpose
                       </th>
                       <th className="text-cg-neutral-200 w-2/5 px-4 py-3 font-semibold">
-                        Base Legal (LGPD art. 7)
+                        Legal Basis (LGPD Art. 7)
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-cg-bg-100 divide-y">
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Prestação do Serviço (autenticação, flags, ambientes)
+                        Service provision (authentication, flags, environments)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Execução de contrato (inciso V)
+                        Contract performance (item V)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Processamento de pagamentos e faturamento
+                        Payment processing and billing
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Execução de contrato (inciso V) + Obrigação legal
-                        (inciso II)
+                        Contract performance (item V) + Legal obligation (item
+                        II)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Emissão de nota fiscal de serviço (NFS-e)
+                        Issuance of service invoice (NFS-e)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Obrigação legal (inciso II)
+                        Legal obligation (item II)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Comunicações transacionais (alertas, confirmações,
-                        convites)
+                        Transactional communications (alerts, confirmations,
+                        invitations)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Execução de contrato (inciso V)
+                        Contract performance (item V)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Marketing e newsletters (opt-in)
+                        Marketing and newsletters (opt-in)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Consentimento (inciso I) — revogável a qualquer momento
+                        Consent (item I) — revocable at any time
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Segurança, prevenção a fraude e abuso
+                        Security, fraud and abuse prevention
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Legítimo interesse (inciso IX)
+                        Legitimate interest (item IX)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Melhoria do Serviço (análise de uso agregada e
-                        anonimizada)
+                        Service improvement (aggregated and anonymized usage
+                        analytics)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Legítimo interesse (inciso IX)
+                        Legitimate interest (item IX)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Defesa em processos judiciais ou administrativos
+                        Defense in judicial or administrative proceedings
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Exercício regular de direitos (inciso VI)
+                        Regular exercise of rights (item VI)
                       </td>
                     </tr>
                   </tbody>
@@ -301,65 +323,64 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              5. Compartilhamento de Dados
+              5. Data Sharing
             </h2>
             <div className="text-cg-neutral-300 space-y-4 text-sm leading-relaxed">
               <p className="text-cg-neutral-200 font-medium">
-                Não vendemos, alugamos nem comercializamos dados pessoais de
-                Usuários.
+                We do not sell, rent, or trade Users' personal data.
               </p>
               <p>
-                Podemos compartilhar dados com os seguintes operadores, que
-                estão contratualmente obrigados a tratá-los apenas conforme
-                nossas instruções e em conformidade com a LGPD:
+                We may share data with the following operators, which are
+                contractually bound to process it only in accordance with our
+                instructions and in compliance with the LGPD:
               </p>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  5.1 Operadores de dados (processadores)
+                  5.1 Data operators (processors)
                 </h3>
                 <ul className="border-cg-bg-100 space-y-2 border-l pl-4">
                   <li>
                     <span className="text-cg-neutral-200">
-                      Processador de pagamentos
+                      Payment processor
                     </span>{' '}
-                    (ex.: Stripe, Asaas ou similar): processamento de cobranças,
-                    assinaturas e reembolsos;
+                    (e.g., Stripe, Asaas, or similar): processing of charges,
+                    subscriptions, and refunds;
                   </li>
                   <li>
                     <span className="text-cg-neutral-200">
-                      Provedor de e-mail transacional
+                      Transactional e-mail provider
                     </span>{' '}
-                    (Resend): envio de notificações, convites e comunicações da
-                    conta;
+                    (Resend): sending notifications, invitations, and account
+                    communications;
                   </li>
                   <li>
                     <span className="text-cg-neutral-200">
-                      Provedores de infraestrutura em nuvem
+                      Cloud infrastructure providers
                     </span>{' '}
-                    (ex.: Railway, Neon, Upstash ou similares): hospedagem,
-                    banco de dados e cache.
+                    (e.g., Railway, Neon, Upstash, or similar): hosting,
+                    database, and cache.
                   </li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  5.2 Autoridades competentes
+                  5.2 Competent authorities
                 </h3>
                 <p>
-                  Podemos divulgar dados pessoais quando legalmente obrigados
-                  por decisão judicial, autoridade administrativa ou regulatória
-                  competente, incluindo a ANPD.
+                  We may disclose personal data when legally required by a
+                  court decision or a competent administrative or regulatory
+                  authority, including the ANPD.
                 </p>
               </div>
               <div>
                 <h3 className="text-cg-neutral-200 mb-2 font-medium">
-                  5.3 Transferência de controle
+                  5.3 Transfer of control
                 </h3>
                 <p>
-                  Em caso de fusão, aquisição ou venda de ativos, os dados
-                  pessoais poderão ser transferidos ao adquirente, que estará
-                  vinculado a esta Política ou a uma equivalente, com
-                  comunicação prévia aos titulares afetados.
+                  In the event of a merger, acquisition, or sale of assets,
+                  personal data may be transferred to the acquirer, which will
+                  be bound by this Policy or an equivalent one, with prior
+                  notice to the affected data subjects.
                 </p>
               </div>
             </div>
@@ -367,180 +388,181 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              6. Transferência Internacional de Dados
+              6. International Data Transfer
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Nossos provedores de infraestrutura podem armazenar e processar
-                dados em servidores localizados fora do Brasil, incluindo nos
-                Estados Unidos e na União Europeia.
+                Our infrastructure providers may store and process data on
+                servers located outside Brazil, including in the United States
+                and the European Union.
               </p>
               <p>
-                Tais transferências são realizadas em conformidade com o art. 33
-                da LGPD, mediante cláusulas contratuais com os operadores ou
-                para países que proporcionem grau de proteção de dados
-                equivalente ao exigido pela legislação brasileira.
+                Such transfers are carried out in compliance with Article 33 of
+                the LGPD, through contractual clauses with the operators or to
+                countries that provide a level of data protection equivalent to
+                that required by Brazilian law.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              7. Retenção e Exclusão de Dados
+              7. Data Retention and Deletion
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Mantemos dados pessoais pelo tempo necessário às finalidades
-                para as quais foram coletados, observando os prazos legais:
+                We keep personal data for as long as necessary for the purposes
+                for which it was collected, observing the legal deadlines:
               </p>
               <div className="border-cg-bg-100 overflow-x-auto rounded-lg border">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-cg-bg-100 bg-cg-bg-100/50 border-b">
                       <th className="text-cg-neutral-200 w-3/5 px-4 py-3 font-semibold">
-                        Categoria de Dados
+                        Data Category
                       </th>
                       <th className="text-cg-neutral-200 w-2/5 px-4 py-3 font-semibold">
-                        Prazo de Retenção
+                        Retention Period
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-cg-bg-100 divide-y">
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Dados de conta ativa
+                        Active account data
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Enquanto a conta estiver ativa
+                        While the account is active
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Dados após cancelamento da conta
+                        Data after account cancellation
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        90 dias para download; após isso, excluídos dos
-                        servidores ativos
+                        90 days for download; after that, deleted from active
+                        servers
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Registros fiscais e financeiros
+                        Tax and financial records
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        5 anos (obrigação legal)
+                        5 years (legal obligation)
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Logs de auditoria do Serviço
+                        Service audit logs
                       </td>
-                      <td className="text-cg-neutral-400 px-4 py-3">2 anos</td>
+                      <td className="text-cg-neutral-400 px-4 py-3">2 years</td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Dados de marketing (com consentimento)
+                        Marketing data (with consent)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Até revogação do consentimento
+                        Until consent is revoked
                       </td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Dados de suporte e comunicações
+                        Support and communications data
                       </td>
-                      <td className="text-cg-neutral-400 px-4 py-3">3 anos</td>
+                      <td className="text-cg-neutral-400 px-4 py-3">3 years</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <p>
-                Após o vencimento dos prazos acima, os dados são eliminados ou
-                anonimizados de forma irreversível.
+                After the above deadlines expire, the data is deleted or
+                irreversibly anonymized.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              8. Direitos dos Titulares (LGPD, art. 18)
+              8. Data Subject Rights (LGPD, Article 18)
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Você, como titular dos dados, tem os seguintes direitos em
-                relação ao tratamento realizado pelo CanaryGate:
+                As a data subject, you have the following rights regarding the
+                processing carried out by CanaryGate:
               </p>
               <ul className="border-cg-bg-100 space-y-2 border-l pl-4">
                 <li>
-                  <span className="text-cg-neutral-200">Confirmação:</span>{' '}
-                  confirmar se tratamos dados seus;
+                  <span className="text-cg-neutral-200">Confirmation:</span>{' '}
+                  confirm whether we process your data;
                 </li>
                 <li>
-                  <span className="text-cg-neutral-200">Acesso:</span> obter
-                  cópia dos seus dados pessoais tratados;
+                  <span className="text-cg-neutral-200">Access:</span> obtain a
+                  copy of your processed personal data;
                 </li>
                 <li>
-                  <span className="text-cg-neutral-200">Correção:</span>{' '}
-                  solicitar a correção de dados incompletos, inexatos ou
-                  desatualizados;
-                </li>
-                <li>
-                  <span className="text-cg-neutral-200">
-                    Anonimização, bloqueio ou eliminação:
-                  </span>{' '}
-                  de dados desnecessários, excessivos ou tratados em
-                  desconformidade com a LGPD;
-                </li>
-                <li>
-                  <span className="text-cg-neutral-200">Portabilidade:</span>{' '}
-                  receber seus dados em formato estruturado e interoperável;
+                  <span className="text-cg-neutral-200">Correction:</span>{' '}
+                  request the correction of incomplete, inaccurate, or outdated
+                  data;
                 </li>
                 <li>
                   <span className="text-cg-neutral-200">
-                    Eliminação por consentimento:
+                    Anonymization, blocking, or deletion:
                   </span>{' '}
-                  solicitar a exclusão dos dados cujo tratamento se baseia em
-                  consentimento;
+                  of unnecessary, excessive, or data processed in
+                  non-compliance with the LGPD;
+                </li>
+                <li>
+                  <span className="text-cg-neutral-200">Portability:</span>{' '}
+                  receive your data in a structured and interoperable format;
                 </li>
                 <li>
                   <span className="text-cg-neutral-200">
-                    Informação sobre compartilhamento:
+                    Deletion by consent:
                   </span>{' '}
-                  saber com quais entidades compartilhamos seus dados;
+                  request the deletion of data whose processing is based on
+                  consent;
                 </li>
                 <li>
                   <span className="text-cg-neutral-200">
-                    Revogação do consentimento:
+                    Information on sharing:
                   </span>{' '}
-                  retirar consentimento a qualquer momento, sem prejuízo dos
-                  tratamentos já realizados; e
+                  know which entities we share your data with;
                 </li>
                 <li>
-                  <span className="text-cg-neutral-200">Oposição:</span> opor-se
-                  a tratamentos realizados sem base legal adequada.
+                  <span className="text-cg-neutral-200">
+                    Consent revocation:
+                  </span>{' '}
+                  withdraw consent at any time, without prejudice to the
+                  processing already carried out; and
+                </li>
+                <li>
+                  <span className="text-cg-neutral-200">Opposition:</span>{' '}
+                  object to processing carried out without an adequate legal
+                  basis.
                 </li>
               </ul>
               <div className="bg-cg-bg-100/40 border-cg-bg-100 mt-4 rounded-lg border p-4">
                 <p className="text-cg-neutral-200 mb-1 font-medium">
-                  Como exercer seus direitos:
+                  How to exercise your rights:
                 </p>
                 <p>
-                  Envie uma solicitação para{' '}
+                  Send a request to{' '}
                   <a
                     href="mailto:rcborges98@gmail.com"
                     className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                   >
                     rcborges98@gmail.com
                   </a>{' '}
-                  com o assunto{' '}
+                  with the subject{' '}
                   <span className="text-cg-neutral-200">
-                    &ldquo;Direitos LGPD — [seu nome]&rdquo;
+                    &ldquo;LGPD Rights — [your name]&rdquo;
                   </span>
-                  . Responderemos no prazo de até 15 (quinze) dias corridos,
-                  conforme o art. 19, II da LGPD.
+                  . We will respond within up to 15 (fifteen) calendar days,
+                  pursuant to Article 19, II of the LGPD.
                 </p>
                 <p className="mt-2">
-                  Você também pode apresentar reclamação diretamente à ANPD em{' '}
+                  You may also file a complaint directly with the ANPD at{' '}
                   <a
                     href="https://www.gov.br/anpd"
                     target="_blank"
@@ -557,138 +579,138 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              9. Segurança dos Dados
+              9. Data Security
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Adotamos medidas técnicas e organizacionais para proteger os
-                dados pessoais contra acesso não autorizado, destruição, perda,
-                alteração ou divulgação indevida:
+                We adopt technical and organizational measures to protect
+                personal data against unauthorized access, destruction, loss,
+                alteration, or improper disclosure:
               </p>
               <ul className="list-inside list-disc space-y-1.5 pl-2">
-                <li>Transmissão de dados criptografada via TLS (HTTPS);</li>
+                <li>Encrypted data transmission via TLS (HTTPS);</li>
                 <li>
-                  Senhas armazenadas em hash com algoritmo seguro — nunca em
-                  texto claro;
+                  Passwords stored in hash with a secure algorithm — never in
+                  plain text;
                 </li>
                 <li>
-                  Acesso aos dados pessoais restrito às pessoas que precisam
-                  para desempenhar suas funções;
+                  Access to personal data restricted to those who need it to
+                  perform their duties;
                 </li>
-                <li>Monitoramento de segurança e logs de acesso; e</li>
-                <li>Isolamento de ambientes de produção.</li>
+                <li>Security monitoring and access logs; and</li>
+                <li>Isolation of production environments.</li>
               </ul>
               <p>
-                Em caso de incidente de segurança que possa acarretar risco ou
-                dano relevante aos titulares, comunicaremos o ocorrido à ANPD e
-                aos titulares afetados em prazo razoável, conforme o art. 48 da
-                LGPD.
+                In the event of a security incident that may pose relevant risk
+                or harm to data subjects, we will notify the ANPD and the
+                affected data subjects within a reasonable period, pursuant to
+                Article 48 of the LGPD.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              10. Cookies e Tecnologias Similares
+              10. Cookies and Similar Technologies
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
-              <p>Utilizamos os seguintes tipos de cookies:</p>
+              <p>We use the following types of cookies:</p>
               <div className="border-cg-bg-100 overflow-x-auto rounded-lg border">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-cg-bg-100 bg-cg-bg-100/50 border-b">
                       <th className="text-cg-neutral-200 px-4 py-3 font-semibold">
-                        Tipo
+                        Type
                       </th>
                       <th className="text-cg-neutral-200 px-4 py-3 font-semibold">
-                        Finalidade
+                        Purpose
                       </th>
                       <th className="text-cg-neutral-200 px-4 py-3 font-semibold">
-                        Obrigatório
+                        Required
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-cg-bg-100 divide-y">
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Sessão / autenticação
+                        Session / authentication
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Manter o Usuário autenticado durante a navegação
+                        Keep the User authenticated while browsing
                       </td>
-                      <td className="text-cg-neutral-400 px-4 py-3">Sim</td>
+                      <td className="text-cg-neutral-400 px-4 py-3">Yes</td>
                     </tr>
                     <tr>
                       <td className="text-cg-neutral-300 px-4 py-3">
-                        Preferências
+                        Preferences
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Armazenar configurações de interface
+                        Store interface settings
                       </td>
-                      <td className="text-cg-neutral-400 px-4 py-3">Não</td>
+                      <td className="text-cg-neutral-400 px-4 py-3">No</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <p>
-                Não utilizamos cookies de rastreamento para fins publicitários.
-                A desativação de cookies de sessão nas configurações do seu
-                navegador impedirá o acesso a funcionalidades autenticadas.
+                We do not use tracking cookies for advertising purposes.
+                Disabling session cookies in your browser settings will prevent
+                access to authenticated features.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              11. Menores de Idade
+              11. Minors
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                O Serviço não se destina a crianças. Nos termos do art. 14 da
-                LGPD, não coletamos intencionalmente dados pessoais de crianças
-                (menores de 12 anos) nem de adolescentes (menores de 18 anos)
-                sem o consentimento específico e destacado de pelo menos um dos
-                pais ou do responsável legal.
+                The Service is not intended for children. Under Article 14 of
+                the LGPD, we do not intentionally collect personal data from
+                children (under 12 years old) or adolescents (under 18 years
+                old) without the specific and prominent consent of at least one
+                parent or legal guardian.
               </p>
               <p>
-                Se tomarmos conhecimento de que dados de menores foram coletados
-                sem o consentimento adequado, os excluiremos imediatamente.
+                If we become aware that data from minors was collected without
+                adequate consent, we will delete it immediately.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              12. Alterações desta Política
+              12. Changes to This Policy
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Podemos atualizar esta Política periodicamente. Alterações
-                relevantes serão comunicadas com pelo menos 30 (trinta) dias de
-                antecedência, por e-mail ou notificação na plataforma.
+                We may update this Policy periodically. Relevant changes will
+                be communicated at least 30 (thirty) days in advance, by
+                e-mail or in-platform notification.
               </p>
               <p>
-                O uso continuado do Serviço após a entrada em vigor das
-                alterações constitui aceitação da nova Política. Se você não
-                concordar com as mudanças, deve cancelar a conta antes da data
-                de vigência.
+                Continued use of the Service after the changes take effect
+                constitutes acceptance of the new Policy. If you do not agree
+                with the changes, you must cancel your account before the
+                effective date.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              13. Contato e Canal de Atendimento
+              13. Contact and Support Channel
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                Para exercer seus direitos, tirar dúvidas ou apresentar
-                reclamações sobre o tratamento de dados pessoais:
+                To exercise your rights, ask questions, or file complaints
+                about the processing of personal data:
               </p>
               <ul className="border-cg-bg-100 space-y-1.5 border-l pl-4">
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Encarregado (DPO):
+                    Data Protection Officer (DPO):
                   </span>{' '}
                   Rafael Castilho e Borges
                 </li>
@@ -705,17 +727,17 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Endereço:
+                    Address:
                   </span>{' '}
                   Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
                   Brasil —{' '}
                   <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CEP: A PREENCHER]
+                    [ZIP CODE: TO BE FILLED]
                   </span>
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
-                    Autoridade fiscalizadora (ANPD):
+                    Supervisory authority (ANPD):
                   </span>{' '}
                   <a
                     href="https://www.gov.br/anpd"
@@ -734,9 +756,10 @@ export default function PrivacyPage() {
 
         <div className="border-cg-bg-100 mt-16 border-t pt-8">
           <p className="text-cg-neutral-600 text-xs">
-            © {new Date().getFullYear()} CanaryGate. Esta Política foi redigida
-            em conformidade com a Lei nº 13.709/2018 (LGPD) e o Marco Civil da
-            Internet (Lei nº 12.965/2014).
+            © {new Date().getFullYear()} CanaryGate. This Policy was drafted
+            in compliance with Law No. 13.709/2018 (LGPD) and the Brazilian
+            Civil Rights Framework for the Internet (Marco Civil da Internet —
+            Law No. 12.965/2014).
           </p>
         </div>
       </div>
