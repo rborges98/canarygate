@@ -7,7 +7,7 @@ import {
   flags,
   history
 } from '@canarygate/database/schema'
-import type { WorkerLogger } from '@canarygate/logger'
+import type { FastifyBaseLogger } from 'fastify'
 import { AutoRolloutJobData } from '@canarygate/messaging-utils'
 
 type JobIdentifiers = {
@@ -37,7 +37,7 @@ type InsertWorkerHistoryData = {
 
 export async function getWorkerFlagState(
   identifiers: JobIdentifiers,
-  log: WorkerLogger
+  log: FastifyBaseLogger
 ) {
   try {
     const [row] = await db
@@ -87,7 +87,7 @@ export function matchesDueAt(value: Date | null, dueAt: string) {
 
 export async function insertWorkerHistory(
   data: InsertWorkerHistoryData,
-  log: WorkerLogger
+  log: FastifyBaseLogger
 ) {
   try {
     await db.insert(history).values({
@@ -121,7 +121,7 @@ export async function insertWorkerHistory(
 export async function scheduleNextAutoRollout(
   targetDate: Date,
   jobData: AutoRolloutJobData,
-  log: WorkerLogger
+  log: FastifyBaseLogger
 ) {
   const delayInSeconds = Math.floor((targetDate.getTime() - Date.now()) / 1000)
   if (delayInSeconds <= 0) return
