@@ -68,7 +68,7 @@ type StepCardProps = {
 function StepCard({ step, index, isLast }: StepCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.15, ease: 'easeOut' }}
@@ -106,7 +106,7 @@ export function V2Steps() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: 'easeOut' }}

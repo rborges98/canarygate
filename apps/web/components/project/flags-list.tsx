@@ -71,7 +71,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
                 key={tab}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  'rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-medium transition-colors',
+                  'rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-semibold transition-colors',
                   filter === tab
                     ? 'border-cg-indigo-600 bg-cg-indigo-950 text-cg-indigo-100'
                     : 'border-cg-bg-100 text-cg-neutral-500 hover:text-cg-neutral-300'

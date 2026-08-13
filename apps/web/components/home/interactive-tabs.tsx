@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useScroll } from 'motion/react'
+import { motion, AnimatePresence, useScroll, useInView } from 'motion/react'
 import { cn } from '@/shared/utils'
-import { useCountdown } from './use-countdown'
+
+type MockupProps = {
+  isInView: boolean
+}
 
 type MockFlag = {
   key: string
@@ -47,7 +50,7 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
         <div className="text-cg-neutral-100 font-mono text-[13px] font-semibold">
           {flag.key}
         </div>
-        <div className="text-cg-neutral-400 mt-0.5 text-[11px]">
+        <div className="text-cg-neutral-300 mt-0.5 text-[11px]">
           {flag.description}
         </div>
       </div>
@@ -68,7 +71,7 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
         <button
           type="button"
           className={cn(
-            'relative h-5 w-10 rounded-full transition-colors duration-300',
+            'focus-visible:ring-cg-indigo-300 relative h-5 w-10 rounded-full transition-colors duration-300 focus-visible:ring-2',
             flag.status === 'enabled' ? 'bg-cg-green-100/30' : 'bg-cg-bg-100'
           )}
           aria-label={`${flag.key} toggle`}
@@ -84,10 +87,11 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
   )
 }
 
-function FlagControlMockup() {
+function FlagControlMockup({ isInView }: MockupProps) {
   const [flags, setFlags] = useState<MockFlag[]>(CONTROL_FLAGS)
 
   useEffect(() => {
+    if (!isInView) return
     const interval = setInterval(() => {
       setFlags((prev) =>
         prev.map((f) => {
@@ -106,7 +110,7 @@ function FlagControlMockup() {
       )
     }, 2000)
     return () => clearInterval(interval)
-  }, [])
+  }, [isInView])
 
   return (
     <div className="border-cg-bg-100 bg-cg-bg-100 overflow-hidden rounded-xl border shadow-xl">
@@ -116,7 +120,7 @@ function FlagControlMockup() {
           <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
           <div className="h-3 w-3 rounded-full bg-green-500/60" />
         </div>
-        <span className="text-cg-neutral-400 font-mono text-xs">
+        <span className="text-cg-neutral-300 font-mono text-xs">
           Feature flags — Production
         </span>
         <div className="flex items-center gap-1.5">
@@ -138,15 +142,16 @@ function FlagControlMockup() {
 
 const ROLLOUT_STEPS = [5, 25, 50, 100]
 
-function RolloutMockup() {
+function RolloutMockup({ isInView }: MockupProps) {
   const [stepIndex, setStepIndex] = useState(1)
 
   useEffect(() => {
+    if (!isInView) return
     const interval = setInterval(() => {
       setStepIndex((prev) => (prev + 1) % ROLLOUT_STEPS.length)
     }, 1500)
     return () => clearInterval(interval)
-  }, [])
+  }, [isInView])
 
   const percent = ROLLOUT_STEPS[stepIndex]
 
@@ -157,7 +162,7 @@ function RolloutMockup() {
           <span className="text-cg-neutral-100 font-mono text-sm font-semibold">
             payment-v2
           </span>
-          <span className="text-cg-neutral-500 text-[10px]">
+          <span className="text-cg-neutral-300 text-[10px]">
             New payment flow · Production
           </span>
         </div>
@@ -179,7 +184,7 @@ function RolloutMockup() {
             {percent}%
           </motion.span>
         </AnimatePresence>
-        <span className="text-cg-neutral-500 text-xs">
+        <span className="text-cg-neutral-300 text-xs">
           ~{Math.round(percent * 28.5).toLocaleString()}K users receiving this
           feature
         </span>
@@ -199,7 +204,7 @@ function RolloutMockup() {
               key={step}
               className={cn(
                 'font-mono text-[10px] transition-colors duration-500',
-                i <= stepIndex ? 'text-cg-indigo-300' : 'text-cg-neutral-700'
+                i <= stepIndex ? 'text-cg-indigo-300' : 'text-cg-neutral-300'
               )}
             >
               {step}%
@@ -213,8 +218,29 @@ function RolloutMockup() {
 
 const SCHEDULED_TARGET = new Date('2026-06-13T09:00:00Z')
 
-function ScheduledMockup() {
-  const { d, h, m, s } = useCountdown(SCHEDULED_TARGET)
+const COUNTDOWN_UNITS = [
+  { key: 'd', label: 'days' },
+  { key: 'h', label: 'hours' },
+  { key: 'm', label: 'min' },
+  { key: 's', label: 'sec' }
+] as const
+
+function ScheduledMockup({ isInView }: MockupProps) {
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!isInView) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [isInView])
+
+  const diff = Math.max(0, SCHEDULED_TARGET.getTime() - now)
+  const remaining: Record<(typeof COUNTDOWN_UNITS)[number]['key'], number> = {
+    d: Math.floor(diff / 86_400_000),
+    h: Math.floor((diff % 86_400_000) / 3_600_000),
+    m: Math.floor((diff % 3_600_000) / 60_000),
+    s: Math.floor((diff % 60_000) / 1_000)
+  }
 
   return (
     <div className="border-cg-bg-100 bg-cg-bg-100 overflow-hidden rounded-xl border shadow-xl">
@@ -223,7 +249,7 @@ function ScheduledMockup() {
           <span className="text-cg-neutral-100 font-mono text-sm font-semibold">
             new-pricing
           </span>
-          <span className="text-cg-neutral-500 text-[10px]">
+          <span className="text-cg-neutral-300 text-[10px]">
             New pricing page · Production
           </span>
         </div>
@@ -235,48 +261,43 @@ function ScheduledMockup() {
       <div className="px-5 py-6">
         <div className="mb-4 flex items-center gap-2">
           <div className="bg-cg-yellow-200 h-2 w-2 rounded-full" />
-          <span className="text-cg-neutral-400 text-[11px]">Goes live on</span>
+          <span className="text-cg-neutral-300 text-[11px]">Goes live on</span>
           <span className="text-cg-neutral-200 font-mono text-[11px] font-semibold">
             Jun 13, 2026 · 09:00 UTC
           </span>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          {(
-            [
-              { value: d, label: 'days' },
-              { value: h, label: 'hours' },
-              { value: m, label: 'min' },
-              { value: s, label: 'sec' }
-            ] as const
-          ).map(({ value, label }) => (
+          {COUNTDOWN_UNITS.map((unit) => (
             <div
-              key={label}
+              key={unit.label}
               className="bg-cg-bg-200 flex flex-col items-center gap-1 rounded-lg py-3"
             >
               <AnimatePresence mode="wait">
                 <motion.span
-                  key={value}
+                  key={remaining[unit.key]}
                   className="text-cg-indigo-200 font-mono text-2xl font-bold"
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {String(value).padStart(2, '0')}
+                  {String(remaining[unit.key]).padStart(2, '0')}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-cg-neutral-600 text-[9px]">{label}</span>
+              <span className="text-cg-neutral-300 text-[9px]">
+                {unit.label}
+              </span>
             </div>
           ))}
         </div>
 
         <div className="bg-cg-bg-200 mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5">
           <div className="flex flex-1 flex-col gap-0.5">
-            <span className="text-cg-neutral-400 text-[10px]">
+            <span className="text-cg-neutral-300 text-[10px]">
               Auto-enables at scheduled time
             </span>
-            <span className="text-cg-neutral-500 text-[10px]">
+            <span className="text-cg-neutral-300 text-[10px]">
               No deploy required · Created by Ana R.
             </span>
           </div>
@@ -344,12 +365,13 @@ const INCOMING_EVENTS: Omit<LiveEvent, 'id' | 'ago'>[] = [
   }
 ]
 
-function RealtimeMockup() {
+function RealtimeMockup({ isInView }: MockupProps) {
   const [events, setEvents] = useState<LiveEvent[]>(INITIAL_EVENTS)
   const nextIdRef = useRef(10)
   const nextEventIndexRef = useRef(0)
 
   useEffect(() => {
+    if (!isInView) return
     const interval = setInterval(() => {
       const incoming =
         INCOMING_EVENTS[nextEventIndexRef.current % INCOMING_EVENTS.length]
@@ -360,7 +382,7 @@ function RealtimeMockup() {
       ])
     }, 1800)
     return () => clearInterval(interval)
-  }, [])
+  }, [isInView])
 
   return (
     <div className="bg-cg-bg-600 border-cg-bg-100 overflow-hidden rounded-xl border shadow-xl">
@@ -370,11 +392,11 @@ function RealtimeMockup() {
             <span className="bg-cg-green-100 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
             <span className="bg-cg-green-100 relative inline-flex h-2 w-2 rounded-full" />
           </span>
-          <span className="text-cg-neutral-400 font-mono text-[11px]">
+          <span className="text-cg-neutral-300 font-mono text-[11px]">
             SSE · connected
           </span>
         </div>
-        <span className="text-cg-neutral-600 font-mono text-[10px]">
+        <span className="text-cg-neutral-300 font-mono text-[10px]">
           stream
         </span>
       </div>
@@ -400,16 +422,16 @@ function RealtimeMockup() {
                   <span className="text-cg-neutral-100 text-[12px] font-semibold">
                     {event.flag}
                   </span>
-                  <span className="text-cg-neutral-500 text-[11px]">
+                  <span className="text-cg-neutral-300 text-[11px]">
                     {event.change}
                   </span>
                 </div>
-                <span className="text-cg-neutral-700 shrink-0 text-[10px]">
+                <span className="text-cg-neutral-300 shrink-0 text-[10px]">
                   {event.ago}
                 </span>
               </div>
               <div className="mt-0.5 pl-4">
-                <span className="text-cg-neutral-600 text-[10px]">
+                <span className="text-cg-neutral-300 text-[10px]">
                   {event.author} · {event.env}
                 </span>
               </div>
@@ -420,7 +442,7 @@ function RealtimeMockup() {
 
       <div className="border-cg-bg-100 border-t px-4 py-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-cg-neutral-600 font-mono text-[10px]">
+          <span className="text-cg-neutral-300 font-mono text-[10px]">
             avg propagation
           </span>
           <span className="text-cg-indigo-200 font-mono text-[10px] font-semibold">
@@ -483,7 +505,7 @@ function AuditMockup() {
         <span className="text-cg-neutral-300 text-sm font-semibold">
           Audit log
         </span>
-        <span className="text-cg-neutral-600 hover:text-cg-neutral-400 cursor-default font-mono text-[10px]">
+        <span className="text-cg-neutral-300 hover:text-cg-neutral-200 cursor-default font-mono text-[10px]">
           export ↓
         </span>
       </div>
@@ -511,19 +533,19 @@ function AuditMockup() {
                 <span className="text-cg-neutral-200 text-[12px] font-semibold">
                   {entry.actor}
                 </span>
-                <span className="text-cg-neutral-500 text-[11px]">
+                <span className="text-cg-neutral-300 text-[11px]">
                   {entry.action}
                 </span>
-                <span className="text-cg-indigo-200 font-mono text-[11px] font-medium">
+                <span className="text-cg-indigo-200 font-mono text-[11px] font-semibold">
                   {entry.flag}
                 </span>
               </div>
               <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="text-cg-neutral-600 text-[10px]">
+                <span className="text-cg-neutral-300 text-[10px]">
                   {entry.time}
                 </span>
-                <span className="text-cg-neutral-700 text-[10px]">·</span>
-                <span className="text-cg-neutral-600 text-[10px]">
+                <span className="text-cg-neutral-300 text-[10px]">·</span>
+                <span className="text-cg-neutral-300 text-[10px]">
                   {entry.env}
                 </span>
               </div>
@@ -539,7 +561,7 @@ type TabItem = {
   number: string
   title: string
   description: string
-  Mockup: React.FC
+  Mockup: (props: MockupProps) => React.ReactNode
 }
 
 const TABS: TabItem[] = [
@@ -584,6 +606,8 @@ export function V2InteractiveTabs() {
   const [activeTab, setActiveTab] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const inView = useInView(containerRef, { amount: 0.2 })
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end']
@@ -602,7 +626,7 @@ export function V2InteractiveTabs() {
   return (
     <div
       ref={containerRef}
-      style={{ height: `${TABS.length * 100}vh` }}
+      style={{ height: '250vh' }}
       className="relative hidden md:block"
     >
       <section className="border-cg-bg-100 bg-cg-bg-600 sticky top-0 h-screen overflow-hidden border-t">
@@ -637,7 +661,7 @@ export function V2InteractiveTabs() {
                       'mt-0.5 shrink-0 font-mono text-sm font-bold transition-colors duration-300',
                       activeTab === i
                         ? 'text-cg-indigo-200'
-                        : 'text-cg-neutral-600'
+                        : 'text-cg-neutral-300'
                     )}
                   >
                     {tab.number}
@@ -648,7 +672,7 @@ export function V2InteractiveTabs() {
                         'text-sm font-semibold transition-colors duration-300',
                         activeTab === i
                           ? 'text-cg-neutral-100'
-                          : 'text-cg-neutral-500'
+                          : 'text-cg-neutral-300'
                       )}
                     >
                       {tab.title}
@@ -656,7 +680,7 @@ export function V2InteractiveTabs() {
                     <AnimatePresence>
                       {activeTab === i && (
                         <motion.p
-                          className="text-cg-neutral-400 mt-1 text-sm leading-relaxed"
+                          className="text-cg-neutral-300 mt-1 text-sm leading-relaxed"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
@@ -681,7 +705,7 @@ export function V2InteractiveTabs() {
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                 >
-                  <ActiveMockup />
+                  <ActiveMockup isInView={inView} />
                 </motion.div>
               </AnimatePresence>
             </div>

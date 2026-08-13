@@ -165,16 +165,23 @@ export function ProjectSettingsForm({
         <h3 className="mb-4 text-[13px] font-semibold text-white">General</h3>
         <div className="flex flex-col gap-3">
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="project-settings-name"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Name
             </label>
             <input
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none"
+              id="project-settings-name"
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none focus-visible:ring-2"
               {...generalForm.register('name', { required: true })}
             />
           </div>
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="project-settings-slug"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Slug
             </label>
             <div className="border-cg-bg-100 flex overflow-hidden rounded-lg border">
@@ -182,7 +189,8 @@ export function ProjectSettingsForm({
                 {orgSlug}/
               </span>
               <input
-                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
+                id="project-settings-slug"
+                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none focus-visible:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 focus-visible:ring-2"
                 {...generalForm.register('slug', { required: true })}
               />
             </div>
@@ -238,9 +246,16 @@ export function ProjectSettingsForm({
         <p className="text-cg-neutral-300 mb-4 text-[11px]">
           Receive a POST request when a flag changes.
         </p>
+        <label
+          htmlFor="project-settings-webhook-url"
+          className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+        >
+          Webhook URL
+        </label>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
-            className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-500 focus:border-cg-indigo-300 focus:text-cg-neutral-100 w-full min-w-0 rounded-lg border px-4 py-2.5 font-mono text-[12px] outline-none sm:flex-1"
+            id="project-settings-webhook-url"
+            className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-500 focus:border-cg-indigo-300 focus:text-cg-neutral-100 focus-visible:ring-cg-indigo-300 w-full min-w-0 rounded-lg border px-4 py-2.5 font-mono text-[12px] outline-none focus-visible:ring-2 sm:flex-1"
             placeholder="https://your-app.com/webhook"
             {...webhookForm.register('webhookUrl')}
           />

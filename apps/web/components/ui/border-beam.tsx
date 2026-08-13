@@ -1,10 +1,10 @@
 'use client'
 
-import { motion, MotionStyle, Transition } from 'motion/react'
+import { motion, MotionStyle, Transition, useReducedMotion } from 'motion/react'
 
 import { cn } from '@/shared/utils'
 
-interface BorderBeamProps {
+type BorderBeamProps = {
   /**
    * The size of the border beam.
    */
@@ -49,6 +49,10 @@ interface BorderBeamProps {
    * The border width of the beam.
    */
   borderWidth?: number
+  /**
+   * Whether to disable the beam animation.
+   */
+  disabled?: boolean
 }
 
 export const BorderBeam = ({
@@ -62,8 +66,12 @@ export const BorderBeam = ({
   style,
   reverse = false,
   initialOffset = 0,
-  borderWidth = 1
+  borderWidth = 1,
+  disabled = false
 }: BorderBeamProps) => {
+  const prefersReducedMotion = useReducedMotion()
+  const beamDisabled = disabled || prefersReducedMotion === true
+
   return (
     <div
       className="border-(length:--border-beam-width) mask-[linear-gradient(transparent,transparent),linear-gradient(#000,#000)] mask-intersect pointer-events-none absolute inset-0 rounded-[inherit] border-transparent [mask-clip:padding-box,border-box]"
@@ -88,19 +96,27 @@ export const BorderBeam = ({
             ...style
           } as MotionStyle
         }
-        initial={{ offsetDistance: `${initialOffset}%` }}
-        animate={{
-          offsetDistance: reverse
-            ? [`${100 - initialOffset}%`, `${-initialOffset}%`]
-            : [`${initialOffset}%`, `${100 + initialOffset}%`]
-        }}
-        transition={{
-          repeat: Infinity,
-          ease: 'linear',
-          duration,
-          delay: -delay,
-          ...transition
-        }}
+        initial={beamDisabled ? false : { offsetDistance: `${initialOffset}%` }}
+        animate={
+          beamDisabled
+            ? undefined
+            : {
+                offsetDistance: reverse
+                  ? [`${100 - initialOffset}%`, `${-initialOffset}%`]
+                  : [`${initialOffset}%`, `${100 + initialOffset}%`]
+              }
+        }
+        transition={
+          beamDisabled
+            ? undefined
+            : {
+                repeat: Infinity,
+                ease: 'linear',
+                duration,
+                delay: -delay,
+                ...transition
+              }
+        }
       />
     </div>
   )

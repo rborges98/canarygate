@@ -60,6 +60,7 @@ export function TabNav({ tabs, className, prefetch }: TabNavProps) {
             key={tab.href}
             href={tab.href}
             prefetch={prefetch}
+            aria-current={isActive ? 'page' : undefined}
             ref={(el) => {
               linkRefs.current[tab.href] = el
             }}

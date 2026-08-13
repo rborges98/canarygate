@@ -116,6 +116,7 @@ export function ScheduleCard({
                   onCheckedChange={() =>
                     handleToggle(field.value, field.onChange)
                   }
+                  label="Schedule"
                 />
               </div>
               <Modal
@@ -162,12 +163,15 @@ export function ScheduleCard({
           )}
         >
           <div>
-            <label className={labelCls}>Date &amp; time</label>
+            <label htmlFor="flag-schedule-date" className={labelCls}>
+              Date &amp; time
+            </label>
 
             <input
+              id="flag-schedule-date"
               type="datetime-local"
               className={cn(
-                'border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 font-mono text-[13px] transition-colors outline-none',
+                'border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 font-mono text-[13px] transition-colors outline-none focus-visible:ring-2',
                 !scheduleEnabled && 'hidden'
               )}
               {...register('scheduleDate')}

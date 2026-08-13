@@ -66,18 +66,25 @@ export function OrgSettingsForm({ orgId, initialName, initialSlug }: Props) {
               {name[0]?.toUpperCase()}
             </div>
             <div className="flex-1">
-              <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+              <label
+                htmlFor="org-settings-name"
+                className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+              >
                 Organization name
               </label>
               <input
-                className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none"
+                id="org-settings-name"
+                className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] outline-none focus-visible:ring-2"
                 {...register('name', { required: true })}
               />
             </div>
           </div>
 
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="org-settings-slug"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Slug
             </label>
             <div className="border-cg-bg-100 flex overflow-hidden rounded-lg border">
@@ -85,7 +92,8 @@ export function OrgSettingsForm({ orgId, initialName, initialSlug }: Props) {
                 canarygate.com/
               </span>
               <input
-                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none"
+                id="org-settings-slug"
+                className="bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 px-3 py-2.5 font-mono text-[12px] outline-none focus-visible:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 focus-visible:ring-2"
                 {...register('slug', { required: true })}
               />
             </div>

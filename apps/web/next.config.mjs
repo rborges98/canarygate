@@ -28,6 +28,24 @@ const nextConfig = {
           value: 'camera=(), microphone=(), geolocation=()'
         }
       ]
+    },
+    {
+      source: '/:asset((?:icon|opengraph-image|twitter-image)(?:\\.png)?)',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }
+      ]
+    },
+    {
+      source: '/favicon.ico',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }
+      ]
+    },
+    {
+      source: '/manifest.json',
+      headers: [
+        { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }
+      ]
     }
   ]
 }

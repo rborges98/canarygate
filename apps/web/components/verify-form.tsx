@@ -66,10 +66,10 @@ export function VerifyForm({ email }: Props) {
       <h2 className="mb-1 text-[20px] font-bold text-white">
         Enter verification code
       </h2>
-      <p className="text-cg-neutral-300 mb-1 text-[12px]">
+      <p id="verify-instruction" className="text-cg-neutral-300 mb-1 text-[12px]">
         We sent a 6-digit code to
       </p>
-      <p className="text-cg-neutral-300 mb-6 font-sans text-[13px]">
+      <p id="verify-email" className="text-cg-neutral-300 mb-6 font-sans text-[13px]">
         {email ?? 'your email'}
       </p>
 
@@ -85,6 +85,8 @@ export function VerifyForm({ email }: Props) {
               onChange={field.onChange}
               disabled={isSubmitting}
               autoFocus
+              aria-label="Verification code"
+              aria-describedby="verify-instruction verify-email"
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -99,7 +101,7 @@ export function VerifyForm({ email }: Props) {
         />
 
         {errors.otp && (
-          <p className="text-cg-red-100 mt-3 text-[12px]">
+          <p role="alert" className="text-cg-red-100 mt-3 text-[12px]">
             {errors.otp.message}
           </p>
         )}

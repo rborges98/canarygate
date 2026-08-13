@@ -10,14 +10,16 @@ const siteDescription =
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  variable: '--font-sans'
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap'
 })
 
 const jetbrains = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-mono'
+  weight: ['400', '600'],
+  variable: '--font-mono',
+  display: 'swap'
 })
 
 export const metadata: Metadata = {
@@ -31,22 +33,34 @@ export const metadata: Metadata = {
   keywords: [
     'CanaryGate',
     'feature flags',
+    'feature flag management',
+    'feature toggles',
+    'feature flag SaaS',
+    'canary deployments',
     'gradual rollout',
-    'canary deploy',
-    'real-time updates',
-    'SSE'
+    'feature flag SDK'
   ],
+  alternates: {
+    canonical: '/'
+  },
   openGraph: {
     type: 'website',
+    url: '/',
     siteName: 'CanaryGate',
+    locale: 'en_US',
     title: 'CanaryGate',
     description: siteDescription
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'CanaryGate',
     description: siteDescription
-  }
+  },
+  robots: {
+    index: true,
+    follow: true
+  },
+  category: 'Developer Tools'
 }
 
 export default function RootLayout({

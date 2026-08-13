@@ -286,22 +286,30 @@ export function MembersClient({
 
         <div className="flex flex-col gap-3 px-6 py-4">
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="invite-email"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Email
             </label>
             <input
+              id="invite-email"
               type="email"
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none"
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none focus-visible:ring-2"
               placeholder="member@company.com"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
             />
           </div>
           <div>
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="invite-org-role"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Org role
             </label>
             <Select
+              id="invite-org-role"
               options={[
                 { value: 'MEMBER', label: 'Member' },
                 { value: 'OWNER', label: 'Owner' }

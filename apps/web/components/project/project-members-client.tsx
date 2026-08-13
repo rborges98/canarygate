@@ -86,7 +86,7 @@ export function ProjectMembersClient({
               key={role}
               onClick={() => setRoleFilter(role)}
               className={cn(
-                'rounded-md border px-3 py-1.5 font-mono text-[11px] font-medium transition-colors',
+                'rounded-md border px-3 py-1.5 font-mono text-[11px] font-semibold transition-colors',
                 roleFilter === role
                   ? 'border-cg-indigo-600 bg-cg-indigo-950 text-cg-indigo-100'
                   : 'border-cg-bg-100 text-cg-neutral-500 hover:text-cg-neutral-300'

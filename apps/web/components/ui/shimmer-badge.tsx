@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { BorderBeam } from './border-beam'
 import { cn } from '@/shared/utils'
 
@@ -10,29 +10,37 @@ type ShimmerBadgeProps = {
 }
 
 export function ShimmerBadge({ label, className }: ShimmerBadgeProps) {
+  const prefersReducedMotion = useReducedMotion()
+
+  const badgeAnimation = prefersReducedMotion ? undefined : { y: [0, -5, 0] }
+  const dotAnimation = prefersReducedMotion
+    ? undefined
+    : { opacity: [1, 0.3, 1] }
+  const textAnimation = prefersReducedMotion
+    ? undefined
+    : { backgroundPosition: ['0% 50%', '200% 50%'] }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
+    <div>
       <motion.div
         className={cn(
           'border-cg-yellow-200/40 bg-cg-yellow-400/90 relative inline-flex items-center gap-2 overflow-hidden rounded-full border px-4 py-1.5 shadow-lg shadow-black/20 backdrop-blur-sm',
           className
         )}
-        animate={{ y: [0, -5, 0] }}
+        whileInView={badgeAnimation}
+        viewport={{ margin: '10% 0px' }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
       >
         <motion.span
           className="bg-cg-yellow-200 h-1.5 w-1.5 shrink-0 rounded-full"
-          animate={{ opacity: [1, 0.3, 1] }}
+          whileInView={dotAnimation}
+          viewport={{ margin: '10% 0px' }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.span
           className="from-cg-yellow-100 to-cg-yellow-100 bg-linear-to-r via-white bg-size-[200%_100%] bg-clip-text font-mono text-[11px] font-semibold tracking-wide text-transparent uppercase"
-          animate={{ backgroundPosition: ['0% 50%', '200% 50%'] }}
+          whileInView={textAnimation}
+          viewport={{ margin: '10% 0px' }}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
         >
           {label}
@@ -45,7 +53,7 @@ export function ShimmerBadge({ label, className }: ShimmerBadgeProps) {
           colorTo="#fde047"
         />
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
 

@@ -44,18 +44,31 @@ export function GeneralInfoCard({ initialKeyTouched = false }: Props) {
       </div>
       <div className="flex flex-1 flex-col gap-3">
         <div>
-          <label className={labelCls}>Flag name</label>
+          <label htmlFor="flag-name" className={labelCls}>
+            Flag name
+          </label>
           <input
-            className={inputCls}
+            id="flag-name"
+            className={cn(
+              inputCls,
+              'focus-visible:ring-cg-indigo-300 focus-visible:ring-2'
+            )}
             placeholder="e.g. Beta Dashboard Access"
             autoFocus
             {...register('name')}
           />
         </div>
         <div>
-          <label className={labelCls}>Key</label>
+          <label htmlFor="flag-key" className={labelCls}>
+            Key
+          </label>
           <input
-            className={cn(inputCls, 'font-mono')}
+            id="flag-key"
+            className={cn(
+              inputCls,
+              'font-mono',
+              'focus-visible:ring-cg-indigo-300 focus-visible:ring-2'
+            )}
             placeholder="beta-dashboard-access"
             value={displayKey}
             onChange={(e) => {
@@ -65,9 +78,15 @@ export function GeneralInfoCard({ initialKeyTouched = false }: Props) {
           />
         </div>
         <div className="flex flex-1 flex-col">
-          <label className={labelCls}>Description</label>
+          <label htmlFor="flag-description" className={labelCls}>
+            Description
+          </label>
           <textarea
-            className={cn(inputCls, 'flex-1 resize-none')}
+            id="flag-description"
+            className={cn(
+              inputCls,
+              'focus-visible:ring-cg-indigo-300 flex-1 resize-none focus-visible:ring-2'
+            )}
             placeholder="Describe the purpose and lifecycle of this flag..."
             {...register('description')}
           />

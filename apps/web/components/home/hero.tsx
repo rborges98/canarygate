@@ -29,7 +29,7 @@ export function V2Hero() {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.2 }}
           >
             <span className="border-cg-indigo-600/50 bg-cg-indigo-950/50 text-cg-indigo-200 inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] sm:text-xs">
               <span className="bg-cg-green-100 h-1.5 w-1.5 animate-pulse rounded-full" />
@@ -37,24 +37,21 @@ export function V2Hero() {
             </span>
           </motion.div>
 
-          <motion.h1
-            className="text-3xl leading-[1.15] font-bold tracking-tight sm:text-5xl lg:text-6xl"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <span className="text-cg-neutral-100 whitespace-nowrap">Deploy on Friday.</span>
+          <h1 className="text-3xl leading-[1.15] font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <span className="text-cg-neutral-100 whitespace-nowrap">
+              Deploy on Friday.
+            </span>
             <br />
             <span className="text-cg-indigo-300 whitespace-nowrap">
               Sleep on Saturday.
             </span>
-          </motion.h1>
+          </h1>
 
           <motion.p
             className="text-cg-neutral-400 max-w-xl text-[13px] leading-relaxed sm:text-base"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0 }}
           >
             Feature flags that just work. Create, toggle, and roll out — no
             YAML, no complexity.
@@ -64,7 +61,7 @@ export function V2Hero() {
             className="flex flex-wrap justify-center gap-3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.2, delay: 0 }}
           >
             <Link
               href="/login"
@@ -84,7 +81,7 @@ export function V2Hero() {
             className="flex flex-wrap justify-center gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            transition={{ duration: 0.2, delay: 0 }}
           >
             {FEATURE_PILLS.map((pill) => (
               <span

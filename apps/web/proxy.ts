@@ -10,7 +10,9 @@ const PUBLIC_PATHS = [
   '/verify',
   '/invite',
   '/api/auth',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon',
+  '/opengraph-image'
 ]
 
 function isPublicAssetPath(pathname: string) {

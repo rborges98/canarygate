@@ -67,11 +67,15 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
           </p>
 
           <div className="mb-4">
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="project-name"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Project name
             </label>
             <input
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none"
+              id="project-name"
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-100 placeholder:text-cg-neutral-400 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-colors outline-none focus-visible:ring-2"
               placeholder="My App"
               autoFocus
               {...register('name', { required: true })}
@@ -79,7 +83,10 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
           </div>
 
           <div className="mb-7">
-            <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+            <label
+              htmlFor="project-slug"
+              className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+            >
               Slug
             </label>
             <div className="border-cg-bg-100 bg-cg-white-200 focus-within:border-cg-indigo-300 flex items-center rounded-lg border transition-colors">
@@ -87,7 +94,8 @@ export function CreateProjectForm({ orgId, orgSlug }: Props) {
                 {orgSlug}/
               </span>
               <input
-                className="text-cg-neutral-100 placeholder:text-cg-neutral-500 min-w-0 flex-1 bg-transparent px-3 py-2.5 font-mono text-[12px] outline-none"
+                id="project-slug"
+                className="text-cg-neutral-100 placeholder:text-cg-neutral-500 min-w-0 flex-1 bg-transparent px-3 py-2.5 font-mono text-[12px] outline-none focus-visible:ring-cg-indigo-300 focus-visible:ring-2"
                 value={displaySlug}
                 placeholder="my-app"
                 onChange={(e) => {

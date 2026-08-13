@@ -115,9 +115,30 @@ export default async function Page(props: {
   assertCanonicalDocsSlug(params.slug)
   const result = await importPage(params.slug)
   const { default: MDXContent, ...pageProps } = result
+  const docMetadata = (pageProps.metadata ?? {}) as DocsFrontmatterMetadata
+
+  const jsonLd = docMetadata.title
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: docMetadata.title,
+        ...(docMetadata.description
+          ? { description: docMetadata.description }
+          : {})
+      }
+    : null
+
   return (
-    <Wrapper {...pageProps}>
-      <MDXContent {...props} params={params} />
-    </Wrapper>
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <Wrapper {...pageProps}>
+        <MDXContent {...props} params={params} />
+      </Wrapper>
+    </>
   )
 }

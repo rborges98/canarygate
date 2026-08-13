@@ -150,6 +150,7 @@ export function AutoRolloutCard() {
           <ToggleSwitch
             checked={enabled}
             onCheckedChange={handleToggleAttempt}
+            label="Auto-rollout"
           />
           {showTooltip && (
             <div className="border-cg-bg-100 bg-cg-bg-200 text-cg-neutral-300 absolute top-9 right-0 z-10 w-max max-w-[200px] rounded-lg border px-3 py-2 font-mono text-[11px] shadow-lg">
@@ -210,8 +211,14 @@ export function AutoRolloutCard() {
         </div>
 
         <div>
-          <label className={labelCls}>Interval</label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+          <label id="auto-rollout-interval-label" className={labelCls}>
+            Interval
+          </label>
+          <div
+            role="group"
+            aria-labelledby="auto-rollout-interval-label"
+            className="flex flex-col gap-2 sm:flex-row sm:items-stretch"
+          >
             <div className="w-full sm:w-28 sm:shrink-0">
               <Controller
                 name="everyValue"

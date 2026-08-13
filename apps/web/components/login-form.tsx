@@ -44,19 +44,26 @@ export function LoginForm() {
         No password. Just email.
       </p>
 
-      <label className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]">
+      <label
+        htmlFor="login-email"
+        className="text-cg-neutral-400 mb-1.5 block font-sans text-[11px]"
+      >
         Email address
       </label>
       <input
+        id="login-email"
         type="email"
         placeholder="you@email.com"
+        autoComplete="email"
         disabled={isSubmitting}
-        className="placeholder:text-cg-neutral-300 text-cg-neutral-100 bg-cg-white-200 border-cg-bg-100 focus:border-cg-indigo-300 mb-4 w-full rounded-lg border px-4 py-3 text-[12px] transition-colors outline-none disabled:opacity-50"
+        className="placeholder:text-cg-neutral-300 text-cg-neutral-100 bg-cg-white-200 border-cg-bg-100 focus:border-cg-indigo-300 focus-visible:ring-cg-indigo-300 mb-4 w-full rounded-lg border px-4 py-3 text-[12px] transition-colors outline-none focus-visible:ring-2 disabled:opacity-50"
         {...register('email', { required: true })}
       />
 
       {errors.email && (
-        <p className="mb-3 text-[11px] text-red-400">{errors.email.message}</p>
+        <p role="alert" className="mb-3 text-[11px] text-red-400">
+          {errors.email.message}
+        </p>
       )}
 
       <button
@@ -83,6 +90,7 @@ export function LoginForm() {
             disabled={isSubmitting}
             icon={
               <svg
+                aria-hidden="true"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -114,6 +122,7 @@ export function LoginForm() {
             disabled={isSubmitting}
             icon={
               <svg
+                aria-hidden="true"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -130,6 +139,7 @@ export function LoginForm() {
             disabled={isSubmitting}
             icon={
               <svg
+                aria-hidden="true"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"

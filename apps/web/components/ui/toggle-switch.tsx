@@ -51,23 +51,26 @@ const toggleThumbVariants = cva(
   }
 )
 
-interface ToggleSwitchProps extends VariantProps<typeof toggleTrackVariants> {
+type ToggleSwitchProps = VariantProps<typeof toggleTrackVariants> & {
   checked: boolean
   onCheckedChange: () => void
   className?: string
+  label?: string
 }
 
 export function ToggleSwitch({
   checked,
   onCheckedChange,
   size = 'sm',
-  className
+  className,
+  label
 }: ToggleSwitchProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       onClick={onCheckedChange}
       className={cn(toggleTrackVariants({ size, checked }), className)}
     >

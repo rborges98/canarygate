@@ -5,9 +5,109 @@ import { V2InteractiveTabs } from '@/components/home/interactive-tabs'
 import { V2Steps } from '@/components/home/steps'
 import { V2Pricing } from '@/components/home/pricing'
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const siteDescription =
+  'Feature flags, gradual rollout, real-time updates and operational safety for modern teams.'
+
+type FaqItem = {
+  question: string
+  answer: string
+}
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    question: 'What is a feature flag?',
+    answer:
+      'A feature flag is a software toggle that lets you turn a feature on or off without deploying code. It is the standard way to release new functionality gradually and roll it back instantly if something goes wrong.'
+  },
+  {
+    question: 'How does CanaryGate work with feature flags in production?',
+    answer:
+      'CanaryGate evaluates feature flags in your application through lightweight SDKs for JavaScript, Go, Python, C#, and Java. Flag changes propagate to every instance in real time over SSE, so updates take effect in milliseconds — no redeploys required.'
+  },
+  {
+    question: 'Does CanaryGate support gradual rollouts and auto-rollout?',
+    answer:
+      'Yes. You can roll a feature out to a percentage of users, schedule the rollout for a specific time, and let auto-rollout increase the percentage automatically while your success criteria are met.'
+  },
+  {
+    question: 'How much does CanaryGate cost?',
+    answer:
+      'CanaryGate has a Free plan for $0, a Starter plan for $45/month, and a Pro plan for $99/month, with no per-seat fees.'
+  }
+]
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'CanaryGate',
+      url: appUrl,
+      logo: `${appUrl}/icon`,
+      sameAs: []
+    },
+    {
+      '@type': 'WebSite',
+      name: 'CanaryGate',
+      url: appUrl
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'CanaryGate',
+      url: appUrl,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Web',
+      description: siteDescription,
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '0',
+        highPrice: '99',
+        priceCurrency: 'USD',
+        offerCount: '3',
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'Free',
+            price: '0',
+            priceCurrency: 'USD'
+          },
+          {
+            '@type': 'Offer',
+            name: 'Starter',
+            price: '45',
+            priceCurrency: 'USD'
+          },
+          {
+            '@type': 'Offer',
+            name: 'Pro',
+            price: '99',
+            priceCurrency: 'USD'
+          }
+        ]
+      }
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
+    }
+  ]
+}
+
 export default function HomePage() {
   return (
     <main className="bg-background text-cg-neutral-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <LandingNav />
 
       <div className="pt-20">
@@ -46,6 +146,37 @@ export default function HomePage() {
       <V2Steps />
 
       <V2Pricing />
+
+      <section className="border-cg-bg-100 border-t py-20 sm:py-28">
+        <div className="mx-auto max-w-3xl px-4 sm:px-8">
+          <h2 className="text-cg-neutral-100 mb-10 text-center text-3xl font-semibold sm:text-4xl">
+            Frequently asked questions
+          </h2>
+          <div className="space-y-3">
+            {FAQ_ITEMS.map((item) => (
+              <details
+                key={item.question}
+                className="border-cg-bg-100 bg-cg-bg-100/40 group rounded-lg border"
+              >
+                <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
+                  <h3 className="text-cg-neutral-100 text-base font-semibold">
+                    {item.question}
+                  </h3>
+                  <span
+                    aria-hidden
+                    className="text-cg-indigo-300 shrink-0 font-mono text-lg font-semibold transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="text-cg-neutral-300 px-5 pb-5 text-sm leading-relaxed">
+                  {item.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <LandingFooter />
     </main>
