@@ -167,11 +167,11 @@ export function FlagForm({
           <GeneralInfoCard
             initialKeyTouched={mode === 'edit' || !!initialData?.key}
           />
+          <ConfigurationCard />
           <ScheduleCard
             initialScheduleEnabled={initialData?.scheduleEnabled}
             initialScheduleDate={initialData?.scheduleDate}
           />
-          <ConfigurationCard />
           <AutoRolloutCard />
         </div>
 

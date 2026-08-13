@@ -7,6 +7,7 @@ const toggleTrackVariants = cva(
     variants: {
       size: {
         sm: 'h-5 w-9',
+        md: 'h-6 w-10',
         lg: 'h-7 w-12'
       },
       checked: {
@@ -27,6 +28,7 @@ const toggleThumbVariants = cva(
     variants: {
       size: {
         sm: 'h-4 w-4',
+        md: 'h-5 w-5',
         lg: 'h-6 w-6'
       },
       checked: {
@@ -37,6 +39,8 @@ const toggleThumbVariants = cva(
     compoundVariants: [
       { size: 'sm', checked: true, className: 'translate-x-4' },
       { size: 'sm', checked: false, className: 'translate-x-0.5' },
+      { size: 'md', checked: true, className: 'translate-x-[18px]' },
+      { size: 'md', checked: false, className: 'translate-x-0.5' },
       { size: 'lg', checked: true, className: 'translate-x-5' },
       { size: 'lg', checked: false, className: 'translate-x-0.5' }
     ],
