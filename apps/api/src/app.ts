@@ -13,6 +13,7 @@ import flagsRoutes from './routes/flags.ts'
 import historyRoutes from './routes/history.ts'
 import invitesRoutes from './routes/invites.ts'
 import sdkRoutes from './routes/sdk.ts'
+import healthRoutes from './routes/health.ts'
 import { fastifyLogger } from '@canarygate/logger'
 import { getRequiredUrl, IS_PRODUCTION } from './utils/env.ts'
 import { webhookRoutes } from './routes/webhook'
@@ -147,6 +148,7 @@ export function buildApp() {
   app.register(historyRoutes)
   app.register(invitesRoutes)
   app.register(sdkRoutes)
+  app.register(healthRoutes)
   app.register(webhookRoutes)
 
   return app
