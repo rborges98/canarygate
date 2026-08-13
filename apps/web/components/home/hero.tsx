@@ -38,20 +38,20 @@ export function V2Hero() {
           </motion.div>
 
           <motion.h1
-            className="text-4xl leading-[1.1] font-bold tracking-tight sm:text-6xl lg:text-7xl"
+            className="text-3xl leading-[1.15] font-bold tracking-tight sm:text-5xl lg:text-6xl"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <span className="text-cg-neutral-100">Deploy on Friday.</span>
+            <span className="text-cg-neutral-100 whitespace-nowrap">Deploy on Friday.</span>
             <br />
-            <span className="text-cg-indigo-300">
+            <span className="text-cg-indigo-300 whitespace-nowrap">
               Sleep on Saturday.
             </span>
           </motion.h1>
 
           <motion.p
-            className="text-cg-neutral-400 max-w-xl text-sm leading-relaxed sm:text-lg"
+            className="text-cg-neutral-400 max-w-xl text-[13px] leading-relaxed sm:text-base"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}

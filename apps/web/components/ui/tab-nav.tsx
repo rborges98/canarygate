@@ -64,7 +64,7 @@ export function TabNav({ tabs, className, prefetch }: TabNavProps) {
               linkRefs.current[tab.href] = el
             }}
             className={cn(
-              'cursor-pointer px-4 py-2.5 text-[13px] whitespace-nowrap transition-colors duration-200',
+              'cursor-pointer px-3 py-2.5 text-[12px] whitespace-nowrap transition-colors duration-200 sm:px-4 sm:text-[13px]',
               isActive
                 ? 'text-white'
                 : 'text-cg-neutral-400 hover:text-cg-neutral-300'

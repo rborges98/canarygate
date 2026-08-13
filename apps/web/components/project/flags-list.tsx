@@ -61,6 +61,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
           value={search}
           onChange={setSearch}
           placeholder="Search flags..."
+          className="min-w-0 flex-1"
         />
 
         <div className="flex gap-1.5">
@@ -70,7 +71,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
                 key={tab}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  'rounded-md border px-3 py-1.5 font-mono text-[11px] font-medium transition-colors',
+                  'rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-medium transition-colors',
                   filter === tab
                     ? 'border-cg-indigo-600 bg-cg-indigo-950 text-cg-indigo-100'
                     : 'border-cg-bg-100 text-cg-neutral-500 hover:text-cg-neutral-300'
@@ -84,7 +85,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
 
         <Link
           href={`/orgs/${orgSlug}/projects/${projectSlug}/flags/new`}
-          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 w-full rounded-lg px-4 py-2 text-center text-[12px] font-semibold text-white transition-colors sm:ml-auto sm:w-fit"
+          className="bg-cg-indigo-300 hover:bg-cg-indigo-400 w-full rounded-lg px-4 py-2 text-center text-[11px] font-semibold text-white transition-colors sm:ml-auto sm:w-fit sm:text-[12px]"
         >
           + New flag
         </Link>
@@ -93,8 +94,8 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
       <div className="flex flex-col gap-1.5">
         {flags.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">No flags yet</p>
-            <p className="text-cg-neutral-500 font-sans text-[12px] leading-relaxed max-w-xs">
+            <p className="text-cg-neutral-200 font-sans text-[13px] font-semibold">No flags yet</p>
+            <p className="text-cg-neutral-500 font-sans text-[11px] leading-relaxed max-w-xs">
               This environment has no feature flags. Create your first flag to start controlling feature rollouts.
             </p>
             <Link
@@ -110,7 +111,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
               <Link
                 key={flag.key}
                 href={buildFlagHref(orgSlug, projectSlug, flag.key, currentEnv)}
-                className="border-cg-bg-100 bg-cg-white-300 hover:border-cg-neutral-700 hover:bg-cg-white-100 grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3.5 rounded-lg border px-4 py-3 transition-all"
+                className="border-cg-bg-100 bg-cg-white-300 hover:border-cg-neutral-700 hover:bg-cg-white-100 grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-2.5 rounded-lg border px-4 py-3 transition-all sm:gap-3.5"
               >
                 <div
                   className={cn(
@@ -120,16 +121,16 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
                   )}
                 />
                 <div className="min-w-0">
-                  <div className="truncate font-mono text-[13px] font-semibold text-white">
+                  <div className="truncate font-mono text-[12px] font-semibold text-white sm:text-[13px]">
                     {flag.key}
                   </div>
-                  <div className="text-cg-neutral-300 mt-0.5 truncate text-[11px]">
+                  <div className="text-cg-neutral-300 mt-0.5 truncate text-[10px] sm:text-[11px]">
                     {flag.description}
                   </div>
                 </div>
                 {flag.status === 'rollout' && flag.rollout !== undefined ? (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full">
+                  <div className="flex shrink-0 items-center gap-2">
+                    <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full hidden sm:block">
                       <div
                         className="from-cg-yellow-300 to-cg-yellow-100 bg-linear-to-r h-full"
                         style={{ width: `${flag.rollout}%` }}
@@ -148,8 +149,8 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
             ))}
             {filtered.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-16 text-center">
-                <p className="text-cg-neutral-200 font-sans text-[14px] font-semibold">No flags match your search</p>
-                <p className="text-cg-neutral-500 font-sans text-[12px]">
+                <p className="text-cg-neutral-200 font-sans text-[13px] font-semibold">No flags match your search</p>
+                <p className="text-cg-neutral-500 font-sans text-[11px]">
                   Try a different name or clear your filters.
                 </p>
               </div>

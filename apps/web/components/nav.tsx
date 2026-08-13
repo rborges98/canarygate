@@ -19,9 +19,9 @@ export function Nav({ org, project, className, user }: NavProps) {
         className
       )}
     >
-      <div className="flex min-w-0 items-center gap-2 text-[13px]">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] sm:gap-2 sm:text-[13px]">
         <Link href="/orgs">
-          <Logo />
+          <Logo className="text-base sm:text-lg" />
         </Link>
 
         {org && (
@@ -30,12 +30,12 @@ export function Nav({ org, project, className, user }: NavProps) {
             {project ? (
               <Link
                 href={`/orgs/${org.orgSlug}/projects`}
-                className="text-cg-neutral-300 max-w-[120px] truncate font-medium transition-colors hover:text-white sm:max-w-none"
+                className="text-cg-neutral-300 max-w-[90px] truncate font-medium transition-colors hover:text-white sm:max-w-none"
               >
                 {org.label}
               </Link>
             ) : (
-              <span className="max-w-[140px] truncate font-semibold text-white sm:max-w-none">
+              <span className="max-w-[90px] truncate font-semibold text-white sm:max-w-none">
                 {org.label}
               </span>
             )}
@@ -45,19 +45,19 @@ export function Nav({ org, project, className, user }: NavProps) {
         {project && (
           <>
             <span className="text-cg-neutral-700">/</span>
-            <span className="max-w-[120px] truncate font-semibold text-white sm:max-w-none">
+            <span className="max-w-[90px] truncate font-semibold text-white sm:max-w-none">
               {project.label}
             </span>
           </>
         )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link
           href="/docs"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-cg-neutral-400 hover:text-white text-[13px] transition-colors"
+          className="text-cg-neutral-400 hover:text-white text-[13px] transition-colors hidden md:block"
         >
           Docs
         </Link>
