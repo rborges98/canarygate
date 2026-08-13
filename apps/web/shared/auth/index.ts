@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -42,7 +43,7 @@ const BYPASS_SESSION = {
   }
 } satisfies { user: SessionUser }
 
-export async function getSession() {
+export const getSession = cache(async () => {
   if (isLocalAuthBypassEnabled()) {
     return BYPASS_SESSION
   }
@@ -51,7 +52,7 @@ export async function getSession() {
   const hdrs = await headers()
 
   return auth.api.getSession({ headers: hdrs })
-}
+})
 
 export async function getSessionOrRedirect() {
   const session = await getSession()

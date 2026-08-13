@@ -24,7 +24,11 @@ const BETTER_AUTH_SECRET = getRequiredEnv('BETTER_AUTH_SECRET', 'api auth')
 export const auth = betterAuth({
   session: {
     expiresIn: IS_PRODUCTION ? 60 * 60 * 24 * 7 : 60 * 60 * 24,
-    updateAge: 60 * 60 * 24
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60
+    }
   },
   baseURL: API_BASE_URL,
   secret: BETTER_AUTH_SECRET,

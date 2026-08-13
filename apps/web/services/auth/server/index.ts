@@ -69,7 +69,11 @@ export const auth = betterAuth({
   secret: BETTER_AUTH_SECRET,
   session: {
     expiresIn: IS_PRODUCTION ? 60 * 60 * 24 * 7 : 60 * 60 * 24,
-    updateAge: 60 * 60 * 24
+    updateAge: 60 * 60 * 24,
+    cookieCache: {
+      enabled: true,
+      maxAge: 60
+    }
   },
   database: drizzleAdapter(getDb(), {
     provider: 'pg',
