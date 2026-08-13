@@ -1,4 +1,6 @@
 import { apiFetch } from '../api-fetch'
+import { createTtlCache } from '../cache/ttl-cache'
+import { getProjectFlagVersion } from '../cache/flag-invalidation'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -74,11 +76,41 @@ export type FlagItem = {
   rollout?: number
 }
 
+type CachedFlagList = {
+  flags: FlagItem[]
+  version: number
+}
+
+type CachedFlagDetail = {
+  flag: ApiFlag | null
+  version: number
+}
+
+const flagListCache = createTtlCache<CachedFlagList>({
+  ttlMs: 30_000,
+  maxEntries: 200
+})
+
+const flagDetailCache = createTtlCache<CachedFlagDetail>({
+  ttlMs: 30_000,
+  maxEntries: 300
+})
+
 export async function getFlags(
   orgId: string,
   projectId: string,
   environmentSlug?: string
 ): Promise<FlagItem[]> {
+  const key = `flags:${projectId}:${environmentSlug ?? 'default'}`
+  const version = getProjectFlagVersion(projectId)
+  const cached = flagListCache.get(key)
+
+  if (cached && version <= cached.version) {
+    return cached.flags
+  }
+
+  flagListCache.delete(key)
+
   const url = new URL(`${API_BASE}/orgs/${orgId}/projects/${projectId}/flags`)
 
   if (environmentSlug) {
@@ -104,7 +136,7 @@ export async function getFlags(
     return 'disabled'
   }
 
-  return data.map((f) => ({
+  const flags = data.map((f) => ({
     flagId: f.id,
     key: f.key,
     name: f.name,
@@ -113,6 +145,10 @@ export async function getFlags(
     status: getFlagStatus(f),
     rollout: f.type === 'rollout' ? f.rolloutPercent : undefined
   }))
+
+  flagListCache.set(key, { flags, version })
+
+  return flags
 }
 
 async function getFlagById(
@@ -121,6 +157,16 @@ async function getFlagById(
   flagId: string,
   environmentSlug?: string
 ): Promise<ApiFlag | null> {
+  const key = `flag:${flagId}:${environmentSlug ?? 'default'}`
+  const version = getProjectFlagVersion(projectId)
+  const cached = flagDetailCache.get(key)
+
+  if (cached && version <= cached.version) {
+    return cached.flag
+  }
+
+  flagDetailCache.delete(key)
+
   const url = new URL(
     `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`
   )
@@ -134,8 +180,12 @@ async function getFlagById(
     return null
   }
 
-  const flag: RawApiFlag = await res.json()
-  return normalizeFlag(flag)
+  const data: RawApiFlag = await res.json()
+  const flag = normalizeFlag(data)
+
+  flagDetailCache.set(key, { flag, version })
+
+  return flag
 }
 
 async function getFlagIdByKey(

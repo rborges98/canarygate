@@ -11,6 +11,7 @@ import { logServerError, logServerInfo } from '@canarygate/logger'
 import { getSession } from '@/shared/auth'
 import { getOrgs } from '@/server/orgs/queries'
 import { getProjects } from '@/server/projects/queries'
+import { invalidateProjectFlags } from '@/server/cache/flag-invalidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,12 @@ function getFlagEventSubscriber() {
             `event: ${envelope.event}\ndata: ${JSON.stringify(envelope.data)}\n\n`
           )
         )
+      }
+
+      try {
+        invalidateProjectFlags(envelope.projectId)
+      } catch (error) {
+        logServerError('Failed to invalidate project flag cache', error)
       }
     } catch (error) {
       logServerError('Failed to process flag event from Redis', error)

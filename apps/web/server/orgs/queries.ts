@@ -1,7 +1,10 @@
+import { cache } from 'react'
 import { unstable_rethrow } from 'next/navigation'
 import { apiFetch } from '../api-fetch'
 import { logServerError } from '@canarygate/logger'
 import { getSessionOrRedirect } from '@/shared/auth'
+import { createTtlCache } from '../cache/ttl-cache'
+import { getCached } from '../cache/two-tier'
 
 function isNextRedirectError(error: unknown): error is { digest: string } {
   return (
@@ -14,6 +17,8 @@ function isNextRedirectError(error: unknown): error is { digest: string } {
 }
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
+
+const orgsCache = createTtlCache<OrgItem[]>({ ttlMs: 60_000, maxEntries: 100 })
 
 type ApiOrg = {
   id: string
@@ -44,36 +49,49 @@ type ApiErrorPayload = {
   message?: string
 }
 
-export async function getOrgs(): Promise<OrgItem[]> {
-  try {
-    await getSessionOrRedirect()
+export const getOrgs = cache(
+  async function getOrgs(): Promise<OrgItem[]> {
+    try {
+      const session = await getSessionOrRedirect()
+      const key = `orgs:${session.user.id}`
 
-    const res = await apiFetch(`${API_BASE}/orgs`, { cache: 'no-store' })
-    if (!res.ok) {
+      const result = await getCached<OrgItem[]>({
+        key,
+        ttlMs: 60_000,
+        memory: orgsCache,
+        redisTtlSeconds: 60,
+        fetcher: async () => {
+          const res = await apiFetch(`${API_BASE}/orgs`, { cache: 'no-store' })
+          if (!res.ok) {
+            return []
+          }
+
+          const data: ApiOrg[] = await res.json()
+          return data.map((org) => ({
+            orgId: org.id,
+            orgSlug: org.slug,
+            initial: org.name[0].toUpperCase(),
+            name: org.name,
+            role: org.role,
+            projects: org.projectCount,
+            members: org.memberCount
+          }))
+        }
+      })
+
+      return result.value
+    } catch (err) {
+      unstable_rethrow(err)
+
+      if (isNextRedirectError(err)) {
+        throw err
+      }
+
+      logServerError('getOrgs falhou', err)
       return []
     }
-
-    const data: ApiOrg[] = await res.json()
-    return data.map((org) => ({
-      orgId: org.id,
-      orgSlug: org.slug,
-      initial: org.name[0].toUpperCase(),
-      name: org.name,
-      role: org.role,
-      projects: org.projectCount,
-      members: org.memberCount
-    }))
-  } catch (err) {
-    unstable_rethrow(err)
-
-    if (isNextRedirectError(err)) {
-      throw err
-    }
-
-    logServerError('getOrgs falhou', err)
-    return []
   }
-}
+)
 
 export async function getOrgBySlug(orgSlug: string): Promise<OrgDetail | null> {
   await getSessionOrRedirect()
