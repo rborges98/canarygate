@@ -1,10 +1,33 @@
 'use server'
 
 import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
 import { logServerError } from '@canarygate/logger'
 import { apiFetch } from '../api-fetch'
+import { invalidateProjectFlags } from '../cache/flag-invalidation'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
+
+const FLAGS_LIST_PATH = '/orgs/[orgSlug]/projects/[projectSlug]/flags'
+const FLAG_DETAIL_PATH =
+  '/orgs/[orgSlug]/projects/[projectSlug]/flags/[...flagKey]'
+
+function invalidateFlagPages(
+  projectId: string,
+  context: { orgId: string; projectId: string; flagId?: string },
+  includeDetail: boolean
+) {
+  try {
+    invalidateProjectFlags(projectId)
+    revalidatePath(FLAGS_LIST_PATH)
+
+    if (includeDetail) {
+      revalidatePath(FLAG_DETAIL_PATH)
+    }
+  } catch (error) {
+    logServerError('flag invalidation falhou', error, context)
+  }
+}
 
 async function getErrorMessage(res: Response) {
   try {
@@ -94,6 +117,7 @@ export async function createFlag(
     }
 
     const data = (await res.json()) as { id: string }
+    invalidateFlagPages(projectId, { orgId, projectId }, false)
     return { ok: true, data }
   } catch (error) {
     logServerError('createFlag falhou', error, { orgId, projectId })
@@ -144,6 +168,7 @@ export async function updateFlag(
     if (!res.ok) {
       return { ok: false, message: await getErrorMessage(res) }
     }
+    invalidateFlagPages(projectId, { orgId, projectId, flagId }, true)
     return { ok: true }
   } catch (error) {
     logServerError('updateFlag falhou', error, {
@@ -169,6 +194,7 @@ export async function deleteFlag(
     if (!res.ok) {
       return { ok: false, message: await getErrorMessage(res) }
     }
+    invalidateFlagPages(projectId, { orgId, projectId, flagId }, false)
     return { ok: true }
   } catch (error) {
     logServerError('deleteFlag falhou', error, { orgId, projectId, flagId })

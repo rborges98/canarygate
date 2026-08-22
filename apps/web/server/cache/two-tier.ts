@@ -9,6 +9,8 @@ export type GetCachedOptions<T> = {
   fetcher: () => Promise<T>
 }
 
+const inFlight = new Map<string, Promise<unknown>>()
+
 export async function getCached<T>(
   options: GetCachedOptions<T>
 ): Promise<{ value: T; cached: boolean }> {
@@ -28,12 +30,28 @@ export async function getCached<T>(
     return { value: redisValue, cached: true }
   }
 
-  const value = await fetcher()
-  memory.set(key, value)
+  const pending = inFlight.get(key)
 
-  if (value !== null) {
-    await setJson(key, value, redisTtlSeconds)
+  if (pending) {
+    return { value: (await pending) as T, cached: true }
   }
+
+  const promise = fetcher()
+    .then((value) => {
+      memory.set(key, value)
+
+      if (value !== null) {
+        return setJson(key, value, redisTtlSeconds).then(() => value)
+      }
+
+      return value
+    })
+    .finally(() => {
+      inFlight.delete(key)
+    })
+
+  inFlight.set(key, promise)
+  const value = await promise
 
   return { value, cached: false }
 }

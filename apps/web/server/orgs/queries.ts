@@ -20,6 +20,11 @@ const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
 const orgsCache = createTtlCache<OrgItem[]>({ ttlMs: 60_000, maxEntries: 100 })
 
+const orgSlugCache = createTtlCache<OrgDetail | null>({
+  ttlMs: 60_000,
+  maxEntries: 100
+})
+
 type ApiOrg = {
   id: string
   name: string
@@ -61,13 +66,15 @@ export const getOrgs = cache(
         memory: orgsCache,
         redisTtlSeconds: 60,
         fetcher: async () => {
-          const res = await apiFetch(`${API_BASE}/orgs`, { cache: 'no-store' })
+          const res = await apiFetch(`${API_BASE}/orgs?pageSize=100`, {
+            cache: 'no-store'
+          })
           if (!res.ok) {
             return []
           }
 
-          const data: ApiOrg[] = await res.json()
-          return data.map((org) => ({
+          const data: { items: ApiOrg[] } = await res.json()
+          return data.items.map((org) => ({
             orgId: org.id,
             orgSlug: org.slug,
             initial: org.name[0].toUpperCase(),
@@ -93,47 +100,62 @@ export const getOrgs = cache(
   }
 )
 
-export async function getOrgBySlug(orgSlug: string): Promise<OrgDetail | null> {
-  await getSessionOrRedirect()
+export const getOrgBySlug = cache(
+  async function getOrgBySlug(orgSlug: string): Promise<OrgDetail | null> {
+    await getSessionOrRedirect()
+    const key = `org-slug:${orgSlug}`
 
-  const res = await apiFetch(`${API_BASE}/orgs/slug/${orgSlug}`, {
-    cache: 'no-store'
-  })
+    const result = await getCached<OrgDetail | null>({
+      key,
+      ttlMs: 60_000,
+      memory: orgSlugCache,
+      redisTtlSeconds: 60,
+      fetcher: async () => {
+        const res = await apiFetch(`${API_BASE}/orgs/slug/${orgSlug}`, {
+          cache: 'no-store'
+        })
 
-  if (!res.ok) {
-    if (res.status === 404) {
+        if (!res.ok) {
+          if (res.status === 404) {
+            return null
+          }
+
+          const payload = (await res
+            .json()
+            .catch(() => null)) as ApiErrorPayload | null
+          throw new Error(payload?.message ?? `Failed to load org ${orgSlug}`)
+        }
+
+        const data: ApiOrg = await res.json()
+        return { id: data.id, name: data.name, slug: data.slug }
+      }
+    })
+
+    return result.value
+  }
+)
+
+export const getOrgBySlugOrName = cache(
+  async function getOrgBySlugOrName(
+    orgSlug: string
+  ): Promise<OrgDetail | null> {
+    const org = await getOrgBySlug(orgSlug)
+    if (org) {
+      return org
+    }
+
+    const orgs = await getOrgs()
+    const fallback = orgs.find(
+      (item) => item.orgSlug === orgSlug || item.name === orgSlug
+    )
+    if (!fallback) {
       return null
     }
 
-    const payload = (await res
-      .json()
-      .catch(() => null)) as ApiErrorPayload | null
-    throw new Error(payload?.message ?? `Failed to load org ${orgSlug}`)
+    return {
+      id: fallback.orgId,
+      name: fallback.name,
+      slug: fallback.orgSlug
+    }
   }
-
-  const data: ApiOrg = await res.json()
-  return { id: data.id, name: data.name, slug: data.slug }
-}
-
-export async function getOrgBySlugOrName(
-  orgSlug: string
-): Promise<OrgDetail | null> {
-  const org = await getOrgBySlug(orgSlug)
-  if (org) {
-    return org
-  }
-
-  const orgs = await getOrgs()
-  const fallback = orgs.find(
-    (item) => item.orgSlug === orgSlug || item.name === orgSlug
-  )
-  if (!fallback) {
-    return null
-  }
-
-  return {
-    id: fallback.orgId,
-    name: fallback.name,
-    slug: fallback.orgSlug
-  }
-}
+)

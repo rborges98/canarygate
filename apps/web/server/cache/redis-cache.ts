@@ -1,5 +1,5 @@
 import { createRedisConnection, type RedisConnection } from '@canarygate/redis'
-import { logServerError, logServerInfo } from '@canarygate/logger'
+import { logServerError } from '@canarygate/logger'
 
 const KEY_PREFIX = 'cache:web:'
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1'])
@@ -35,13 +35,8 @@ function shouldUseRedisTier(): boolean {
 
 const USE_REDIS = shouldUseRedisTier()
 
-if (!USE_REDIS) {
-  logServerInfo('Redis cache tier disabled: use CACHE_REDIS_TIER=on to enable')
-}
-
 let connection: RedisConnection | null = null
 let isReady = false
-const writtenKeys = new Set<string>()
 
 function getCacheConnection(): RedisConnection {
   if (connection) {
@@ -57,7 +52,6 @@ function getCacheConnection(): RedisConnection {
 
   connection.on('ready', () => {
     isReady = true
-    logServerInfo('Redis cache connection ready')
   })
 
   connection.on('close', () => {
@@ -116,7 +110,6 @@ export async function setJson(
       'EX',
       ttlSeconds
     )
-    writtenKeys.add(fullKey)
   } catch (error) {
     logServerError('Redis cache setJson failed', error, { key })
   }
@@ -131,23 +124,5 @@ export async function del(key: string): Promise<void> {
     await getCacheConnection().del(buildKey(key))
   } catch (error) {
     logServerError('Redis cache del failed', error, { key })
-  }
-}
-
-export async function flushKeys(): Promise<void> {
-  if (!USE_REDIS || !isReady) {
-    return
-  }
-
-  try {
-    const keys = Array.from(writtenKeys)
-
-    if (keys.length > 0) {
-      await getCacheConnection().del(...keys)
-    }
-
-    writtenKeys.clear()
-  } catch (error) {
-    logServerError('Redis cache flushKeys failed', error)
   }
 }

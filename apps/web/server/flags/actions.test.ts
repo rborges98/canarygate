@@ -1,5 +1,7 @@
 import { createFlag, updateFlag, deleteFlag } from './actions'
 import { apiFetch } from '../api-fetch'
+import { invalidateProjectFlags } from '../cache/flag-invalidation'
+import { revalidatePath } from 'next/cache'
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
@@ -15,7 +17,14 @@ vi.mock('../api-fetch', () => ({
   apiFetch: vi.fn(),
 }))
 
+vi.mock('../cache/flag-invalidation', () => ({
+  getProjectFlagVersion: vi.fn(() => 0),
+  invalidateProjectFlags: vi.fn(),
+}))
+
 const mockApiFetch = vi.mocked(apiFetch)
+const mockInvalidateProjectFlags = vi.mocked(invalidateProjectFlags)
+const mockRevalidatePath = vi.mocked(revalidatePath)
 
 const validFlagData = {
   name: 'My Flag',
@@ -54,6 +63,19 @@ describe('createFlag', () => {
     const result = await createFlag('org-1', 'proj-1', validFlagData)
 
     expect(result).toEqual({ ok: true, data: { id: 'flag-1' } })
+  })
+
+  it('invalidates the flags list page after a successful creation', async () => {
+    mockApiFetch.mockResolvedValueOnce(
+      new Response(JSON.stringify({ id: 'flag-1' }), { status: 200 })
+    )
+
+    await createFlag('org-1', 'proj-1', validFlagData)
+
+    expect(mockInvalidateProjectFlags).toHaveBeenCalledWith('proj-1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith(
+      '/orgs/[orgSlug]/projects/[projectSlug]/flags'
+    )
   })
 
   it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {
@@ -136,6 +158,20 @@ describe('updateFlag', () => {
     expect(result).toEqual({ ok: true })
   })
 
+  it('invalidates the flags list and detail pages after a successful update', async () => {
+    mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 200 }))
+
+    await updateFlag('org-1', 'proj-1', 'flag-1', updateData)
+
+    expect(mockInvalidateProjectFlags).toHaveBeenCalledWith('proj-1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith(
+      '/orgs/[orgSlug]/projects/[projectSlug]/flags'
+    )
+    expect(mockRevalidatePath).toHaveBeenCalledWith(
+      '/orgs/[orgSlug]/projects/[projectSlug]/flags/[...flagKey]'
+    )
+  })
+
   it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {
     mockApiFetch.mockResolvedValueOnce(
       new Response(JSON.stringify({ message: 'Bad request' }), { status: 400 })
@@ -182,6 +218,17 @@ describe('deleteFlag', () => {
     const result = await deleteFlag('org-1', 'proj-1', 'flag-1')
 
     expect(result).toEqual({ ok: true })
+  })
+
+  it('invalidates the flags list page after a successful deletion', async () => {
+    mockApiFetch.mockResolvedValueOnce(new Response(null, { status: 200 }))
+
+    await deleteFlag('org-1', 'proj-1', 'flag-1')
+
+    expect(mockInvalidateProjectFlags).toHaveBeenCalledWith('proj-1')
+    expect(mockRevalidatePath).toHaveBeenCalledWith(
+      '/orgs/[orgSlug]/projects/[projectSlug]/flags'
+    )
   })
 
   it('returns { ok: false, message } with the API message when apiFetch returns non-ok status', async () => {

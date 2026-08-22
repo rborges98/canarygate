@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { Resend } from 'resend'
+import { revalidatePath } from 'next/cache'
 import { logServerError } from '@canarygate/logger'
 import { apiFetch } from '../api-fetch'
 
@@ -9,6 +10,15 @@ const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const RESEND_SENDER =
+  process.env.RESEND_SENDER ?? 'CanaryGate <onboarding@resend.dev>'
+
+function invalidateMemberPages() {
+  revalidatePath('/orgs')
+  revalidatePath('/orgs/[orgSlug]', 'page')
+  revalidatePath('/orgs/[orgSlug]/members', 'page')
+  revalidatePath('/orgs/[orgSlug]/projects/[projectSlug]/members', 'page')
+}
 
 async function getErrorMessage(res: Response) {
   try {
@@ -40,6 +50,7 @@ export async function makeOwner(orgId: string, userId: string) {
     if (!res.ok) {
       return { ok: false, message: await getErrorMessage(res) }
     }
+    invalidateMemberPages()
     return { ok: true }
   } catch (error) {
     logServerError('makeOwner falhou', error, { orgId, userId })
@@ -55,6 +66,7 @@ export async function removeMember(orgId: string, userId: string) {
     if (!res.ok) {
       return { ok: false, message: await getErrorMessage(res) }
     }
+    invalidateMemberPages()
     return { ok: true }
   } catch (error) {
     logServerError('removeMember falhou', error, { orgId, userId })
@@ -173,7 +185,7 @@ export async function sendInvite(
     const inviteUrl = `${APP_URL}/invite/${invite.token}`
 
     await resend.emails.send({
-      from: 'CanaryGate <onboarding@resend.dev>',
+      from: RESEND_SENDER,
       to: parsed.data.email,
       subject: "You've been invited to CanaryGate",
       text: `You've been invited to join an organization on CanaryGate.\n\nAccept your invite:\n${inviteUrl}\n\nThis invite expires in 7 days.`

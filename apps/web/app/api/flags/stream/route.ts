@@ -10,13 +10,14 @@ import {
 import { logServerError, logServerInfo } from '@canarygate/logger'
 import { getSession } from '@/shared/auth'
 import { getOrgs } from '@/server/orgs/queries'
-import { getProjects } from '@/server/projects/queries'
+import { getAllProjects } from '@/server/projects/queries'
 import { invalidateProjectFlags } from '@/server/cache/flag-invalidation'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_CONNECTIONS_PER_USER = 5
 const HEARTBEAT_INTERVAL_MS = 25_000
+const MEMBERSHIP_REVALIDATE_INTERVAL_MS = 5 * 60 * 1000
 const HEARTBEAT = new TextEncoder().encode(': ping\n\n')
 
 type ActiveStream = {
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
     accessibleProjectIds = new Set<string>()
 
     for (const org of orgs) {
-      const projects = await getProjects(org.orgId)
+      const projects = await getAllProjects(org.orgId)
 
       for (const project of projects) {
         accessibleProjectIds.add(project.projectId)
@@ -133,6 +134,7 @@ export async function GET(request: NextRequest) {
 
   let cleaned = false
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+  let revalidateTimer: ReturnType<typeof setInterval> | null = null
   let cleanup: (() => void) | undefined
 
   const stream = new ReadableStream<Uint8Array>({
@@ -156,6 +158,32 @@ export async function GET(request: NextRequest) {
         }
       }, HEARTBEAT_INTERVAL_MS)
 
+      revalidateTimer = setInterval(async () => {
+        if (cleaned) {
+          return
+        }
+
+        try {
+          const orgs = await getOrgs()
+          const nextProjectIds = new Set<string>()
+
+          for (const org of orgs) {
+            const projects = await getAllProjects(org.orgId)
+
+            for (const project of projects) {
+              nextProjectIds.add(project.projectId)
+            }
+          }
+
+          streamEntry.projectIds = nextProjectIds
+        } catch (error) {
+          logServerError(
+            'Failed to revalidate accessible project ids for flag stream',
+            error
+          )
+        }
+      }, MEMBERSHIP_REVALIDATE_INTERVAL_MS)
+
       cleanup = () => {
         if (cleaned) {
           return
@@ -166,6 +194,11 @@ export async function GET(request: NextRequest) {
         if (heartbeatTimer !== null) {
           clearInterval(heartbeatTimer)
           heartbeatTimer = null
+        }
+
+        if (revalidateTimer !== null) {
+          clearInterval(revalidateTimer)
+          revalidateTimer = null
         }
 
         if (activeStreams.has(streamEntry)) {

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { apiFetch } from '../api-fetch'
 import { createTtlCache } from '../cache/ttl-cache'
 import { getProjectFlagVersion } from '../cache/flag-invalidation'
@@ -78,6 +79,9 @@ export type FlagItem = {
 
 type CachedFlagList = {
   flags: FlagItem[]
+  total: number
+  page: number
+  pageSize: number
   version: number
 }
 
@@ -96,123 +100,181 @@ const flagDetailCache = createTtlCache<CachedFlagDetail>({
   maxEntries: 300
 })
 
-export async function getFlags(
-  orgId: string,
-  projectId: string,
-  environmentSlug?: string
-): Promise<FlagItem[]> {
-  const key = `flags:${projectId}:${environmentSlug ?? 'default'}`
-  const version = getProjectFlagVersion(projectId)
-  const cached = flagListCache.get(key)
+export type FlagList = {
+  items: FlagItem[]
+  total: number
+  page: number
+  pageSize: number
+}
 
-  if (cached && version <= cached.version) {
-    return cached.flags
-  }
+export const getFlags = cache(
+  async function getFlags(
+    orgId: string,
+    projectId: string,
+    environmentSlug?: string,
+    page = 1,
+    pageSize = 50
+  ): Promise<FlagList> {
+    const key = `flags:${projectId}:${environmentSlug ?? 'default'}:${page}:${pageSize}`
+    const version = getProjectFlagVersion(projectId)
+    const cached = flagListCache.get(key)
 
-  flagListCache.delete(key)
-
-  const url = new URL(`${API_BASE}/orgs/${orgId}/projects/${projectId}/flags`)
-
-  if (environmentSlug) {
-    url.searchParams.set('environmentSlug', environmentSlug)
-  }
-
-  const res = await apiFetch(url.toString())
-  if (!res.ok) {
-    return []
-  }
-
-  const data: RawApiFlag[] = await res.json()
-
-  function getFlagStatus(flag: ApiFlag): FlagItem['status'] {
-    if (flag.type === 'rollout') {
-      return 'rollout'
+    if (cached && version <= cached.version) {
+      return {
+        items: cached.flags,
+        total: cached.total,
+        page: cached.page,
+        pageSize: cached.pageSize
+      }
     }
 
-    if (flag.enabled) {
-      return 'enabled'
+    flagListCache.delete(key)
+
+    const url = new URL(`${API_BASE}/orgs/${orgId}/projects/${projectId}/flags`)
+    url.searchParams.set('page', String(page))
+    url.searchParams.set('pageSize', String(pageSize))
+
+    if (environmentSlug) {
+      url.searchParams.set('environmentSlug', environmentSlug)
     }
 
-    return 'disabled'
+    const res = await apiFetch(url.toString())
+    if (!res.ok) {
+      return { items: [], total: 0, page, pageSize }
+    }
+
+    const data: {
+      items: RawApiFlag[]
+      total: number
+      page: number
+      pageSize: number
+    } = await res.json()
+
+    function getFlagStatus(flag: ApiFlag): FlagItem['status'] {
+      if (flag.type === 'rollout') {
+        return 'rollout'
+      }
+
+      if (flag.enabled) {
+        return 'enabled'
+      }
+
+      return 'disabled'
+    }
+
+    const flags = data.items.map((f) => ({
+      flagId: f.id,
+      key: f.key,
+      name: f.name,
+      description: f.description,
+      type: f.type,
+      status: getFlagStatus(f),
+      rollout: f.type === 'rollout' ? f.rolloutPercent : undefined
+    }))
+
+    flagListCache.set(key, {
+      flags,
+      total: data.total,
+      page: data.page,
+      pageSize: data.pageSize,
+      version
+    })
+
+    return {
+      items: flags,
+      total: data.total,
+      page: data.page,
+      pageSize: data.pageSize
+    }
   }
+)
 
-  const flags = data.map((f) => ({
-    flagId: f.id,
-    key: f.key,
-    name: f.name,
-    description: f.description,
-    type: f.type,
-    status: getFlagStatus(f),
-    rollout: f.type === 'rollout' ? f.rolloutPercent : undefined
-  }))
+const getFlagById = cache(
+  async function getFlagById(
+    orgId: string,
+    projectId: string,
+    flagId: string,
+    environmentSlug?: string
+  ): Promise<ApiFlag | null> {
+    const key = `flag:${flagId}:${environmentSlug ?? 'default'}`
+    const version = getProjectFlagVersion(projectId)
+    const cached = flagDetailCache.get(key)
 
-  flagListCache.set(key, { flags, version })
+    if (cached && version <= cached.version) {
+      return cached.flag
+    }
 
-  return flags
-}
+    flagDetailCache.delete(key)
 
-async function getFlagById(
-  orgId: string,
-  projectId: string,
-  flagId: string,
-  environmentSlug?: string
-): Promise<ApiFlag | null> {
-  const key = `flag:${flagId}:${environmentSlug ?? 'default'}`
-  const version = getProjectFlagVersion(projectId)
-  const cached = flagDetailCache.get(key)
+    const url = new URL(
+      `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`
+    )
 
-  if (cached && version <= cached.version) {
-    return cached.flag
+    if (environmentSlug) {
+      url.searchParams.set('environmentSlug', environmentSlug)
+    }
+
+    const res = await apiFetch(url.toString())
+    if (!res.ok) {
+      return null
+    }
+
+    const data: RawApiFlag = await res.json()
+    const flag = normalizeFlag(data)
+
+    flagDetailCache.set(key, { flag, version })
+
+    return flag
   }
+)
 
-  flagDetailCache.delete(key)
+const getFlagIdByKey = cache(
+  async function getFlagIdByKey(
+    orgId: string,
+    projectId: string,
+    flagKey: string,
+    environmentSlug?: string
+  ) {
+    const pageSize = 100
+    let page = 1
 
-  const url = new URL(
-    `${API_BASE}/orgs/${orgId}/projects/${projectId}/flags/${flagId}`
-  )
-
-  if (environmentSlug) {
-    url.searchParams.set('environmentSlug', environmentSlug)
+    while (true) {
+      const { items, total } = await getFlags(
+        orgId,
+        projectId,
+        environmentSlug,
+        page,
+        pageSize
+      )
+      const found = items.find((flag) => flag.key === flagKey)
+      if (found) {
+        return found.flagId
+      }
+      if (page * pageSize >= total) {
+        return null
+      }
+      page++
+    }
   }
+)
 
-  const res = await apiFetch(url.toString())
-  if (!res.ok) {
-    return null
+export const getFlag = cache(
+  async function getFlag(
+    orgId: string,
+    projectId: string,
+    flagKey: string,
+    environmentSlug?: string
+  ): Promise<ApiFlag | null> {
+    const flagId = await getFlagIdByKey(
+      orgId,
+      projectId,
+      flagKey,
+      environmentSlug
+    )
+    if (!flagId) {
+      return null
+    }
+
+    return getFlagById(orgId, projectId, flagId, environmentSlug)
   }
-
-  const data: RawApiFlag = await res.json()
-  const flag = normalizeFlag(data)
-
-  flagDetailCache.set(key, { flag, version })
-
-  return flag
-}
-
-async function getFlagIdByKey(
-  orgId: string,
-  projectId: string,
-  flagKey: string,
-  environmentSlug?: string
-) {
-  const flags = await getFlags(orgId, projectId, environmentSlug)
-  return flags.find((flag) => flag.key === flagKey)?.flagId ?? null
-}
-
-export async function getFlag(
-  orgId: string,
-  projectId: string,
-  flagKey: string,
-  environmentSlug?: string
-): Promise<ApiFlag | null> {
-  const flagId = await getFlagIdByKey(
-    orgId,
-    projectId,
-    flagKey,
-    environmentSlug
-  )
-  if (!flagId) {
-    return null
-  }
-
-  return getFlagById(orgId, projectId, flagId, environmentSlug)
-}
+)

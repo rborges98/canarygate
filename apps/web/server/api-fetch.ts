@@ -1,10 +1,6 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import {
-  logServerError,
-  logServerInfo,
-  logServerWarn
-} from '@canarygate/logger'
+import { logServerError, logServerWarn } from '@canarygate/logger'
 
 const MAX_RETRIES = 2
 const TIMEOUT_MS = 15_000
@@ -90,10 +86,6 @@ export async function apiFetch(
         attempt: attempt + 1
       }
 
-      if (res.ok) {
-        logServerInfo('apiFetch concluido', logContext)
-      }
-
       if (!res.ok) {
         if (res.status >= 500) {
           logServerError('apiFetch recebeu resposta 5xx', undefined, logContext)
@@ -108,7 +100,6 @@ export async function apiFetch(
 
       return res
     } catch (err) {
-      console.log(err)
       if (isNextRedirectError(err)) {
         throw err
       }
