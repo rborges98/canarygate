@@ -1,39 +1,22 @@
 'use client'
 
 import React, { useState, useTransition } from 'react'
-import { Badge, type BadgeColor } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
 import { SearchInput } from '@/components/ui/search-input'
-import { UserAvatar } from '@/components/ui/user-avatar'
 import { cn } from '@/shared/utils'
 import { loadMoreHistory } from '@/server/history/actions'
 import type { HistoryItem } from '@/server/history/queries'
 import { ENVIRONMENTS, type Environment } from '@/shared/environments'
 
-const ENV_COLORS: Record<string, string> = {
-  production: 'bg-cg-red-200/10 border-cg-red-200/60 text-cg-red-100',
-  staging: 'bg-cg-yellow-200/10 border-cg-yellow-200/60 text-cg-yellow-200',
-  development: 'bg-cg-indigo-950/60 border-cg-indigo-600/60 text-cg-indigo-100'
-}
-const DEFAULT_ENV_COLOR = 'bg-cg-bg-100 border-cg-bg-200 text-cg-neutral-400'
-
 type ApiAction = HistoryItem['action']
 type ActionFilter = 'all' | ApiAction
 
-const ACTION_BADGE_COLOR: Record<ApiAction, BadgeColor> = {
-  created: 'indigo',
-  deleted: 'red',
-  toggled: 'green',
-  rollout_updated: 'yellow',
-  updated: 'yellow'
-}
-
-const ACTION_LABEL_BY_TYPE: Record<ApiAction, string> = {
-  created: 'CREATED',
-  deleted: 'DELETED',
-  toggled: 'TOGGLED',
-  rollout_updated: 'ROLLOUT',
-  updated: 'UPDATED'
+const ACTION_DOT_COLOR: Record<ApiAction, string> = {
+  created: 'bg-cg-indigo-300',
+  deleted: 'bg-cg-red-100',
+  toggled: 'bg-cg-green-100',
+  rollout_updated: 'bg-cg-yellow-200',
+  updated: 'bg-cg-yellow-200'
 }
 
 const ACTION_DESCRIPTION_BY_TYPE: Record<ApiAction, string> = {
@@ -42,10 +25,6 @@ const ACTION_DESCRIPTION_BY_TYPE: Record<ApiAction, string> = {
   toggled: 'toggled',
   rollout_updated: 'changed rollout of',
   updated: 'updated'
-}
-
-function actionToLabel(action: ApiAction): string {
-  return ACTION_LABEL_BY_TYPE[action]
 }
 
 function actionToDescription(action: ApiAction): string {
@@ -88,10 +67,8 @@ function renderChanges(entry: HistoryItem): React.ReactNode {
   const togglePill = (isEnabled: boolean) => (
     <span
       className={cn(
-        'rounded px-1.5 py-0.5 font-mono text-[10px]',
-        isEnabled
-          ? 'bg-cg-green-300 border-cg-green-200 text-cg-green-100 border'
-          : 'bg-cg-red-300 border-cg-red-200 text-cg-red-100 border'
+        'px-1.5 py-0.5 font-mono text-[10px]',
+        isEnabled ? 'text-cg-green-100' : 'text-cg-red-100'
       )}
     >
       {isEnabled ? 'enabled' : 'disabled'}
@@ -99,13 +76,13 @@ function renderChanges(entry: HistoryItem): React.ReactNode {
   )
 
   const rolloutPill = (value: unknown) => (
-    <span className="bg-cg-indigo-800 border-cg-indigo-700 text-cg-indigo-100 rounded border px-1.5 py-0.5 font-mono text-[10px]">
+    <span className="text-cg-indigo-200 px-1.5 py-0.5 font-mono text-[10px]">
       {String(value)}%
     </span>
   )
 
   const textPill = (value: unknown) => (
-    <span className="bg-cg-bg-100 text-cg-neutral-300 rounded px-1.5 py-0.5 font-mono text-[10px]">
+    <span className="text-cg-neutral-300 px-1.5 py-0.5 font-mono text-[10px]">
       {String(value)}
     </span>
   )
@@ -302,58 +279,51 @@ export function HistoryList({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        {filtered.map((entry) => (
-          <div
-            key={entry.id}
-            className="border-cg-bg-100 bg-cg-white-300 flex items-start gap-3 rounded-lg border px-3 py-3 sm:items-center"
-          >
-            <UserAvatar
-              initial={entry.actorInitial}
-              variant="muted"
-              size="md"
-            />
+      <div className="flex flex-col gap-0 px-1 py-2">
+        {filtered.map((entry, i) => (
+          <div key={entry.id} className="flex items-start gap-3 py-3">
+            <div className="mt-1.5 flex flex-col items-center">
+              <span
+                className={cn(
+                  'h-2 w-2 rounded-full',
+                  ACTION_DOT_COLOR[entry.action]
+                )}
+              />
+              {i < filtered.length - 1 && (
+                <div
+                  className="bg-cg-bg-100 mt-1 w-px flex-1"
+                  style={{ height: '28px' }}
+                />
+              )}
+            </div>
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-white">
-                <span className="text-cg-indigo-200 font-mono font-semibold">
+            <div className="min-w-0 flex-1 pb-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="text-cg-neutral-200 text-[12px] font-semibold">
                   {entry.actorEmail}
                 </span>
-                <span className="text-cg-neutral-400">
+                <span className="text-cg-neutral-400 text-[11px]">
                   {actionToDescription(entry.action)}
                 </span>
-                <span className="text-cg-indigo-100 font-mono">
+                <span className="text-cg-indigo-200 font-mono text-[11px] font-semibold">
                   {entry.flagKey}
+                </span>
+              </div>
+              {renderChanges(entry)}
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="text-cg-neutral-500 font-mono text-[10px]">
+                  {formatTime(entry.createdAt)}
                 </span>
                 {entry.environmentSlug && (
                   <>
-                    {' '}
-                    <span className="text-cg-neutral-400">on</span>
-                    <span
-                      className={cn(
-                        'inline-flex rounded border px-1.5 py-0.5 align-middle font-mono text-[10px]',
-                        ENV_COLORS[entry.environmentSlug] ?? DEFAULT_ENV_COLOR
-                      )}
-                    >
+                    <span className="text-cg-neutral-600 text-[10px]">·</span>
+                    <span className="text-cg-neutral-500 font-mono text-[10px]">
                       {entry.environmentSlug}
                     </span>
                   </>
                 )}
               </div>
-              {renderChanges(entry)}
-              <div className="mt-0.5">
-                <span className="text-cg-neutral-400 font-mono text-[10px]">
-                  {formatTime(entry.createdAt)}
-                </span>
-              </div>
             </div>
-
-            <Badge
-              color={ACTION_BADGE_COLOR[entry.action]}
-              className="mt-0.5 shrink-0 sm:mt-0"
-            >
-              {actionToLabel(entry.action)}
-            </Badge>
           </div>
         ))}
       </div>

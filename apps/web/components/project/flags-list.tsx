@@ -4,10 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Badge, type BadgeColor } from '@/components/ui/badge'
 import { SearchInput } from '@/components/ui/search-input'
+import { Pagination } from '@/components/ui/pagination'
 import { cn } from '@/shared/utils'
 import type { FlagItem } from '@/server/flags/queries'
 
 type FilterTab = 'all' | 'enabled' | 'disabled' | 'rollout'
+
+type PaginationInfo = {
+  page: number
+  pageSize: number
+  total: number
+  baseHref: string
+}
 
 const dotColor: Record<FlagItem['status'], string> = {
   enabled: 'bg-cg-green-100 shadow-[0_0_6px_rgba(34,197,94,0.5)]',
@@ -26,6 +34,7 @@ type Props = {
   orgSlug: string
   projectSlug: string
   currentEnv?: string
+  pagination?: PaginationInfo
 }
 
 function buildFlagHref(
@@ -42,7 +51,13 @@ function buildFlagHref(
   return `/orgs/${orgSlug}/projects/${projectSlug}/flags/${encodedFlagKeyPath}${currentEnv ? `?env=${currentEnv}` : ''}`
 }
 
-export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
+export function FlagsList({
+  flags,
+  orgSlug,
+  projectSlug,
+  currentEnv,
+  pagination
+}: Props) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterTab>('all')
 
@@ -56,22 +71,22 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
 
   return (
     <div className="px-4 py-4 sm:px-8 sm:py-6">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search flags..."
-          className="min-w-0 flex-1"
+          className="w-full min-w-0 sm:w-auto sm:flex-1"
         />
 
-        <div className="flex gap-1.5">
+        <div className="-mx-1 flex w-full gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:w-auto sm:overflow-visible sm:p-0">
           {(['all', 'enabled', 'disabled', 'rollout'] as FilterTab[]).map(
             (tab) => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
                 className={cn(
-                  'rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-semibold transition-colors',
+                  'shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 font-mono text-[11px] font-semibold transition-colors',
                   filter === tab
                     ? 'border-cg-indigo-600 bg-cg-indigo-950 text-cg-indigo-100'
                     : 'border-cg-bg-100 text-cg-neutral-500 hover:text-cg-neutral-300'
@@ -130,7 +145,7 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
                 </div>
                 {flag.status === 'rollout' && flag.rollout !== undefined ? (
                   <div className="flex shrink-0 items-center gap-2">
-                    <div className="bg-cg-yellow-400 h-1 w-14 overflow-hidden rounded-full hidden sm:block">
+                    <div className="bg-cg-yellow-400/30 h-1 w-14 overflow-hidden rounded-full hidden sm:block">
                       <div
                         className="from-cg-yellow-300 to-cg-yellow-100 bg-linear-to-r h-full"
                         style={{ width: `${flag.rollout}%` }}
@@ -158,6 +173,8 @@ export function FlagsList({ flags, orgSlug, projectSlug, currentEnv }: Props) {
           </>
         )}
       </div>
+
+      {pagination && <Pagination {...pagination} />}
     </div>
   )
 }
