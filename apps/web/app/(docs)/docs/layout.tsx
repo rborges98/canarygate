@@ -3,7 +3,7 @@ import { Layout, Navbar } from 'nextra-theme-docs'
 import { getPageMap } from 'nextra/page-map'
 import type { PageMapItem } from 'nextra'
 import DocsSearch from '@/components/docs/docs-search'
-import { Logo } from '@/components/logo'
+import { Logo } from '@/components/branding/logo'
 import type { ReactNode } from 'react'
 import 'nextra-theme-docs/style.css'
 
@@ -19,7 +19,7 @@ export default async function DocsLayout({
   const pageMap = filterDocsPageMap(await getPageMap('/docs'))
 
   return (
-    <div className="text-cg-neutral-100 bg-background [&_aside]:bg-background! [&_nav]:text-cg-neutral-100 [&_aside]:text-cg-neutral-100 [&_aside_a]:text-cg-neutral-100! [&_aside_button]:text-cg-neutral-100! [&_aside_a:hover]:text-cg-indigo-300! [&_aside_button:hover]:text-cg-indigo-300! [&_nav_a:hover]:text-cg-indigo-300! [&_nav_button:hover]:text-cg-indigo-300! [&_article_:where(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,th,td)]:text-cg-neutral-100! [&_article_a]:text-cg-indigo-300! [&_article_a:hover]:text-cg-indigo-300! [--nextra-bg:10_10_10] [--nextra-navbar-height:60px] [--x-font-mono:var(--font-mono)] [--x-font-sans:var(--font-sans)] [&_article_a]:decoration-[color-mix(in_oklab,var(--color-cg-indigo-300)_45%,transparent)] [&_aside_a]:[transition:color_150ms_ease] [&_aside_button]:[transition:color_150ms_ease]">
+    <div className="text-cg-neutral-100 bg-background [&_aside]:bg-background! [&_nav]:text-cg-neutral-100 [&_aside]:text-cg-neutral-100 [&_aside_a]:text-cg-neutral-100! [&_aside_button]:text-cg-neutral-100! [&_aside_a:hover]:text-cg-indigo-300! [&_aside_button:hover]:text-cg-indigo-300! [&_nav_a:not([data-navbar-cta])]:text-cg-neutral-100! [&_nav_a:not([data-navbar-cta]):hover]:text-cg-indigo-300! [&_nav_button:hover]:text-cg-indigo-300! [&_article_:where(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,th,td)]:text-cg-neutral-100! [&_article_a]:text-cg-indigo-300! [&_article_a:hover]:text-cg-indigo-300! [--nextra-bg:10_10_10] [--nextra-navbar-height:60px] [--x-font-mono:var(--font-mono)] [--x-font-sans:var(--font-sans)] [&_article_a]:decoration-[color-mix(in_oklab,var(--color-cg-indigo-300)_45%,transparent)] [&_aside_a]:[transition:color_150ms_ease] [&_aside_button]:[transition:color_150ms_ease]">
       <Layout
         navbar={
           <Navbar
@@ -28,6 +28,7 @@ export default async function DocsLayout({
           >
             <Link
               href="/login"
+              data-navbar-cta="login"
               className="bg-cg-indigo-400 hover:bg-cg-indigo-300 inline-flex items-center rounded-lg px-4 py-2 text-[13px] font-semibold whitespace-nowrap text-white no-underline transition-colors"
             >
               Login
