@@ -41,10 +41,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-cg-neutral-500 mt-3 text-sm">
-            Version 1.0 &mdash; Effective date:{' '}
-            <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-              [DATE: TO BE FILLED]
-            </span>
+            Version 1.0 &mdash; Effective date: August 18, 2026
           </p>
           <p className="text-cg-neutral-400 mt-3 text-sm leading-relaxed">
             This Policy describes how we process the personal data of users of
@@ -76,19 +73,7 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">CNPJ:</span>{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CNPJ: TO BE FILLED AFTER COMPANY REGISTRATION]
-                  </span>
-                </li>
-                <li>
-                  <span className="text-cg-neutral-100 font-medium">
-                    Address:
-                  </span>{' '}
-                  Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
-                  Brasil —{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [ZIP CODE: TO BE FILLED]
-                  </span>
+                  Not applicable (individual)
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
@@ -169,13 +154,13 @@ export default function PrivacyPage() {
                   3.2 Payment data
                 </h3>
                 <ul className="list-inside list-disc space-y-1 pl-2">
-                  <li>Billing name and address;</li>
                   <li>
-                    Credit card data — processed directly by the payment
-                    processor; <em>we do not store</em> card data on our
-                    servers;
+                    <em>None.</em> The Service is currently free of charge and
+                    we do not collect, process, or store any payment or billing
+                    data. If paid plans are introduced in the future, this
+                    policy will be updated before any payment data is
+                    requested.
                   </li>
-                  <li>Transaction history and subscription status.</li>
                 </ul>
               </div>
               <div>
@@ -261,8 +246,8 @@ export default function PrivacyPage() {
                         Payment processing and billing
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Contract performance (item V) + Legal obligation (item
-                        II)
+                        Not applicable — the Service is currently free of
+                        charge; no payment data is collected
                       </td>
                     </tr>
                     <tr>
@@ -270,7 +255,7 @@ export default function PrivacyPage() {
                         Issuance of service invoice (NFS-e)
                       </td>
                       <td className="text-cg-neutral-400 px-4 py-3">
-                        Legal obligation (item II)
+                        Not applicable while the Service is free of charge
                       </td>
                     </tr>
                     <tr>
@@ -339,13 +324,6 @@ export default function PrivacyPage() {
                   5.1 Data operators (processors)
                 </h3>
                 <ul className="border-cg-bg-100 space-y-2 border-l pl-4">
-                  <li>
-                    <span className="text-cg-neutral-200">
-                      Payment processor
-                    </span>{' '}
-                    (e.g., Stripe, Asaas, or similar): processing of charges,
-                    subscriptions, and refunds;
-                  </li>
                   <li>
                     <span className="text-cg-neutral-200">
                       Transactional e-mail provider
@@ -724,16 +702,6 @@ export default function PrivacyPage() {
                   >
                     rcborges98@gmail.com
                   </a>
-                </li>
-                <li>
-                  <span className="text-cg-neutral-100 font-medium">
-                    Address:
-                  </span>{' '}
-                  Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
-                  Brasil —{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [ZIP CODE: TO BE FILLED]
-                  </span>
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">

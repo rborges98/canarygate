@@ -41,10 +41,7 @@ export default function TermsPage() {
             Terms of Use
           </h1>
           <p className="text-cg-neutral-500 mt-3 text-sm">
-            Version 1.0 &mdash; Effective date:{' '}
-            <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-              [DATE: TO BE FILLED]
-            </span>
+            Version 1.0 &mdash; Effective date: August 18, 2026
           </p>
         </div>
 
@@ -94,16 +91,9 @@ export default function TermsPage() {
                     &ldquo;CanaryGate&rdquo;, &ldquo;we&rdquo; or
                     &ldquo;our&rdquo;
                   </span>{' '}
-                  refers to Rafael Castilho e Borges,{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [CNPJ: TO BE FILLED AFTER COMPANY REGISTRATION]
-                  </span>
-                  , with address at Rua Gaspar Magalhães, 415, Apto 302, Rio de
-                  Janeiro, RJ, Brasil,{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [ZIP CODE: TO BE FILLED]
-                  </span>
-                  .
+                  refers to Rafael Castilho e Borges, an individual developer
+                  who maintains CanaryGate as a personal project (no company
+                  or registered address yet).
                 </li>
                 <li>
                   <span className="text-cg-neutral-100 font-medium">
@@ -160,8 +150,8 @@ export default function TermsPage() {
               </ul>
               <p>
                 The Service is provided under the Software as a Service (SaaS)
-                model, accessible through a subscription or a free plan. The
-                exact functionality of each plan is described on the{' '}
+                model. It is currently free of charge during the beta phase.
+                The planned plans and features are described on the{' '}
                 <a
                   href="/#pricing"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
@@ -219,83 +209,46 @@ export default function TermsPage() {
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
-                5.1. CanaryGate offers a free plan with limited features and
-                paid plans with additional features. The prices and features of
-                each plan are available at{' '}
+                5.1. The Service is currently provided free of charge during
+                the beta phase. CanaryGate may introduce paid plans in the
+                future, as described on the{' '}
                 <a
                   href="/#pricing"
                   className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
                 >
-                  canarygate.io/#pricing
+                  pricing page
                 </a>
                 .
               </p>
               <p>
-                5.2. Paid subscriptions are billed on a recurring basis
-                (monthly or yearly, as selected at the time of purchase) and
-                automatically renewed at the end of each period, unless
-                cancelled by the User.
+                5.2. If paid plans are introduced, CanaryGate will notify
+                Users in advance, with at least 30 (thirty) days&rsquo; notice,
+                before any charges apply. Existing free access will not be
+                revoked without prior communication.
               </p>
               <p>
-                5.3. The User may cancel automatic renewal at any time in the
-                account settings. Cancellation takes effect at the end of the
-                already-paid period.
-              </p>
-              <p>
-                5.4. Prices are quoted in Brazilian reais (BRL) or US dollars
-                (USD) as indicated on the pricing page. International users are
-                subject to exchange rates and fees applied by their financial
-                institution.
-              </p>
-              <p>
-                5.5. In the event of payment failure after automatic billing
-                attempts, CanaryGate will notify the User and may suspend or
-                reclassify the account to the free plan.
-              </p>
-              <p>
-                5.6. CanaryGate reserves the right to change plan prices with
-                at least 30 (thirty) days&rsquo; prior notice, as described in
-                Section 14.
+                5.3. During the beta phase, no payment data is requested or
+                stored by CanaryGate.
               </p>
             </div>
           </section>
 
           <section>
             <h2 className="text-cg-neutral-100 mb-4 text-lg font-semibold">
-              6. Right of Withdrawal and Cancellation
+              6. Cancellation and Account Closure
             </h2>
             <div className="text-cg-neutral-300 space-y-3 text-sm leading-relaxed">
               <p>
                 <span className="text-cg-neutral-100 font-medium">
-                  6.1. Right of withdrawal (CDC, art. 49):
+                  6.1. Cancellation:
                 </span>{' '}
-                A User who purchases a paid plan may withdraw from the purchase
-                within 7 (seven) calendar days from the date of the first
-                charge, pursuant to art. 49 of the Consumer Protection Code
-                (Código de Defesa do Consumidor &mdash; Law No. 8.078/1990). To
-                exercise this right, the User must send written communication
-                to{' '}
-                <a
-                  href="mailto:rcborges98@gmail.com"
-                  className="text-cg-indigo-300 hover:text-cg-indigo-200 underline underline-offset-2 transition-colors"
-                >
-                  rcborges98@gmail.com
-                </a>{' '}
-                with the subject &ldquo;Contract Withdrawal&rdquo;. The amount
-                paid will be fully refunded within up to 10 (ten) business
-                days.
+                Since the Service is currently free, the User may stop using
+                it at any time without any charge or obligation. If paid plans
+                are introduced in the future, withdrawal and cancellation
+                rights will follow the applicable consumer protection law.
               </p>
               <p>
-                <span className="text-cg-neutral-100 font-medium">
-                  6.2. Cancellation after the withdrawal period:
-                </span>{' '}
-                After the 7 days, there will be no refund of amounts related to
-                the current already-paid period. Cancellation stops automatic
-                renewal, and the User retains access to the plan until the end
-                of the paid period.
-              </p>
-              <p>
-                6.3. Cancellation can be made at any time in the account
+                6.2. Cancellation can be made at any time in the account
                 settings or by email to{' '}
                 <a
                   href="mailto:rcborges98@gmail.com"
@@ -306,7 +259,7 @@ export default function TermsPage() {
                 .
               </p>
               <p>
-                6.4. After account closure, User Data will be kept for 90
+                6.3. After account closure, User Data will be kept for 90
                 (ninety) days, during which the User may export it. After that
                 period, the data may be deleted from our active servers,
                 subject to retention obligations provided by law.
@@ -498,10 +451,10 @@ export default function TermsPage() {
               </ul>
               <p>
                 12.3. In any case, CanaryGate&rsquo;s maximum liability to the
-                User, for any cause, will be limited to the total amount paid
-                by the User in the 12 (twelve) months preceding the event
-                giving rise to liability, or R$&nbsp;100,00 (cem reais),
-                whichever is higher.
+                User, for any cause, will be limited to R$&nbsp;100,00 (cem
+                reais), or, if the User has paid for the Service, to the total
+                amount paid by the User in the 12 (twelve) months preceding
+                the event giving rise to liability, whichever is higher.
               </p>
               <p>
                 12.4. Nothing in this section excludes or limits liabilities
@@ -661,16 +614,6 @@ export default function TermsPage() {
                   >
                     rcborges98@gmail.com
                   </a>
-                </li>
-                <li>
-                  <span className="text-cg-neutral-100 font-medium">
-                    Address:
-                  </span>{' '}
-                  Rua Gaspar Magalhães, 415, Apto 302, Rio de Janeiro, RJ,
-                  Brasil —{' '}
-                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 font-mono text-xs text-yellow-400">
-                    [ZIP CODE: TO BE FILLED]
-                  </span>
                 </li>
               </ul>
             </div>

@@ -54,7 +54,7 @@ data: {}
 ## Using manually (without the SDK)
 
 ```ts
-const source = new EventSource('https://api.canarygate.io/sdk/events', {
+const source = new EventSource('/sdk/stream', {
   // Native EventSource does not support headers — use a polyfill
   // or the SDK which already handles this internally
 })
