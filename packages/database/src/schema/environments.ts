@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import { projects } from './projects'
 
 export const environments = pgTable('environments', {
@@ -8,7 +8,9 @@ export const environments = pgTable('environments', {
   slug:      text('slug').notNull(),
   isDefault: boolean('is_default').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull()
-})
+}, (t) => [
+  index('environments_project_id_idx').on(t.projectId)
+])
 
 export type Environment    = typeof environments.$inferSelect
 export type NewEnvironment = typeof environments.$inferInsert

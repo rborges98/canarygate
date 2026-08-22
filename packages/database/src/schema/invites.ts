@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { orgs } from './orgs'
 import { projects } from './projects'
 
@@ -15,7 +15,9 @@ export const invites = pgTable('invites', {
   status:      inviteStatusEnum('status').notNull().default('PENDING'),
   createdAt:   timestamp('created_at').defaultNow().notNull(),
   expiresAt:   timestamp('expires_at').notNull(),
-})
+}, (t) => [
+  unique('invites_org_id_email_unique').on(t.orgId, t.email)
+])
 
 export type Invite = typeof invites.$inferSelect
 export type NewInvite = typeof invites.$inferInsert

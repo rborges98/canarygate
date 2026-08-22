@@ -8,6 +8,20 @@
       "when": 1781047503790,
       "tag": "0000_mute_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786684524042,
+      "tag": "0001_graceful_maria_hill",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786912482144,
+      "tag": "0002_typical_night_thrasher",
+      "breakpoints": true
     }
   ]
 }

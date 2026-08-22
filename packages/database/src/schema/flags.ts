@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { projects } from './projects'
 
 export const flagTypeEnum       = pgEnum('flag_type',       ['boolean', 'rollout'])
@@ -14,7 +14,10 @@ export const flags = pgTable('flags', {
   type:        flagTypeEnum('type').notNull().default('boolean'),
   createdAt:   timestamp('created_at').defaultNow().notNull(),
   updatedAt:   timestamp('updated_at').defaultNow().notNull()
-})
+}, (t) => [
+  index('flags_project_id_idx').on(t.projectId),
+  unique('flags_project_id_key_unique').on(t.projectId, t.key)
+])
 
 export type Flag    = typeof flags.$inferSelect
 export type NewFlag = typeof flags.$inferInsert

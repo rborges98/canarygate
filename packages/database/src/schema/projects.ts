@@ -1,4 +1,4 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, index, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { orgs } from './orgs'
 import { orgMembers } from './members'
 
@@ -9,12 +9,15 @@ export const projects = pgTable('projects', {
   orgId:      text('org_id').notNull().references(() => orgs.id, { onDelete: 'cascade' }),
   name:       text('name').notNull(),
   slug:       text('slug').notNull(),
-  apiKey:     text('api_key').notNull().unique(),
-  webhookUrl: text('webhook_url'),
-  active:     boolean('active').notNull().default(true),
+  apiKey:        text('api_key').notNull().unique(),
+  webhookUrl:    text('webhook_url'),
+  webhookSecret: text('webhook_secret'),
+  active:        boolean('active').notNull().default(true),
   createdAt:  timestamp('created_at').defaultNow().notNull(),
   updatedAt:  timestamp('updated_at').defaultNow().notNull(),
-})
+}, (t) => [
+  unique('projects_org_id_slug_unique').on(t.orgId, t.slug)
+])
 
 export const projectMembers = pgTable('project_members', {
   id:          text('id').primaryKey(),
@@ -22,7 +25,9 @@ export const projectMembers = pgTable('project_members', {
   orgMemberId: text('org_member_id').notNull().references(() => orgMembers.id, { onDelete: 'cascade' }),
   role:        projectRoleEnum('role').notNull().default('MEMBER'),
   createdAt:   timestamp('created_at').defaultNow().notNull(),
-})
+}, (t) => [
+  index('project_members_org_member_id_project_id_idx').on(t.orgMemberId, t.projectId)
+])
 
 export type Project = typeof projects.$inferSelect
 export type NewProject = typeof projects.$inferInsert

@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, real, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, pgTable, real, text, timestamp, unique } from 'drizzle-orm/pg-core'
 import { flags } from './flags'
 import { environments } from './environments'
 import { scheduleActionEnum, everyUnitEnum } from './flags'
@@ -28,7 +28,13 @@ export const flagEnvironments = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull()
   },
-  (t) => [unique().on(t.flagId, t.environmentId)]
+  (t) => [
+    unique().on(t.flagId, t.environmentId),
+    index('flag_environments_environment_id_flag_id_idx').on(
+      t.environmentId,
+      t.flagId
+    )
+  ]
 )
 
 export type FlagEnvironment    = typeof flagEnvironments.$inferSelect

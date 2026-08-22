@@ -9,7 +9,14 @@ let _db: DB | null = null
 
 export function getDb(): DB {
   if (!_db) {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
+      statement_timeout: 5_000,
+      query_timeout: 5_000
+    })
     _db = drizzle(pool, { schema })
   }
   return _db

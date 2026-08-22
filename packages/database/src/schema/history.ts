@@ -1,4 +1,4 @@
-import { jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 import { projects } from './projects'
 import { flags } from './flags'
 import { environments } from './environments'
@@ -46,7 +46,10 @@ export const history = pgTable('flag_history', {
   actorEmail: text('actor_email').notNull(),
   changes: jsonb('changes'),
   createdAt: timestamp('created_at').defaultNow().notNull()
-})
+}, (t) => [
+  index('flag_history_project_id_created_at_idx').on(t.projectId, t.createdAt),
+  index('flag_history_flag_id_created_at_idx').on(t.flagId, t.createdAt)
+])
 
 export const auditLog = pgTable('audit_log', {
   id: text('id').primaryKey(),
