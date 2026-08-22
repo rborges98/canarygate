@@ -2,6 +2,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
+import yaml from 'js-yaml'
+
+const yamlEngine = {
+  yaml: {
+    parse: (input) => yaml.load(input)
+  }
+}
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = path.dirname(scriptPath)
@@ -251,7 +258,7 @@ async function main() {
   const entries = await Promise.all(
     files.map(async (filePath) => {
       const fileContents = await fs.readFile(filePath, 'utf8')
-      const { data, content } = matter(fileContents)
+      const { data, content } = matter(fileContents, { engines: yamlEngine })
 
       if (data.searchable === false) {
         return null
