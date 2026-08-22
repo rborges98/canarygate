@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/shared/utils'
-import { Logo } from '@/components/logo'
-import { UserMenu } from '@/components/user-menu'
+import { Logo } from '@/components/branding/logo'
+import { UserMenu } from '@/components/branding/user-menu'
 import type { SessionUser } from '@/shared/auth'
 
 type NavProps = {

@@ -1,5 +1,5 @@
 import { getMembers } from '@/server/members/queries'
-import { getProjects } from '@/server/projects/queries'
+import { getAllProjects } from '@/server/projects/queries'
 import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { MembersClient } from '@/components/members/members-client'
 import { getSessionOrRedirect } from '@/shared/auth'
@@ -19,7 +19,7 @@ export default async function MembersPage({ params }: Props) {
 
   const [members, projects] = await Promise.all([
     getMembers(org.id),
-    getProjects(org.id)
+    getAllProjects(org.id)
   ])
   const availableProjects = projects.map((p) => ({
     projectId: p.projectId,

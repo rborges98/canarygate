@@ -1,4 +1,4 @@
-import { Nav } from '@/components/nav'
+import { Nav } from '@/components/branding/nav'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function NewOrgLoading() {

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { DangerZone } from '@/components/danger-zone'
-import { DangerZoneAction } from '@/components/danger-zone-action'
+import { DangerZone } from '@/components/patterns/danger-zone'
+import { DangerZoneAction } from '@/components/patterns/danger-zone-action'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import {
@@ -132,6 +132,7 @@ export function ProjectSettingsForm({
   }
 
   const maskedKey = '••••••••••••••••••••••••••••••••'
+  const hasKey = apiKey.length > 0
   let toggleActionTitle = 'Reactivate project'
   let toggleActionDescription =
     'Restore this project to the regular project list for all members with access.'
@@ -212,23 +213,35 @@ export function ProjectSettingsForm({
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="border-cg-bg-100 bg-cg-white-200 text-cg-indigo-100 min-w-0 flex-1 truncate rounded-lg border px-4 py-2.5 font-mono text-[12px]">
-            {apiKeyRevealed ? apiKey : maskedKey}
+            {hasKey && apiKeyRevealed ? apiKey : maskedKey}
           </div>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={handleCopy}
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-300 flex-1 rounded-lg border px-3 py-2.5 text-[12px] transition-colors hover:text-white sm:flex-none"
+              disabled={!hasKey}
+              title={hasKey ? undefined : 'Regenerate the key to get a new one'}
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-300 flex-1 rounded-lg border px-3 py-2.5 text-[12px] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-cg-neutral-300 sm:flex-none"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
             <button
+              type="button"
               onClick={() => setApiKeyRevealed((v) => !v)}
-              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-300 flex-1 rounded-lg border px-3 py-2.5 text-[12px] transition-colors hover:text-white sm:flex-none"
+              disabled={!hasKey}
+              title={hasKey ? undefined : 'Regenerate the key to get a new one'}
+              className="border-cg-bg-100 bg-cg-white-200 text-cg-neutral-300 flex-1 rounded-lg border px-3 py-2.5 text-[12px] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-cg-neutral-300 sm:flex-none"
             >
               {apiKeyRevealed ? 'Hide' : 'Reveal'}
             </button>
           </div>
         </div>
+        {!hasKey && (
+          <p className="text-cg-neutral-500 mt-2 text-[11px]">
+            For security, your key is only shown right after it is generated.
+            Regenerate it to get a new one.
+          </p>
+        )}
         <button
           onClick={handleRegenerate}
           disabled={isRegenerating}

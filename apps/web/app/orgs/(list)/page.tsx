@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { OrgCard } from '@/components/org/org-card'
-import { Nav } from '@/components/nav'
+import { Nav } from '@/components/branding/nav'
 import { getOrgs } from '@/server/orgs/queries'
 import { getSessionOrRedirect } from '@/shared/auth'
 

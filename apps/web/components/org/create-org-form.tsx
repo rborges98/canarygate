@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { Nav } from '@/components/nav'
+import { Nav } from '@/components/branding/nav'
 import type { SessionUser } from '@/shared/auth'
 import { createOrg } from '@/server/orgs/actions'
 

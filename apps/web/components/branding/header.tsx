@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { cn } from '@/shared/utils'
-import { Logo } from '@/components/logo'
+import { Logo } from '@/components/branding/logo'
 
 export { Logo }
 

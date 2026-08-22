@@ -1,5 +1,5 @@
-import { OrgShell } from '@/components/org-shell'
-import { FlagStreamRefresher } from '@/components/flag-stream-refresher'
+import { OrgShell } from '@/components/org/org-shell'
+import { FlagStreamRefresher } from '@/components/project/flag-stream-refresher'
 import { getOrgBySlugOrName } from '@/server/orgs/queries'
 import { getSessionOrRedirect } from '@/shared/auth'
 

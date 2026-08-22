@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { LogOut } from 'lucide-react'
+import { LogOut, MonitorSmartphone } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { useSession, signOut } from '@/services/auth/client'
+import { revokeAllSessions } from '@/server/auth/actions'
 import type { SessionUser } from '@/shared/auth'
 import { UserAvatar } from '@/components/ui/user-avatar'
 
@@ -17,6 +19,7 @@ type UserMenuProps = {
 export function UserMenu({ initialUser }: UserMenuProps) {
   const { data: session, isPending, isRefetching, refetch } = useSession()
   const [open, setOpen] = useState(false)
+  const [isSignOutAllPending, setIsSignOutAllPending] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const sessionRetryCountRef = useRef(0)
   const router = useRouter()
@@ -64,6 +67,25 @@ export function UserMenu({ initialUser }: UserMenuProps) {
   }, [open])
 
   async function handleSignOut() {
+    await signOut()
+    router.push('/login')
+  }
+
+  async function handleSignOutAllDevices() {
+    if (isSignOutAllPending) {
+      return
+    }
+
+    setIsSignOutAllPending(true)
+    const res = await revokeAllSessions()
+
+    if (!res.ok) {
+      setIsSignOutAllPending(false)
+      toast.error(res.message ?? 'Failed to sign out of all devices')
+      return
+    }
+
+    toast.success('Signed out of all devices')
     await signOut()
     router.push('/login')
   }
@@ -121,6 +143,16 @@ export function UserMenu({ initialUser }: UserMenuProps) {
               >
                 <LogOut size={13} />
                 Sign out
+              </button>
+              <button
+                onClick={handleSignOutAllDevices}
+                disabled={isSignOutAllPending}
+                className="text-cg-neutral-300 hover:bg-cg-bg-100 hover:text-cg-red-100 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 font-sans text-[12px] transition-colors disabled:opacity-50"
+              >
+                <MonitorSmartphone size={13} />
+                {isSignOutAllPending
+                  ? 'Signing out...'
+                  : 'Sign out of all devices'}
               </button>
             </div>
           </div>
