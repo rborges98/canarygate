@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, gt } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import {
   invites,
@@ -11,7 +11,11 @@ import { getProjectInOrg } from '../utils/access.ts'
 export async function getInviteByToken(token: string, log?: FastifyBaseLogger) {
   try {
     return await db.query.invites.findFirst({
-      where: eq(invites.token, token),
+      where: and(
+        eq(invites.token, token),
+        eq(invites.status, 'PENDING'),
+        gt(invites.expiresAt, new Date())
+      ),
       with: { org: true, project: true }
     })
   } catch (error) {
@@ -101,14 +105,35 @@ export async function acceptInvite(
       }
     }
 
+    const existingMember = await db.query.orgMembers.findFirst({
+      where: and(
+        eq(orgMembers.orgId, invite.orgId),
+        eq(orgMembers.userId, userId)
+      ),
+      columns: { id: true }
+    })
+
+    if (existingMember) {
+      await db
+        .update(invites)
+        .set({ status: 'ACCEPTED' })
+        .where(
+          and(eq(invites.id, invite.id), eq(invites.status, 'PENDING'))
+        )
+      return true
+    }
+
     await db.transaction(async (tx) => {
       const memberId = crypto.randomUUID()
-      await tx.insert(orgMembers).values({
-        id: memberId,
-        orgId: invite.orgId,
-        userId,
-        role: invite.orgRole as 'OWNER' | 'MEMBER'
-      })
+      await tx
+        .insert(orgMembers)
+        .values({
+          id: memberId,
+          orgId: invite.orgId,
+          userId,
+          role: invite.orgRole as 'OWNER' | 'MEMBER'
+        })
+        .onConflictDoNothing()
       if (invite.projectId && invite.projectRole) {
         await tx.insert(projectMembers).values({
           id: crypto.randomUUID(),
@@ -120,7 +145,9 @@ export async function acceptInvite(
       await tx
         .update(invites)
         .set({ status: 'ACCEPTED' })
-        .where(eq(invites.id, invite.id))
+        .where(
+          and(eq(invites.id, invite.id), eq(invites.status, 'PENDING'))
+        )
     })
 
     return true
@@ -153,6 +180,10 @@ export async function declineInvite(
       return null
     }
 
+    if (new Date() > invite.expiresAt) {
+      return null
+    }
+
     if (invite.email.toLowerCase() !== userEmail.toLowerCase()) {
       return null
     }
@@ -160,7 +191,7 @@ export async function declineInvite(
     await db
       .update(invites)
       .set({ status: 'DECLINED' })
-      .where(eq(invites.id, invite.id))
+      .where(and(eq(invites.id, invite.id), eq(invites.status, 'PENDING')))
     return true
   } catch (error) {
     log?.error(

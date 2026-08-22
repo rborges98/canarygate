@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, count, eq, inArray } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import {
   flags,
@@ -115,29 +115,48 @@ function mergeFlag(
 export async function listFlags(
   projectId: string,
   environmentId: string,
+  options: { page?: number; pageSize?: number } = {},
   log?: FastifyBaseLogger
 ) {
   try {
-    const rows = await db
-      .select()
-      .from(flags)
-      .innerJoin(
-        flagEnvironments,
-        and(
-          eq(flagEnvironments.flagId, flags.id),
-          eq(flagEnvironments.environmentId, environmentId)
-        )
-      )
-      .where(eq(flags.projectId, projectId))
+    const page = options.page ?? 1
+    const pageSize = options.pageSize ?? 50
 
-    return rows.map((r) => mergeFlag(r.flags, r.flag_environments))
+    const joinCondition = and(
+      eq(flagEnvironments.flagId, flags.id),
+      eq(flagEnvironments.environmentId, environmentId)
+    )
+
+    const [rows, totalResult] = await Promise.all([
+      db
+        .select()
+        .from(flags)
+        .innerJoin(flagEnvironments, joinCondition)
+        .where(eq(flags.projectId, projectId))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize),
+      db
+        .select({ total: count() })
+        .from(flags)
+        .innerJoin(flagEnvironments, joinCondition)
+        .where(eq(flags.projectId, projectId))
+    ])
+
+    const total = totalResult[0]?.total ?? 0
+
+    return {
+      items: rows.map((r) => mergeFlag(r.flags, r.flag_environments)),
+      total
+    }
   } catch (error) {
     log?.error(
       {
         err: error,
         scope: 'db.flags.listFlags',
         projectId,
-        environmentId
+        environmentId,
+        page: options.page ?? 1,
+        pageSize: options.pageSize ?? 50
       },
       'Failed in db.flags.listFlags'
     )
@@ -147,9 +166,32 @@ export async function listFlags(
 
 export async function listFlagsWithAllEnvs(
   projectId: string,
+  options: { page?: number; pageSize?: number } = {},
   log?: FastifyBaseLogger
 ) {
   try {
+    const page = options.page ?? 1
+    const pageSize = options.pageSize ?? 50
+
+    const [flagIds, totalResult] = await Promise.all([
+      db
+        .select({ id: flags.id })
+        .from(flags)
+        .where(eq(flags.projectId, projectId))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize),
+      db
+        .select({ total: count() })
+        .from(flags)
+        .where(eq(flags.projectId, projectId))
+    ])
+
+    const total = totalResult[0]?.total ?? 0
+
+    if (flagIds.length === 0) {
+      return { items: [], total }
+    }
+
     const rows = await db
       .select({
         flag: flags,
@@ -162,7 +204,7 @@ export async function listFlagsWithAllEnvs(
         environments,
         eq(environments.id, flagEnvironments.environmentId)
       )
-      .where(eq(flags.projectId, projectId))
+      .where(inArray(flags.id, flagIds.map((f) => f.id)))
 
     const map = new Map<
       string,
@@ -198,10 +240,19 @@ export async function listFlagsWithAllEnvs(
       }
     }
 
-    return [...map.values()]
+    return {
+      items: [...map.values()],
+      total
+    }
   } catch (error) {
     log?.error(
-      { err: error, scope: 'db.flags.listFlagsWithAllEnvs', projectId },
+      {
+        err: error,
+        scope: 'db.flags.listFlagsWithAllEnvs',
+        projectId,
+        page: options.page ?? 1,
+        pageSize: options.pageSize ?? 50
+      },
       'Failed in db.flags.listFlagsWithAllEnvs'
     )
     throw error
@@ -287,28 +338,32 @@ export async function createFlag(
       autoRolloutUntilMax: data.autoRolloutUntilMax
     })
 
-    const [flag] = await db
-      .insert(flags)
-      .values({
-        id: flagId,
-        projectId,
-        name: data.name,
-        key: data.key,
-        description: data.description ?? '',
-        type: data.type
-      })
-      .returning()
+    const flag = await db.transaction(async (tx) => {
+      const [createdFlag] = await tx
+        .insert(flags)
+        .values({
+          id: flagId,
+          projectId,
+          name: data.name,
+          key: data.key,
+          description: data.description ?? '',
+          type: data.type
+        })
+        .returning()
 
-    if (environmentIds.length > 0) {
-      await db.insert(flagEnvironments).values(
-        environmentIds.map((envId) => ({
-          id: randomUUID(),
-          flagId,
-          environmentId: envId,
-          ...environmentConfig
-        }))
-      )
-    }
+      if (environmentIds.length > 0) {
+        await tx.insert(flagEnvironments).values(
+          environmentIds.map((envId) => ({
+            id: randomUUID(),
+            flagId,
+            environmentId: envId,
+            ...environmentConfig
+          }))
+        )
+      }
+
+      return createdFlag
+    })
 
     return flag
   } catch (error) {
@@ -515,13 +570,14 @@ export async function updateRollout(
 
 export async function addFlagToEnvironment(
   flagId: string,
+  projectId: string,
   environmentId: string,
   rolloutPercent = 0,
   log?: FastifyBaseLogger
 ) {
   try {
     const flagMeta = await db.query.flags.findFirst({
-      where: eq(flags.id, flagId)
+      where: and(eq(flags.id, flagId), eq(flags.projectId, projectId))
     })
     if (!flagMeta) {
       return null
@@ -550,10 +606,67 @@ export async function addFlagToEnvironment(
         err: error,
         scope: 'db.flags.addFlagToEnvironment',
         flagId,
+        projectId,
         environmentId,
         rolloutPercent
       },
       'Failed in db.flags.addFlagToEnvironment'
+    )
+    throw error
+  }
+}
+
+export async function getFlagEnvironmentRow(
+  flagId: string,
+  environmentId: string,
+  log?: FastifyBaseLogger
+) {
+  try {
+    return (
+      (await db.query.flagEnvironments.findFirst({
+        where: and(
+          eq(flagEnvironments.flagId, flagId),
+          eq(flagEnvironments.environmentId, environmentId)
+        )
+      })) ?? null
+    )
+  } catch (error) {
+    log?.error(
+      {
+        err: error,
+        scope: 'db.flags.getFlagEnvironmentRow',
+        flagId,
+        environmentId
+      },
+      'Failed in db.flags.getFlagEnvironmentRow'
+    )
+    throw error
+  }
+}
+
+export async function listFlagEnvironmentsForFlag(
+  flagId: string,
+  log?: FastifyBaseLogger
+) {
+  try {
+    const rows = await db
+      .select({
+        id: flagEnvironments.id,
+        environmentId: flagEnvironments.environmentId,
+        environmentSlug: environments.slug
+      })
+      .from(flagEnvironments)
+      .innerJoin(
+        environments,
+        eq(environments.id, flagEnvironments.environmentId)
+      )
+      .where(eq(flagEnvironments.flagId, flagId))
+
+    return rows
+  } catch (error) {
+    log?.error(
+      { err: error, scope: 'db.flags.listFlagEnvironmentsForFlag', flagId },
+      'Failed in db.flags.listFlagEnvironmentsForFlag'
     )
     throw error
   }

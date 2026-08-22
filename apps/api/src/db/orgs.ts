@@ -3,15 +3,32 @@ import { db } from '@canarygate/database/client'
 import { orgs, orgMembers, projects } from '@canarygate/database/schema'
 import type { FastifyBaseLogger } from 'fastify'
 
-export async function listOrgsForUser(userId: string, log?: FastifyBaseLogger) {
+export async function listOrgsForUser(
+  userId: string,
+  options: { page?: number; pageSize?: number } = {},
+  log?: FastifyBaseLogger
+) {
   try {
-    const memberships = await db.query.orgMembers.findMany({
-      where: eq(orgMembers.userId, userId),
-      with: { org: true }
-    })
+    const page = options.page ?? 1
+    const pageSize = options.pageSize ?? 50
+
+    const [memberships, totalResult] = await Promise.all([
+      db.query.orgMembers.findMany({
+        where: eq(orgMembers.userId, userId),
+        with: { org: true },
+        limit: pageSize,
+        offset: (page - 1) * pageSize
+      }),
+      db
+        .select({ total: count() })
+        .from(orgMembers)
+        .where(eq(orgMembers.userId, userId))
+    ])
+
+    const total = totalResult[0]?.total ?? 0
 
     if (memberships.length === 0) {
-      return []
+      return { items: [], total }
     }
 
     const orgIds = memberships.map((m) => m.orgId)
@@ -29,15 +46,24 @@ export async function listOrgsForUser(userId: string, log?: FastifyBaseLogger) {
         .groupBy(projects.orgId)
     ])
 
-    return memberships.map((m) => ({
-      ...m.org,
-      role: m.role,
-      memberCount: memberCounts.find((c) => c.orgId === m.orgId)?.total ?? 0,
-      projectCount: projectCounts.find((c) => c.orgId === m.orgId)?.total ?? 0
-    }))
+    return {
+      items: memberships.map((m) => ({
+        ...m.org,
+        role: m.role,
+        memberCount: memberCounts.find((c) => c.orgId === m.orgId)?.total ?? 0,
+        projectCount: projectCounts.find((c) => c.orgId === m.orgId)?.total ?? 0
+      })),
+      total
+    }
   } catch (error) {
     log?.error(
-      { err: error, scope: 'db.orgs.listOrgsForUser', userId },
+      {
+        err: error,
+        scope: 'db.orgs.listOrgsForUser',
+        userId,
+        page: options.page ?? 1,
+        pageSize: options.pageSize ?? 50
+      },
       'Failed in db.orgs.listOrgsForUser'
     )
     throw error
@@ -98,17 +124,19 @@ export async function createOrg(
 ) {
   try {
     const orgId = crypto.randomUUID()
-    const [org] = await db
-      .insert(orgs)
-      .values({ id: orgId, name: data.name, slug: data.slug })
-      .returning()
-    await db.insert(orgMembers).values({
-      id: crypto.randomUUID(),
-      orgId,
-      userId,
-      role: 'OWNER'
+    return db.transaction(async (tx) => {
+      const [org] = await tx
+        .insert(orgs)
+        .values({ id: orgId, name: data.name, slug: data.slug })
+        .returning()
+      await tx.insert(orgMembers).values({
+        id: crypto.randomUUID(),
+        orgId,
+        userId,
+        role: 'OWNER'
+      })
+      return org
     })
-    return org
   } catch (error) {
     log?.error(
       { err: error, scope: 'db.orgs.createOrg', userId, slug: data.slug },

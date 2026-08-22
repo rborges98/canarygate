@@ -2,19 +2,15 @@ import type { FastifyInstance } from 'fastify'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import {
-  projects,
   flags,
   flagEnvironments,
   environments
 } from '@canarygate/database/schema'
-import {
-  subscribe,
-  unsubscribe,
-  getDetailedSseMetrics
-} from '../sse/flag-emitter.ts'
+import { hashApiKey, findProjectByApiKey } from '../db/projects.ts'
+import { subscribe, unsubscribe } from '../sse/flag-emitter.ts'
 
 const SDK_FLAGS_RATE_LIMIT = { max: 60, timeWindow: '1 minute' }
-const SDK_STREAM_RATE_LIMIT = { max: 10, timeWindow: '1 minute' }
+const SDK_STREAM_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 const SSE_RETRY_MS = 5_000
 const SSE_MAX_CONNECTION_LIFETIME_MS = 1000 * 60 * 60 * 24
 
@@ -47,66 +43,59 @@ export function resolveSdkStreamAuthentication(input: {
   return { apiKey }
 }
 
-async function resolveProjectAndEnvironment(
-  apiKey: string,
+type SdkProjectRow = NonNullable<
+  Awaited<ReturnType<typeof findProjectByApiKey>>
+>
+type SdkEnvironmentRow = NonNullable<
+  Awaited<ReturnType<typeof resolveEnvironment>>
+>
+
+type ResolvedSdkProject =
+  | { status: 'ok'; project: SdkProjectRow; env: SdkEnvironmentRow }
+  | { status: 'not-found' }
+  | { status: 'disabled' }
+
+async function resolveEnvironment(
+  projectId: string,
   environmentSlug?: string
 ) {
-  const project = await db.query.projects.findFirst({
-    where: eq(projects.apiKey, apiKey)
-  })
-  if (!project) {
-    return null
-  }
-
-  let env
   if (environmentSlug) {
-    env = await db.query.environments.findFirst({
+    return db.query.environments.findFirst({
       where: and(
-        eq(environments.projectId, project.id),
+        eq(environments.projectId, projectId),
         eq(environments.slug, environmentSlug)
       )
     })
-  } else {
-    const envs = await db.query.environments.findMany({
-      where: eq(environments.projectId, project.id)
-    })
-    env = envs.find((e) => e.isDefault) ?? envs[0]
   }
 
+  const envs = await db.query.environments.findMany({
+    where: eq(environments.projectId, projectId)
+  })
+  return envs.find((e) => e.isDefault) ?? envs[0] ?? null
+}
+
+async function resolveProjectAndEnvironment(
+  apiKey: string,
+  environmentSlug?: string
+): Promise<ResolvedSdkProject> {
+  const project = await findProjectByApiKey(apiKey)
+  if (!project) {
+    return { status: 'not-found' }
+  }
+
+  if (!project.active) {
+    return { status: 'disabled' }
+  }
+
+  const env = await resolveEnvironment(project.id, environmentSlug)
   if (!env) {
-    return null
+    return { status: 'not-found' }
   }
 
-  return { project, env }
+  return { status: 'ok', project, env }
 }
 
 export default async function sdkRoutes(app: FastifyInstance) {
-  // ROTA DE MÉTRICAS ANÔNIMA COM NOMES DE AMBIENTE
-  app.get('/api/metrics', async () => {
-    const sseMetrics = getDetailedSseMetrics()
-    const memoryUsage = process?.memoryUsage
-      ? process.memoryUsage()
-      : { heapUsed: 0 }
-    const ramInMB = memoryUsage.heapUsed / 1024 / 1024
-
-    const efficiency =
-      sseMetrics.totalConnections > 0
-        ? `${(ramInMB / sseMetrics.totalConnections).toFixed(3)} MB por conexão`
-        : '0 MB (Nenhuma conexão ativa)'
-
-    return {
-      status: 'healthy',
-      uptime: `${process.uptime().toFixed(0)} segundos`,
-      memoryUsed: `${ramInMB.toFixed(2)} MB`,
-      efficiency,
-      summary: {
-        totalConnections: sseMetrics.totalConnections,
-        totalActiveProjects: sseMetrics.totalActiveProjects
-      },
-      projects: sseMetrics.projects
-    }
-  })
-
   // Header: X-Api-Key: <project api key>
   // Header: X-Environment: <environment slug> (optional, defaults to production)
   app.get('/sdk/flags', {
@@ -143,7 +132,11 @@ export default async function sdkRoutes(app: FastifyInstance) {
         apiKey,
         environmentSlug
       )
-      if (!resolved) {
+      if (resolved.status === 'disabled') {
+        return reply.status(403).send({ message: 'Project is disabled' })
+      }
+
+      if (resolved.status !== 'ok') {
         return reply
           .status(404)
           .send({ message: 'Project or environment not found' })
@@ -152,7 +145,13 @@ export default async function sdkRoutes(app: FastifyInstance) {
       const { project, env } = resolved
 
       const rows = await db
-        .select()
+        .select({
+          key: flags.key,
+          type: flags.type,
+          enabled: flagEnvironments.enabled,
+          rolloutPercent: flagEnvironments.rolloutPercent,
+          updatedAt: flagEnvironments.updatedAt
+        })
         .from(flags)
         .innerJoin(
           flagEnvironments,
@@ -166,12 +165,12 @@ export default async function sdkRoutes(app: FastifyInstance) {
       return {
         projectId: project.id,
         environment: env.slug,
-        flags: rows.map((r) => ({
-          key: r.flags.key,
-          type: r.flags.type,
-          enabled: r.flag_environments.enabled,
-          rolloutPercent: r.flag_environments.rolloutPercent,
-          updatedAt: r.flag_environments.updatedAt.toISOString()
+        flags: rows.map((row) => ({
+          key: row.key,
+          type: row.type,
+          enabled: row.enabled,
+          rolloutPercent: row.rolloutPercent,
+          updatedAt: row.updatedAt.toISOString()
         }))
       }
     }
@@ -232,7 +231,11 @@ export default async function sdkRoutes(app: FastifyInstance) {
         return reply.status(500).send({ message: 'Internal server error' })
       }
 
-      if (!resolved) {
+      if (resolved.status === 'disabled') {
+        return reply.status(403).send({ message: 'Project is disabled' })
+      }
+
+      if (resolved.status !== 'ok') {
         return reply
           .status(404)
           .send({ message: 'Project or environment not found' })
@@ -242,14 +245,13 @@ export default async function sdkRoutes(app: FastifyInstance) {
       const channelKey = `${project.id}:${env.id}`
       const raw = reply.raw
 
-      // Enviando o env.slug nas opções para o emissor conseguir catalogar as métricas
       const subscription = subscribe(channelKey, raw, {
         ip: request.ip,
-        apiKey,
-        environmentSlug: env.slug
-      } as any)
+        apiKey: hashApiKey(apiKey)
+      })
 
       if (!subscription.ok) {
+        reply.header('retry-after', '60')
         return reply.status(429).send({ message: subscription.message })
       }
 

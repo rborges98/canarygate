@@ -79,7 +79,8 @@ export default async function historyRoutes(app: FastifyInstance) {
         environmentId,
         limit,
         offset,
-        action: action as Parameters<typeof historyDb.listHistory>[1]['action']
+        action: action as Parameters<typeof historyDb.listHistory>[1]['action'],
+        includeChanges: true
       })
     }
   })

@@ -38,6 +38,11 @@ vi.mock('../../src/db/projects.ts', () => ({
   getProjectById: vi.fn(),
   regenerateApiKey: vi.fn(),
   updateProject: vi.fn(),
+  getWebhook: vi.fn(),
+  getWebhookSecret: vi.fn(),
+  getProjectWebhookConfig: vi.fn(),
+  updateWebhook: vi.fn(),
+  regenerateWebhookSecret: vi.fn(),
 }))
 
 vi.mock('../../src/db/environments.ts', () => ({
@@ -62,6 +67,12 @@ vi.mock('@canarygate/database/client', () => ({
 
 vi.mock('@canarygate/logger', () => ({
   fastifyLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+  createLogger: () => ({
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn()
+  })
 }))
 
 import * as projectsDb from '../../src/db/projects.ts'
@@ -132,6 +143,65 @@ describe('Projects routes', () => {
     })
   })
 
+  describe('GET /orgs/:orgId/projects', () => {
+    it('returns paginated list of projects for the org owner', async () => {
+      vi.mocked(projectsDb.listProjectsByOrg).mockResolvedValue({
+        items: [mockProject],
+        total: 1,
+      } as any)
+
+      const response = await app.inject({ method: 'GET', url: PROJECTS_BASE })
+
+      expect(response.statusCode).toBe(200)
+      const body = JSON.parse(response.body)
+      expect(body).toEqual(
+        expect.objectContaining({ total: 1, page: 1, pageSize: 50 })
+      )
+      expect(body.items).toHaveLength(1)
+      expect(body.items[0]).toMatchObject({
+        id: TEST_PROJECT_ID,
+        slug: 'test-project',
+      })
+      expect(vi.mocked(projectsDb.listProjectsByOrg)).toHaveBeenCalledWith(
+        TEST_ORG_ID,
+        undefined,
+        { page: 1, pageSize: 50 },
+        expect.anything()
+      )
+    })
+
+    it('passes page and pageSize query params to the db', async () => {
+      vi.mocked(projectsDb.listProjectsByOrg).mockResolvedValue({
+        items: [],
+        total: 42,
+      } as any)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `${PROJECTS_BASE}?page=2&pageSize=25`,
+      })
+
+      expect(response.statusCode).toBe(200)
+      const body = JSON.parse(response.body)
+      expect(body).toEqual({ items: [], total: 42, page: 2, pageSize: 25 })
+      expect(vi.mocked(projectsDb.listProjectsByOrg)).toHaveBeenCalledWith(
+        TEST_ORG_ID,
+        undefined,
+        { page: 2, pageSize: 25 },
+        expect.anything()
+      )
+    })
+
+    it('returns 400 for pageSize above the maximum', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `${PROJECTS_BASE}?pageSize=101`,
+      })
+
+      expect(response.statusCode).toBe(400)
+    })
+  })
+
   describe('GET /orgs/:orgId/projects/slug/:slug', () => {
     it('returns project by slug', async () => {
       vi.mocked(projectsDb.getProjectBySlug).mockResolvedValue(mockProject as any)
@@ -152,6 +222,103 @@ describe('Projects routes', () => {
       const response = await app.inject({
         method: 'GET',
         url: `${PROJECTS_BASE}/slug/nonexistent-slug`,
+      })
+
+      expect(response.statusCode).toBe(404)
+    })
+  })
+
+  describe('Webhook endpoints', () => {
+    const WEBHOOK_BASE = `${PROJECTS_BASE}/${TEST_PROJECT_ID}/webhook`
+
+    it('GET returns the webhook URL and secret', async () => {
+      vi.mocked(projectsDb.getWebhook).mockResolvedValue(
+        'https://hooks.example.com/canarygate' as any
+      )
+      vi.mocked(projectsDb.getWebhookSecret).mockResolvedValue(
+        'webhook-secret' as any
+      )
+
+      const response = await app.inject({
+        method: 'GET',
+        url: WEBHOOK_BASE,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body)).toEqual({
+        webhookUrl: 'https://hooks.example.com/canarygate',
+        webhookSecret: 'webhook-secret',
+      })
+    })
+
+    it('GET returns 404 when the project does not exist', async () => {
+      vi.mocked(projectsDb.getWebhook).mockResolvedValue(undefined as any)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: WEBHOOK_BASE,
+      })
+
+      expect(response.statusCode).toBe(404)
+    })
+
+    it('PUT saves the webhook URL and returns the generated secret', async () => {
+      vi.mocked(projectsDb.getWebhook).mockResolvedValue(null as any)
+      vi.mocked(projectsDb.updateWebhook).mockResolvedValue({
+        ...mockProject,
+        webhookUrl: 'https://hooks.example.com/canarygate',
+        webhookSecret: 'generated-secret',
+      } as any)
+
+      const response = await app.inject({
+        method: 'PUT',
+        url: WEBHOOK_BASE,
+        payload: { webhookUrl: 'https://hooks.example.com/canarygate' },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body)).toEqual({
+        webhookUrl: 'https://hooks.example.com/canarygate',
+        webhookSecret: 'generated-secret',
+      })
+    })
+
+    it('PUT rejects non-https webhook URLs', async () => {
+      vi.mocked(projectsDb.getWebhook).mockResolvedValue(null as any)
+
+      const response = await app.inject({
+        method: 'PUT',
+        url: WEBHOOK_BASE,
+        payload: { webhookUrl: 'http://hooks.example.com/canarygate' },
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(projectsDb.updateWebhook).not.toHaveBeenCalled()
+    })
+
+    it('POST /secret regenerates the webhook secret', async () => {
+      vi.mocked(projectsDb.getProjectById).mockResolvedValue(mockProject as any)
+      vi.mocked(projectsDb.regenerateWebhookSecret).mockResolvedValue({
+        webhookSecret: 'regenerated-secret',
+      } as any)
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `${WEBHOOK_BASE}/secret`,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(JSON.parse(response.body)).toEqual({
+        webhookSecret: 'regenerated-secret',
+      })
+    })
+
+    it('POST /secret returns 404 when the project does not exist', async () => {
+      vi.mocked(projectsDb.getProjectById).mockResolvedValue(null as any)
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `${WEBHOOK_BASE}/secret`,
       })
 
       expect(response.statusCode).toBe(404)

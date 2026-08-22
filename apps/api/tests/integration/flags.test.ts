@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 
+const { publishJSONMock } = vi.hoisted(() => ({ publishJSONMock: vi.fn() }))
+
+vi.mock('@upstash/qstash', () => ({
+  Client: vi.fn().mockImplementation(() => ({ publishJSON: publishJSONMock })),
+}))
+
 vi.mock('../../src/plugins/require-session.ts', () => ({
   requireSession: vi.fn(async (request: { userId: string; userEmail: string }) => {
     request.userId = 'test-user-id'
@@ -40,6 +46,9 @@ vi.mock('../../src/db/flags.ts', () => ({
   deleteFlag: vi.fn(),
   toggleFlag: vi.fn(),
   updateRollout: vi.fn(),
+  addFlagToEnvironment: vi.fn(),
+  getFlagEnvironmentRow: vi.fn(),
+  listFlagEnvironmentsForFlag: vi.fn(),
 }))
 
 vi.mock('../../src/db/environments.ts', () => ({
@@ -54,6 +63,14 @@ vi.mock('../../src/db/history.ts', () => ({
   insertAuditLog: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('../../src/db/projects.ts', () => ({
+  getProjectWebhookConfig: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('../../src/utils/ssrf.ts', () => ({
+  assertPublicWebhookTarget: vi.fn().mockResolvedValue({ ok: true }),
+}))
+
 vi.mock('../../src/pubsub/flag-events.ts', () => ({
   publishFlagEvent: vi.fn().mockResolvedValue(undefined),
   startFlagEventSubscriber: vi.fn(),
@@ -61,6 +78,7 @@ vi.mock('../../src/pubsub/flag-events.ts', () => ({
 
 import * as flagsDb from '../../src/db/flags.ts'
 import * as environmentsDb from '../../src/db/environments.ts'
+import { getProjectWebhookConfig } from '../../src/db/projects.ts'
 import { publishFlagEvent } from '../../src/pubsub/flag-events.ts'
 import flagsRoutes from '../../src/routes/flags.ts'
 import {
@@ -105,7 +123,29 @@ const mockFlag = {
   autoRolloutNextAt: null,
 }
 
+const mockFlagEnvironmentRow = {
+  id: 'fe-1',
+  flagId: TEST_FLAG_ID,
+  environmentId: TEST_ENV_ID,
+  enabled: false,
+  rolloutPercent: 0,
+  scheduleEnabled: false,
+  scheduleDate: null,
+  scheduleAction: null,
+  scheduleRolloutPercent: 0,
+  autoRolloutEnabled: false,
+  autoRolloutIncreaseBy: 10,
+  autoRolloutEveryValue: 1,
+  autoRolloutEveryUnit: 'hours',
+  autoRolloutUntilMax: 100,
+  autoRolloutNextAt: null,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+}
+
 const FLAGS_BASE = `/orgs/${TEST_ORG_ID}/projects/${TEST_PROJECT_ID}/flags`
+
+process.env.QSTASH_TOKEN = 'test-token'
 
 describe('Flags routes', () => {
   let app: FastifyInstance
@@ -140,19 +180,33 @@ describe('Flags routes', () => {
           { slug: 'production', name: 'Production', enabled: false, rolloutPercent: 0 },
         ],
       }
-      vi.mocked(flagsDb.listFlagsWithAllEnvs).mockResolvedValue([flagWithEnvs] as any)
+      vi.mocked(flagsDb.listFlagsWithAllEnvs).mockResolvedValue({
+        items: [flagWithEnvs],
+        total: 1,
+      } as any)
 
       const response = await app.inject({ method: 'GET', url: FLAGS_BASE })
 
       expect(response.statusCode).toBe(200)
       const body = JSON.parse(response.body)
-      expect(body).toHaveLength(1)
-      expect(body[0]).toMatchObject({ id: TEST_FLAG_ID, key: 'test-flag' })
+      expect(body).toEqual(
+        expect.objectContaining({ total: 1, page: 1, pageSize: 50 })
+      )
+      expect(body.items).toHaveLength(1)
+      expect(body.items[0]).toMatchObject({ id: TEST_FLAG_ID, key: 'test-flag' })
+      expect(vi.mocked(flagsDb.listFlagsWithAllEnvs)).toHaveBeenCalledWith(
+        TEST_PROJECT_ID,
+        { page: 1, pageSize: 50 },
+        expect.anything()
+      )
     })
 
     it('returns flags for a specific environment when environmentSlug is provided', async () => {
       vi.mocked(environmentsDb.getEnvironmentBySlug).mockResolvedValue(mockEnv as any)
-      vi.mocked(flagsDb.listFlags).mockResolvedValue([mockFlag] as any)
+      vi.mocked(flagsDb.listFlags).mockResolvedValue({
+        items: [mockFlag],
+        total: 1,
+      } as any)
 
       const response = await app.inject({
         method: 'GET',
@@ -161,8 +215,17 @@ describe('Flags routes', () => {
 
       expect(response.statusCode).toBe(200)
       const body = JSON.parse(response.body)
-      expect(body).toHaveLength(1)
-      expect(body[0]).toMatchObject({ id: TEST_FLAG_ID, key: 'test-flag' })
+      expect(body).toEqual(
+        expect.objectContaining({ total: 1, page: 1, pageSize: 50 })
+      )
+      expect(body.items).toHaveLength(1)
+      expect(body.items[0]).toMatchObject({ id: TEST_FLAG_ID, key: 'test-flag' })
+      expect(vi.mocked(flagsDb.listFlags)).toHaveBeenCalledWith(
+        TEST_PROJECT_ID,
+        TEST_ENV_ID,
+        { page: 1, pageSize: 50 },
+        expect.anything()
+      )
     })
 
     it('returns 404 when specified environment does not exist', async () => {
@@ -176,13 +239,74 @@ describe('Flags routes', () => {
       expect(response.statusCode).toBe(404)
     })
 
-    it('returns empty array when project has no flags', async () => {
-      vi.mocked(flagsDb.listFlagsWithAllEnvs).mockResolvedValue([])
+    it('returns empty page when project has no flags', async () => {
+      vi.mocked(flagsDb.listFlagsWithAllEnvs).mockResolvedValue({
+        items: [],
+        total: 0,
+      } as any)
 
       const response = await app.inject({ method: 'GET', url: FLAGS_BASE })
 
       expect(response.statusCode).toBe(200)
-      expect(JSON.parse(response.body)).toEqual([])
+      expect(JSON.parse(response.body)).toEqual({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 50,
+      })
+    })
+
+    it('passes page and pageSize to listFlagsWithAllEnvs', async () => {
+      vi.mocked(flagsDb.listFlagsWithAllEnvs).mockResolvedValue({
+        items: [],
+        total: 7,
+      } as any)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `${FLAGS_BASE}?page=2&pageSize=10`,
+      })
+
+      expect(response.statusCode).toBe(200)
+      const body = JSON.parse(response.body)
+      expect(body).toEqual({ items: [], total: 7, page: 2, pageSize: 10 })
+      expect(vi.mocked(flagsDb.listFlagsWithAllEnvs)).toHaveBeenCalledWith(
+        TEST_PROJECT_ID,
+        { page: 2, pageSize: 10 },
+        expect.anything()
+      )
+    })
+
+    it('passes page and pageSize to listFlags when environmentSlug is provided', async () => {
+      vi.mocked(environmentsDb.getEnvironmentBySlug).mockResolvedValue(mockEnv as any)
+      vi.mocked(flagsDb.listFlags).mockResolvedValue({
+        items: [],
+        total: 5,
+      } as any)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: `${FLAGS_BASE}?environmentSlug=production&page=2&pageSize=10`,
+      })
+
+      expect(response.statusCode).toBe(200)
+      const body = JSON.parse(response.body)
+      expect(body).toEqual({ items: [], total: 5, page: 2, pageSize: 10 })
+      expect(vi.mocked(flagsDb.listFlags)).toHaveBeenCalledWith(
+        TEST_PROJECT_ID,
+        TEST_ENV_ID,
+        { page: 2, pageSize: 10 },
+        expect.anything()
+      )
+    })
+
+    it('returns 400 for pageSize above the maximum', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: `${FLAGS_BASE}?pageSize=101`,
+      })
+
+      expect(response.statusCode).toBe(400)
     })
   })
 
@@ -300,6 +424,45 @@ describe('Flags routes', () => {
       )
     })
 
+    it('dispatches a signed webhook delivery when the project has a webhook configured', async () => {
+      const webhookProject = {
+        id: TEST_PROJECT_ID,
+        slug: 'test-project',
+        webhookUrl: 'https://hooks.example.com/canarygate',
+        webhookSecret: 'webhook-secret'
+      }
+      vi.mocked(getProjectWebhookConfig).mockResolvedValueOnce(
+        webhookProject as any
+      )
+      vi.mocked(flagsDb.toggleFlag).mockResolvedValue({
+        ...mockFlag,
+        enabled: true
+      } as any)
+
+      const response = await app.inject({
+        method: 'PATCH',
+        url: `${FLAGS_BASE}/${TEST_FLAG_ID}/toggle`,
+      })
+
+      expect(response.statusCode).toBe(200)
+      const deliveryCall = publishJSONMock.mock.calls.find(
+        (args: any[]) => args[0]?.url === webhookProject.webhookUrl
+      )
+      expect(deliveryCall).toBeDefined()
+      const [publishArgs] = deliveryCall
+      expect(publishArgs.headers['x-canarygate-signature']).toMatch(
+        /^sha256=[0-9a-f]{64}$/
+      )
+      expect(publishArgs.retries).toBe(3)
+      expect(publishArgs.body).toMatchObject({
+        event: 'flag.toggled',
+        projectId: TEST_PROJECT_ID,
+        projectSlug: webhookProject.slug,
+        flag: { key: 'test-flag', enabled: true },
+        environment: { slug: 'production' }
+      })
+    })
+
     it('returns 404 when flag does not exist', async () => {
       vi.mocked(flagsDb.toggleFlag).mockResolvedValue(null)
 
@@ -408,7 +571,10 @@ describe('Flags routes', () => {
   })
 
   describe('DELETE /orgs/:orgId/projects/:projectId/flags/:flagId', () => {
-    it('deletes a flag and returns 204', async () => {
+    it('deletes a flag and broadcasts to every environment', async () => {
+      vi.mocked(flagsDb.listFlagEnvironmentsForFlag).mockResolvedValue([
+        { id: 'fe-1', environmentId: TEST_ENV_ID, environmentSlug: 'production' },
+      ] as any)
       vi.mocked(flagsDb.deleteFlag).mockResolvedValue(mockFlag as any)
 
       const response = await app.inject({
@@ -422,6 +588,10 @@ describe('Flags routes', () => {
         TEST_PROJECT_ID,
         expect.anything()
       )
+      expect(vi.mocked(flagsDb.listFlagEnvironmentsForFlag)).toHaveBeenCalledWith(
+        TEST_FLAG_ID,
+        expect.anything()
+      )
       expect(vi.mocked(publishFlagEvent)).toHaveBeenCalledWith(
         TEST_PROJECT_ID,
         TEST_ENV_ID,
@@ -431,7 +601,24 @@ describe('Flags routes', () => {
       )
     })
 
+    it('broadcasts to multiple environments', async () => {
+      vi.mocked(flagsDb.listFlagEnvironmentsForFlag).mockResolvedValue([
+        { id: 'fe-1', environmentId: TEST_ENV_ID, environmentSlug: 'production' },
+        { id: 'fe-2', environmentId: 'env-2', environmentSlug: 'staging' },
+      ] as any)
+      vi.mocked(flagsDb.deleteFlag).mockResolvedValue(mockFlag as any)
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `${FLAGS_BASE}/${TEST_FLAG_ID}`,
+      })
+
+      expect(response.statusCode).toBe(204)
+      expect(vi.mocked(publishFlagEvent)).toHaveBeenCalledTimes(2)
+    })
+
     it('returns 404 when flag does not exist', async () => {
+      vi.mocked(flagsDb.listFlagEnvironmentsForFlag).mockResolvedValue([])
       vi.mocked(flagsDb.deleteFlag).mockResolvedValue(null)
 
       const response = await app.inject({
@@ -440,6 +627,136 @@ describe('Flags routes', () => {
       })
 
       expect(response.statusCode).toBe(404)
+    })
+  })
+
+  describe('QStash job dispatch', () => {
+    it('dispatches a schedule job with flagEnvironmentId and deduplicationId', async () => {
+      const scheduleDate = new Date(Date.now() + 60 * 60 * 1000)
+      vi.mocked(flagsDb.createFlag).mockResolvedValue(mockFlag as any)
+      vi.mocked(flagsDb.getFlagEnvironmentRow).mockResolvedValue({
+        ...mockFlagEnvironmentRow,
+        scheduleEnabled: true,
+        scheduleDate,
+        scheduleAction: 'enable',
+      } as any)
+
+      const response = await app.inject({
+        method: 'POST',
+        url: FLAGS_BASE,
+        payload: {
+          name: 'Test Flag',
+          key: 'test-flag',
+          type: 'boolean',
+          scheduleEnabled: true,
+          scheduleDate: scheduleDate.toISOString(),
+          scheduleAction: 'enable',
+        },
+      })
+
+      expect(response.statusCode).toBe(201)
+      expect(vi.mocked(flagsDb.getFlagEnvironmentRow)).toHaveBeenCalledWith(
+        TEST_FLAG_ID,
+        TEST_ENV_ID,
+        expect.anything()
+      )
+      expect(publishJSONMock).toHaveBeenCalledTimes(1)
+      const publishCall = publishJSONMock.mock.calls[0][0]
+      expect(publishCall.body.type).toBe('schedule')
+      expect(publishCall.body.jobData.flagEnvironmentId).toBe('fe-1')
+      expect(publishCall.body.jobData.flagKey).toBe('test-flag')
+      expect(publishCall.body.jobData.dueAt).toBe(scheduleDate.toISOString())
+      expect(publishCall.deduplicationId).toContain(
+        `schedule:${TEST_FLAG_ID}:${TEST_ENV_ID}:`
+      )
+    })
+
+    it('dispatches an auto-rollout job using the stored nextAt', async () => {
+      const nextAt = new Date(Date.now() + 2 * 60 * 60 * 1000)
+      vi.mocked(flagsDb.createFlag).mockResolvedValue(mockFlag as any)
+      vi.mocked(flagsDb.getFlagEnvironmentRow).mockResolvedValue({
+        ...mockFlagEnvironmentRow,
+        autoRolloutEnabled: true,
+        autoRolloutNextAt: nextAt,
+      } as any)
+
+      const response = await app.inject({
+        method: 'POST',
+        url: FLAGS_BASE,
+        payload: {
+          name: 'Test Flag',
+          key: 'test-flag',
+          type: 'boolean',
+          autoRolloutEnabled: true,
+          autoRolloutIncreaseBy: 10,
+          autoRolloutEveryValue: 1,
+          autoRolloutEveryUnit: 'hours',
+          autoRolloutUntilMax: 100,
+        },
+      })
+
+      expect(response.statusCode).toBe(201)
+      expect(publishJSONMock).toHaveBeenCalledTimes(1)
+      const publishCall = publishJSONMock.mock.calls[0][0]
+      expect(publishCall.body.type).toBe('auto-rollout')
+      expect(publishCall.body.jobData.flagEnvironmentId).toBe('fe-1')
+      expect(publishCall.body.jobData.dueAt).toBe(nextAt.toISOString())
+    })
+
+    it('returns 400 when scheduleDate is not ISO-8601 with offset', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: FLAGS_BASE,
+        payload: {
+          name: 'Test Flag',
+          key: 'test-flag',
+          type: 'boolean',
+          scheduleEnabled: true,
+          scheduleDate: '2026-08-14T10:00:00',
+          scheduleAction: 'enable',
+        },
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body).message).toContain('timezone offset')
+    })
+
+    it('returns 400 when scheduleDate is more than 30 days ahead', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: FLAGS_BASE,
+        payload: {
+          name: 'Test Flag',
+          key: 'test-flag',
+          type: 'boolean',
+          scheduleEnabled: true,
+          scheduleDate: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+          scheduleAction: 'enable',
+        },
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body).message).toContain('30 days')
+    })
+
+    it('returns 400 when auto-rollout interval exceeds 30 days', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: FLAGS_BASE,
+        payload: {
+          name: 'Test Flag',
+          key: 'test-flag',
+          type: 'boolean',
+          autoRolloutEnabled: true,
+          autoRolloutIncreaseBy: 10,
+          autoRolloutEveryValue: 5,
+          autoRolloutEveryUnit: 'weeks',
+          autoRolloutUntilMax: 100,
+        },
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body).message).toContain('30 days')
     })
   })
 })

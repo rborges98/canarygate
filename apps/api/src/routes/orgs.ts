@@ -12,6 +12,7 @@ import * as orgsDb from '../db/orgs.ts'
 import {
   nameSchema,
   orgParamsSchema,
+  paginationQuerySchema,
   slugParamsSchema,
   slugSchema
 } from './validation.ts'
@@ -22,10 +23,20 @@ export default async function orgsRoutes(app: FastifyInstance) {
     route.schema = { tags: ['orgs'], ...(route.schema ?? {}) }
   })
 
-  app.get('/orgs', {
+  app.get<{ Querystring: { page?: number; pageSize?: number } }>('/orgs', {
+    schema: {
+      querystring: paginationQuerySchema
+    },
     handler: async (request) => {
       try {
-        return orgsDb.listOrgsForUser(request.userId, request.log)
+        const page = request.query.page ?? 1
+        const pageSize = request.query.pageSize ?? 50
+        const { items, total } = await orgsDb.listOrgsForUser(
+          request.userId,
+          { page, pageSize },
+          request.log
+        )
+        return { items, total, page, pageSize }
       } catch (error) {
         request.log.error(
           { err: error, scope: 'route.orgs.list', userId: request.userId },
@@ -54,9 +65,25 @@ export default async function orgsRoutes(app: FastifyInstance) {
           request.userId,
           request.log
         )
+        request.log.info(
+          {
+            scope: 'route.orgs.create',
+            orgId: org.id,
+            slug: org.slug,
+            userId: request.userId
+          },
+          'Org created'
+        )
         reply.status(201)
         return org
       } catch (error) {
+        const dbError = error as { code?: string }
+        if (dbError.code === '23505') {
+          return reply
+            .status(409)
+            .send({ message: 'An org with this slug already exists' })
+        }
+
         request.log.error(
           {
             err: error,
@@ -165,6 +192,13 @@ export default async function orgsRoutes(app: FastifyInstance) {
 
           return org
         } catch (error) {
+          const dbError = error as { code?: string }
+          if (dbError.code === '23505') {
+            return reply
+              .status(409)
+              .send({ message: 'An org with this slug already exists' })
+          }
+
           request.log.error(
             {
               err: error,
@@ -208,6 +242,16 @@ export default async function orgsRoutes(app: FastifyInstance) {
             changes: { slug: org.slug }
           },
           request.log
+        )
+
+        request.log.info(
+          {
+            scope: 'route.orgs.delete',
+            orgId: org.id,
+            slug: org.slug,
+            userId: request.userId
+          },
+          'Org deleted'
         )
 
         reply.status(204)

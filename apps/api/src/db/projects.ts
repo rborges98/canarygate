@@ -1,4 +1,6 @@
-import { and, count, eq, inArray } from 'drizzle-orm'
+import { createHash, randomBytes } from 'node:crypto'
+import { and, count, eq, inArray, or } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import { projects, flags, projectMembers } from '@canarygate/database/schema'
 import type { FastifyBaseLogger } from 'fastify'
@@ -7,13 +9,41 @@ function generateApiKey() {
   return `cg_live_${crypto.randomUUID().replace(/-/g, '')}`
 }
 
-export async function listProjectsByOrg(
-  orgId: string,
-  orgMemberId?: string,
+export function hashApiKey(apiKey: string) {
+  return createHash('sha256').update(apiKey).digest('hex')
+}
+
+export async function findProjectByApiKey(
+  apiKey: string,
   log?: FastifyBaseLogger
 ) {
   try {
-    let projs
+    return (
+      (await db.query.projects.findFirst({
+        where: eq(projects.apiKey, hashApiKey(apiKey))
+      })) ?? null
+    )
+  } catch (error) {
+    log?.error(
+      { err: error, scope: 'db.projects.findProjectByApiKey' },
+      'Failed in db.projects.findProjectByApiKey'
+    )
+    throw error
+  }
+}
+
+export async function listProjectsByOrg(
+  orgId: string,
+  orgMemberId?: string,
+  options: { page?: number; pageSize?: number } = {},
+  log?: FastifyBaseLogger
+) {
+  try {
+    const page = options.page ?? 1
+    const pageSize = options.pageSize ?? 50
+    const offset = (page - 1) * pageSize
+
+    let where: SQL | undefined
     let adminProjectIds = new Set<string>()
 
     if (orgMemberId) {
@@ -23,7 +53,7 @@ export async function listProjectsByOrg(
       })
       const accessibleIds = accessRows.map((r) => r.projectId)
       if (accessibleIds.length === 0) {
-        return []
+        return { items: [], total: 0 }
       }
 
       adminProjectIds = new Set(
@@ -32,24 +62,32 @@ export async function listProjectsByOrg(
           .map((row) => row.projectId)
       )
 
-      projs = await db.query.projects.findMany({
-        where: and(
-          eq(projects.orgId, orgId),
-          inArray(projects.id, accessibleIds)
-        )
-      })
+      const activeFilter =
+        adminProjectIds.size > 0
+          ? or(
+              eq(projects.active, true),
+              inArray(projects.id, [...adminProjectIds])
+            )
+          : eq(projects.active, true)
 
-      projs = projs.filter((project) => {
-        return project.active || adminProjectIds.has(project.id)
-      })
+      where = and(
+        eq(projects.orgId, orgId),
+        inArray(projects.id, accessibleIds),
+        activeFilter
+      )
     } else {
-      projs = await db.query.projects.findMany({
-        where: eq(projects.orgId, orgId)
-      })
+      where = eq(projects.orgId, orgId)
     }
 
+    const [projs, totalResult] = await Promise.all([
+      db.query.projects.findMany({ where, limit: pageSize, offset }),
+      db.select({ total: count() }).from(projects).where(where)
+    ])
+
+    const total = totalResult[0]?.total ?? 0
+
     if (projs.length === 0) {
-      return []
+      return { items: [], total }
     }
 
     const projectIds = projs.map((p) => p.id)
@@ -59,13 +97,23 @@ export async function listProjectsByOrg(
       .where(inArray(flags.projectId, projectIds))
       .groupBy(flags.projectId)
 
-    return projs.map((p) => ({
-      ...p,
-      flagCount: flagCounts.find((f) => f.projectId === p.id)?.total ?? 0
-    }))
+    return {
+      items: projs.map((p) => ({
+        ...p,
+        flagCount: flagCounts.find((f) => f.projectId === p.id)?.total ?? 0
+      })),
+      total
+    }
   } catch (error) {
     log?.error(
-      { err: error, scope: 'db.projects.listProjectsByOrg', orgId, orgMemberId },
+      {
+        err: error,
+        scope: 'db.projects.listProjectsByOrg',
+        orgId,
+        orgMemberId,
+        page: options.page ?? 1,
+        pageSize: options.pageSize ?? 50
+      },
       'Failed in db.projects.listProjectsByOrg'
     )
     throw error
@@ -173,6 +221,7 @@ export async function createProject(
   log?: FastifyBaseLogger
 ) {
   try {
+    const rawApiKey = generateApiKey()
     const [project] = await db
       .insert(projects)
       .values({
@@ -180,11 +229,11 @@ export async function createProject(
         orgId,
         name: data.name,
         slug: data.slug,
-        apiKey: generateApiKey(),
+        apiKey: hashApiKey(rawApiKey),
         active: true
       })
       .returning()
-    return { ...project, flagCount: 0 }
+    return { ...project, apiKey: rawApiKey, flagCount: 0 }
   } catch (error) {
     log?.error(
       {
@@ -305,7 +354,7 @@ export async function regenerateApiKey(
     const newKey = generateApiKey()
     const [updated] = await db
       .update(projects)
-      .set({ apiKey: newKey, updatedAt: new Date() })
+      .set({ apiKey: hashApiKey(newKey), updatedAt: new Date() })
       .where(and(eq(projects.id, projectId), eq(projects.orgId, orgId)))
       .returning()
     return updated ? newKey : null
@@ -343,6 +392,45 @@ export async function getWebhook(
   }
 }
 
+export async function getWebhookSecret(
+  orgId: string,
+  projectId: string,
+  log?: FastifyBaseLogger
+): Promise<string | null | undefined> {
+  try {
+    const project = await db.query.projects.findFirst({
+      where: and(eq(projects.id, projectId), eq(projects.orgId, orgId)),
+      columns: { webhookSecret: true }
+    })
+    return project?.webhookSecret
+  } catch (error) {
+    log?.error(
+      { err: error, scope: 'db.projects.getWebhookSecret', orgId, projectId },
+      'Failed in db.projects.getWebhookSecret'
+    )
+    throw error
+  }
+}
+
+export async function getProjectWebhookConfig(
+  projectId: string,
+  log?: FastifyBaseLogger
+) {
+  try {
+    const project = await db.query.projects.findFirst({
+      where: eq(projects.id, projectId),
+      columns: { id: true, slug: true, webhookUrl: true, webhookSecret: true }
+    })
+    return project ?? null
+  } catch (error) {
+    log?.error(
+      { err: error, scope: 'db.projects.getProjectWebhookConfig', projectId },
+      'Failed in db.projects.getProjectWebhookConfig'
+    )
+    throw error
+  }
+}
+
 export async function updateWebhook(
   orgId: string,
   projectId: string,
@@ -350,9 +438,24 @@ export async function updateWebhook(
   log?: FastifyBaseLogger
 ) {
   try {
+    const existing = await db.query.projects.findFirst({
+      where: and(eq(projects.id, projectId), eq(projects.orgId, orgId)),
+      columns: { webhookSecret: true }
+    })
+    if (!existing) {
+      return null
+    }
+
+    const needsSecret = webhookUrl !== null && existing.webhookSecret === null
     const [updated] = await db
       .update(projects)
-      .set({ webhookUrl, updatedAt: new Date() })
+      .set({
+        webhookUrl,
+        ...(needsSecret
+          ? { webhookSecret: randomBytes(32).toString('hex') }
+          : {}),
+        updatedAt: new Date()
+      })
       .where(and(eq(projects.id, projectId), eq(projects.orgId, orgId)))
       .returning()
     return updated ?? null
@@ -366,6 +469,33 @@ export async function updateWebhook(
         webhookConfigured: webhookUrl !== null
       },
       'Failed in db.projects.updateWebhook'
+    )
+    throw error
+  }
+}
+
+export async function regenerateWebhookSecret(
+  orgId: string,
+  projectId: string,
+  log?: FastifyBaseLogger
+): Promise<{ webhookSecret: string } | null> {
+  try {
+    const newSecret = randomBytes(32).toString('hex')
+    const [updated] = await db
+      .update(projects)
+      .set({ webhookSecret: newSecret, updatedAt: new Date() })
+      .where(and(eq(projects.id, projectId), eq(projects.orgId, orgId)))
+      .returning()
+    return updated ? { webhookSecret: newSecret } : null
+  } catch (error) {
+    log?.error(
+      {
+        err: error,
+        scope: 'db.projects.regenerateWebhookSecret',
+        orgId,
+        projectId
+      },
+      'Failed in db.projects.regenerateWebhookSecret'
     )
     throw error
   }

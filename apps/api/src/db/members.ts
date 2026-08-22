@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, count, eq } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
 import {
   orgMembers,
@@ -68,6 +68,23 @@ export async function getMemberSummary(
     log?.error(
       { err: error, scope: 'db.members.getMemberSummary', orgId, userId },
       'Failed in db.members.getMemberSummary'
+    )
+    throw error
+  }
+}
+
+export async function countOwners(orgId: string, log?: FastifyBaseLogger) {
+  try {
+    const [row] = await db
+      .select({ total: count() })
+      .from(orgMembers)
+      .where(and(eq(orgMembers.orgId, orgId), eq(orgMembers.role, 'OWNER')))
+
+    return row?.total ?? 0
+  } catch (error) {
+    log?.error(
+      { err: error, scope: 'db.members.countOwners', orgId },
+      'Failed in db.members.countOwners'
     )
     throw error
   }

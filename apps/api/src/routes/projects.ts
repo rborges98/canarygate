@@ -1,5 +1,4 @@
 import type { FastifyInstance } from 'fastify'
-import { isIP } from 'node:net'
 import { requireSession } from '../plugins/require-session.ts'
 import { and, eq } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
@@ -10,6 +9,8 @@ import {
   requireProjectAccess,
   requireProjectAdmin
 } from '../plugins/require-org-access.ts'
+import { disconnectByApiKey } from '../sse/flag-emitter.ts'
+import { isBlockedWebhookHostname } from '../utils/ssrf.ts'
 import * as historyDb from '../db/history.ts'
 import * as projectsDb from '../db/projects.ts'
 import * as environmentsDb from '../db/environments.ts'
@@ -18,6 +19,7 @@ import {
   orgParamsSchema,
   orgProjectParamsSchema,
   orgSlugParamsSchema,
+  paginationQuerySchema,
   slugSchema
 } from './validation.ts'
 
@@ -33,86 +35,55 @@ function getWebhookHost(webhookUrl: string | null | undefined) {
   }
 }
 
-function normalizeHostname(hostname: string) {
-  if (hostname.startsWith('[') && hostname.endsWith(']')) {
-    return hostname.slice(1, -1)
-  }
-
-  return hostname
-}
-
-function isPrivateIpv4Address(hostname: string) {
-  const octets = hostname.split('.').map(Number)
-  if (octets.length !== 4 || octets.some((octet) => Number.isNaN(octet))) {
-    return false
-  }
-
-  const [firstOctet, secondOctet] = octets
-
-  return (
-    firstOctet === 0 ||
-    firstOctet === 10 ||
-    firstOctet === 127 ||
-    (firstOctet === 169 && secondOctet === 254) ||
-    (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31) ||
-    (firstOctet === 192 && secondOctet === 168)
-  )
-}
-
-function isBlockedWebhookHostname(hostname: string) {
-  const normalizedHostname = normalizeHostname(hostname).toLowerCase()
-
-  if (
-    normalizedHostname === 'localhost' ||
-    normalizedHostname.endsWith('.localhost') ||
-    normalizedHostname === 'host.docker.internal'
-  ) {
-    return true
-  }
-
-  const ipVersion = isIP(normalizedHostname)
-  if (ipVersion === 4) {
-    return isPrivateIpv4Address(normalizedHostname)
-  }
-
-  if (ipVersion === 6) {
-    return (
-      normalizedHostname === '::1' ||
-      normalizedHostname.startsWith('fe80:') ||
-      normalizedHostname.startsWith('fc') ||
-      normalizedHostname.startsWith('fd')
-    )
-  }
-
-  return false
-}
-
 export default async function projectsRoutes(app: FastifyInstance) {
   app.addHook('preHandler', requireSession)
   app.addHook('onRoute', (route) => {
     route.schema = { tags: ['projects'], ...(route.schema ?? {}) }
   })
 
-  app.get<{ Params: { orgId: string } }>('/orgs/:orgId/projects', {
+  app.get<{
+    Params: { orgId: string }
+    Querystring: { page?: number; pageSize?: number }
+  }>('/orgs/:orgId/projects', {
     preHandler: requireOrgMember,
     schema: {
-      params: orgParamsSchema
+      params: orgParamsSchema,
+      querystring: paginationQuerySchema
     },
     handler: async (request) => {
       const { orgId } = request.params
+      const page = request.query.page ?? 1
+      const pageSize = request.query.pageSize ?? 50
       try {
+        let result
         if (request.orgRole === 'OWNER') {
-          return projectsDb.listProjectsByOrg(orgId, undefined, request.log)
+          result = await projectsDb.listProjectsByOrg(
+            orgId,
+            undefined,
+            { page, pageSize },
+            request.log
+          )
+        } else {
+          const membership = await db.query.orgMembers.findFirst({
+            where: and(
+              eq(orgMembers.orgId, orgId),
+              eq(orgMembers.userId, request.userId)
+            ),
+            columns: { id: true }
+          })
+          result = await projectsDb.listProjectsByOrg(
+            orgId,
+            membership?.id,
+            { page, pageSize },
+            request.log
+          )
         }
-
-        const membership = await db.query.orgMembers.findFirst({
-          where: and(
-            eq(orgMembers.orgId, orgId),
-            eq(orgMembers.userId, request.userId)
-          ),
-          columns: { id: true }
-        })
-        return projectsDb.listProjectsByOrg(orgId, membership?.id, request.log)
+        return {
+          items: result.items,
+          total: result.total,
+          page,
+          pageSize
+        }
       } catch (error) {
         request.log.error(
           {
@@ -153,6 +124,15 @@ export default async function projectsRoutes(app: FastifyInstance) {
           await environmentsDb.createDefaultEnvironments(
             project.id,
             request.log
+          )
+          request.log.info(
+            {
+              scope: 'route.projects.create',
+              orgId: request.params.orgId,
+              projectId: project.id,
+              slug: project.slug
+            },
+            'Project created'
           )
           reply.status(201)
           return project
@@ -359,6 +339,16 @@ export default async function projectsRoutes(app: FastifyInstance) {
             request.log
           )
 
+          request.log.info(
+            {
+              scope: 'route.projects.delete',
+              orgId: request.params.orgId,
+              projectId: project.id,
+              slug: project.slug
+            },
+            'Project deleted'
+          )
+
           reply.status(204)
         } catch (error) {
           request.log.error(
@@ -420,16 +410,7 @@ export default async function projectsRoutes(app: FastifyInstance) {
       },
       handler: async (request, reply) => {
         try {
-          const apiKey = await projectsDb.getApiKey(
-            request.params.orgId,
-            request.params.projectId,
-            request.log
-          )
-          if (apiKey === null) {
-            return reply.status(404).send({ message: 'Project not found' })
-          }
-
-          return { apiKey }
+          return { apiKey: null }
         } catch (error) {
           request.log.error(
             {
@@ -464,6 +445,12 @@ export default async function projectsRoutes(app: FastifyInstance) {
             return reply.status(404).send({ message: 'Project not found' })
           }
 
+          const previousApiKeyHash = await projectsDb.getApiKey(
+            request.params.orgId,
+            request.params.projectId,
+            request.log
+          )
+
           const newKey = await projectsDb.regenerateApiKey(
             request.params.orgId,
             request.params.projectId,
@@ -471,6 +458,18 @@ export default async function projectsRoutes(app: FastifyInstance) {
           )
           if (newKey === null) {
             return reply.status(404).send({ message: 'Project not found' })
+          }
+
+          if (previousApiKeyHash !== null) {
+            const disconnectedCount = disconnectByApiKey(previousApiKeyHash)
+            request.log.info(
+              {
+                scope: 'route.projects.regenerateApiKey',
+                projectId: project.id,
+                disconnectedCount
+              },
+              'Disconnected SSE subscribers after API key rotation'
+            )
           }
 
           await historyDb.insertAuditLog(
@@ -509,22 +508,29 @@ export default async function projectsRoutes(app: FastifyInstance) {
   app.get<{ Params: { orgId: string; projectId: string } }>(
     '/orgs/:orgId/projects/:projectId/webhook',
     {
-      preHandler: requireProjectAccess,
+      preHandler: requireProjectAdmin,
       schema: {
         params: orgProjectParamsSchema
       },
       handler: async (request, reply) => {
         try {
-          const webhookUrl = await projectsDb.getWebhook(
-            request.params.orgId,
-            request.params.projectId,
-            request.log
-          )
+          const [webhookUrl, webhookSecret] = await Promise.all([
+            projectsDb.getWebhook(
+              request.params.orgId,
+              request.params.projectId,
+              request.log
+            ),
+            projectsDb.getWebhookSecret(
+              request.params.orgId,
+              request.params.projectId,
+              request.log
+            )
+          ])
           if (webhookUrl === undefined) {
             return reply.status(404).send({ message: 'Project not found' })
           }
 
-          return { webhookUrl }
+          return { webhookUrl, webhookSecret }
         } catch (error) {
           request.log.error(
             {
@@ -621,7 +627,10 @@ export default async function projectsRoutes(app: FastifyInstance) {
           request.log
         )
 
-        return { webhookUrl: project.webhookUrl }
+        return {
+          webhookUrl: project.webhookUrl,
+          webhookSecret: project.webhookSecret
+        }
       } catch (error) {
         request.log.error(
           {
@@ -637,4 +646,64 @@ export default async function projectsRoutes(app: FastifyInstance) {
       }
     }
   })
+
+  app.post<{ Params: { orgId: string; projectId: string } }>(
+    '/orgs/:orgId/projects/:projectId/webhook/secret',
+    {
+      preHandler: requireProjectAdmin,
+      schema: {
+        params: orgProjectParamsSchema
+      },
+      handler: async (request, reply) => {
+        try {
+          const project = await projectsDb.getProjectById(
+            request.params.orgId,
+            request.params.projectId,
+            request.log
+          )
+          if (!project) {
+            return reply.status(404).send({ message: 'Project not found' })
+          }
+
+          const regenerated = await projectsDb.regenerateWebhookSecret(
+            request.params.orgId,
+            request.params.projectId,
+            request.log
+          )
+          if (regenerated === null) {
+            return reply.status(404).send({ message: 'Project not found' })
+          }
+
+          await historyDb.insertAuditLog(
+            {
+              orgId: request.params.orgId,
+              projectId: project.id,
+              resourceType: 'webhook',
+              resourceId: project.id,
+              resourceName: project.name,
+              action: 'regenerated',
+              actorEmail: request.userEmail,
+              changes: {
+                webhookSecretPrefix: regenerated.webhookSecret.slice(0, 12)
+              }
+            },
+            request.log
+          )
+
+          return { webhookSecret: regenerated.webhookSecret }
+        } catch (error) {
+          request.log.error(
+            {
+              err: error,
+              scope: 'route.projects.regenerateWebhookSecret',
+              orgId: request.params.orgId,
+              projectId: request.params.projectId
+            },
+            'Failed in route.projects.regenerateWebhookSecret'
+          )
+          throw error
+        }
+      }
+    }
+  )
 }

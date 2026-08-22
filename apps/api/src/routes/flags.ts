@@ -1,7 +1,5 @@
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify'
-import { Client } from '@upstash/qstash'
 import { requireSession } from '../plugins/require-session.ts'
-import { IS_PRODUCTION } from '../utils/env.ts'
 import {
   requireProjectAccess,
   requireProjectAdmin
@@ -13,9 +11,19 @@ import {
 import * as flagsDb from '../db/flags.ts'
 import * as historyDb from '../db/history.ts'
 import * as environmentsDb from '../db/environments.ts'
+import { getProjectWebhookConfig } from '../db/projects.ts'
 import { publishFlagEvent } from '../pubsub/flag-events.ts'
 import {
+  deliverFlagWebhook
+} from '../services/webhook-delivery.ts'
+import {
+  getQStashClient,
+  getQStashWebhookUrl,
+  MAX_QSTASH_DELAY_SECONDS
+} from '../utils/webhook.ts'
+import {
   environmentSlugQuerySchema,
+  flagsListQuerySchema,
   nameSchema,
   orgProjectFlagParamsSchema,
   orgProjectParamsSchema,
@@ -24,7 +32,9 @@ import {
 
 const BASE = '/orgs/:orgId/projects/:projectId/flags'
 
-const qstash = new Client({ token: process.env.QSTASH_TOKEN! })
+const MAX_QSTASH_DELAY_MS = MAX_QSTASH_DELAY_SECONDS * 1000
+const ISO_DATE_WITH_OFFSET =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/
 
 function getFlagMutationPreHandler(mutation: FlagMutation) {
   return getFlagPermissionRequirement(mutation) === 'project-admin'
@@ -48,9 +58,17 @@ function validateFlagConfigPayload(body: {
       return 'scheduleDate and scheduleAction are required when scheduleEnabled is true'
     }
 
+    if (!ISO_DATE_WITH_OFFSET.test(body.scheduleDate)) {
+      return 'scheduleDate must be ISO-8601 with a timezone offset (e.g. 2026-08-14T10:00:00Z or +02:00)'
+    }
+
     const scheduleDate = new Date(body.scheduleDate)
     if (isNaN(scheduleDate.getTime()) || scheduleDate <= new Date()) {
       return 'scheduleDate must be a future date'
+    }
+
+    if (scheduleDate.getTime() - Date.now() > MAX_QSTASH_DELAY_MS) {
+      return 'scheduleDate must be at most 30 days in the future'
     }
 
     if (
@@ -69,6 +87,14 @@ function validateFlagConfigPayload(body: {
       typeof body.autoRolloutUntilMax !== 'number'
     ) {
       return 'Auto-rollout fields are required when autoRolloutEnabled is true'
+    }
+
+    const nextDate = calculateNextRolloutDate(
+      body.autoRolloutEveryValue,
+      body.autoRolloutEveryUnit
+    )
+    if (nextDate.getTime() - Date.now() > MAX_QSTASH_DELAY_MS) {
+      return 'Auto-rollout interval must target at most 30 days in the future'
     }
   }
 
@@ -101,32 +127,41 @@ async function dispatchQStashJob(
   type: 'schedule' | 'auto-rollout',
   targetDate: string | Date,
   jobData: {
+    flagEnvironmentId: string
     flagId: string
     projectId: string
     environmentId: string
     environmentSlug: string
+    flagKey: string
   },
   log: FastifyBaseLogger
 ) {
   const date = new Date(targetDate)
   const delayInSeconds = Math.floor((date.getTime() - Date.now()) / 1000)
-  const callbackUrl = IS_PRODUCTION
-    ? process.env.API_URL
-    : process.env.NGROK_URL
 
   if (delayInSeconds <= 0) return
+  if (delayInSeconds > MAX_QSTASH_DELAY_SECONDS) {
+    log.warn(
+      { scope: 'qstash.publish', flagId: jobData.flagId, type, delayInSeconds },
+      'Skipping QStash job because the delay exceeds the 30-day limit'
+    )
+    return
+  }
+
+  const dueAt = date.toISOString()
 
   try {
-    const res = await qstash.publishJSON({
-      url: `${callbackUrl}/webhook`,
+    await getQStashClient().publishJSON({
+      url: `${getQStashWebhookUrl()}/webhook`,
       body: {
         type,
         jobData: {
           ...jobData,
-          dueAt: date.toISOString()
+          dueAt
         }
       },
-      delay: delayInSeconds
+      delay: delayInSeconds,
+      deduplicationId: `${type}:${jobData.flagId}:${jobData.environmentId}:${dueAt}`
     })
   } catch (err) {
     log.error(
@@ -144,32 +179,55 @@ export default async function flagsRoutes(app: FastifyInstance) {
 
   app.get<{
     Params: { orgId: string; projectId: string }
-    Querystring: { environmentSlug?: string }
+    Querystring: {
+      environmentSlug?: string
+      page?: number
+      pageSize?: number
+    }
   }>(BASE, {
     preHandler: requireProjectAccess,
     schema: {
       params: orgProjectParamsSchema,
-      querystring: environmentSlugQuerySchema
+      querystring: flagsListQuerySchema
     },
     handler: async (request, reply) => {
       const { projectId } = request.params
+      const page = request.query.page ?? 1
+      const pageSize = request.query.pageSize ?? 50
 
       try {
+        let result
         if (!request.query.environmentSlug) {
           await environmentsDb.getOrCreateEnvironments(projectId, request.log)
-          return flagsDb.listFlagsWithAllEnvs(projectId, request.log)
+          result = await flagsDb.listFlagsWithAllEnvs(
+            projectId,
+            { page, pageSize },
+            request.log
+          )
+        } else {
+          const env = await resolveEnvironmentWithLog(
+            projectId,
+            request.query.environmentSlug,
+            request.log
+          )
+          if (!env) {
+            return reply.status(404).send({ message: 'Environment not found' })
+          }
+
+          result = await flagsDb.listFlags(
+            projectId,
+            env.id,
+            { page, pageSize },
+            request.log
+          )
         }
 
-        const env = await resolveEnvironmentWithLog(
-          projectId,
-          request.query.environmentSlug,
-          request.log
-        )
-        if (!env) {
-          return reply.status(404).send({ message: 'Environment not found' })
+        return {
+          items: result.items,
+          total: result.total,
+          page,
+          pageSize
         }
-
-        return flagsDb.listFlags(projectId, env.id, request.log)
       } catch (error) {
         request.log.error(
           {
@@ -288,6 +346,10 @@ export default async function flagsRoutes(app: FastifyInstance) {
           projectId,
           request.log
         )
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
+          request.log
+        )
         for (const env of allEnvs) {
           if (!environmentIds.includes(env.id)) {
             continue
@@ -324,43 +386,93 @@ export default async function flagsRoutes(app: FastifyInstance) {
             request.log
           )
 
+          await deliverFlagWebhook(
+            'flag.created',
+            webhookProject,
+            {
+              key: flag.key,
+              name: flag.name,
+              type: flag.type,
+              enabled: flagData.enabled ?? false,
+              rolloutPercent:
+                flagData.type === 'rollout'
+                  ? (flagData.rolloutPercent ?? 0)
+                  : 0,
+              updatedAt: flag.updatedAt
+            },
+            { slug: env.slug },
+            request.log,
+            request.userEmail
+          )
+
+          const hasSchedule =
+            flagData.scheduleEnabled && Boolean(flagData.scheduleDate)
+          const hasAutoRollout =
+            flagData.autoRolloutEnabled &&
+            Boolean(flagData.autoRolloutEveryValue) &&
+            Boolean(flagData.autoRolloutEveryUnit)
+
+          if (!hasSchedule && !hasAutoRollout) {
+            continue
+          }
+
+          const flagEnvironmentRow = await flagsDb.getFlagEnvironmentRow(
+            flag.id,
+            env.id,
+            request.log
+          )
+          if (!flagEnvironmentRow) {
+            continue
+          }
+
           const jobIdentifiers = {
+            flagEnvironmentId: flagEnvironmentRow.id,
             projectId,
             flagId: flag.id,
             environmentId: env.id,
-            environmentSlug: env.slug
+            environmentSlug: env.slug,
+            flagKey: flag.key
           }
 
-          if (flagData.scheduleEnabled && flagData.scheduleDate) {
+          if (hasSchedule && flagEnvironmentRow.scheduleDate) {
             await dispatchQStashJob(
               'schedule',
-              flagData.scheduleDate,
+              flagEnvironmentRow.scheduleDate,
               jobIdentifiers,
               request.log
             )
           }
 
-          if (
-            flagData.autoRolloutEnabled &&
-            flagData.autoRolloutEveryValue &&
-            flagData.autoRolloutEveryUnit
-          ) {
-            const nextDate = calculateNextRolloutDate(
-              flagData.autoRolloutEveryValue,
-              flagData.autoRolloutEveryUnit
-            )
+          if (hasAutoRollout && flagEnvironmentRow.autoRolloutNextAt) {
             await dispatchQStashJob(
               'auto-rollout',
-              nextDate,
+              flagEnvironmentRow.autoRolloutNextAt,
               jobIdentifiers,
               request.log
             )
           }
         }
 
+        request.log.info(
+          {
+            scope: 'route.flags.create',
+            projectId,
+            flagId: flag.id,
+            flagKey: flag.key
+          },
+          'Flag created'
+        )
+
         reply.status(201)
         return flag
       } catch (error) {
+        const dbError = error as { code?: string }
+        if (dbError.code === '23505') {
+          return reply
+            .status(409)
+            .send({ message: 'A flag with this key already exists' })
+        }
+
         request.log.error(
           {
             err: error,
@@ -516,6 +628,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
 
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
+          request.log
+        )
+
         await historyDb.insertHistory(
           {
             projectId,
@@ -553,41 +670,76 @@ export default async function flagsRoutes(app: FastifyInstance) {
           request.log
         )
 
-        const jobIdentifiers = {
-          projectId,
-          flagId: flag.id,
-          environmentId: env.id,
-          environmentSlug: env.slug
-        }
+        await deliverFlagWebhook(
+          'flag.updated',
+          webhookProject,
+          {
+            key: flag.key,
+            name: flag.name,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt
+          },
+          { slug: env.slug },
+          request.log,
+          request.userEmail
+        )
 
-        if (request.body.scheduleEnabled && request.body.scheduleDate) {
-          await dispatchQStashJob(
-            'schedule',
-            request.body.scheduleDate,
-            jobIdentifiers,
-            request.log
-          )
-        }
-
-        if (
+        const hasSchedule =
+          request.body.scheduleEnabled && Boolean(request.body.scheduleDate)
+        const hasAutoRollout =
           request.body.autoRolloutEnabled &&
-          request.body.autoRolloutEveryValue &&
-          request.body.autoRolloutEveryUnit
-        ) {
-          const nextDate = calculateNextRolloutDate(
-            request.body.autoRolloutEveryValue,
-            request.body.autoRolloutEveryUnit
-          )
-          await dispatchQStashJob(
-            'auto-rollout',
-            nextDate,
-            jobIdentifiers,
+          Boolean(request.body.autoRolloutEveryValue) &&
+          Boolean(request.body.autoRolloutEveryUnit)
+
+        if (hasSchedule || hasAutoRollout) {
+          const flagEnvironmentRow = await flagsDb.getFlagEnvironmentRow(
+            flag.id,
+            env.id,
             request.log
           )
+          if (!flagEnvironmentRow) {
+            return reply.status(404).send({ message: 'Flag not found' })
+          }
+
+          const jobIdentifiers = {
+            flagEnvironmentId: flagEnvironmentRow.id,
+            projectId,
+            flagId: flag.id,
+            environmentId: env.id,
+            environmentSlug: env.slug,
+            flagKey: flag.key
+          }
+
+          if (hasSchedule && flagEnvironmentRow.scheduleDate) {
+            await dispatchQStashJob(
+              'schedule',
+              flagEnvironmentRow.scheduleDate,
+              jobIdentifiers,
+              request.log
+            )
+          }
+
+          if (hasAutoRollout && flagEnvironmentRow.autoRolloutNextAt) {
+            await dispatchQStashJob(
+              'auto-rollout',
+              flagEnvironmentRow.autoRolloutNextAt,
+              jobIdentifiers,
+              request.log
+            )
+          }
         }
 
         return flag
       } catch (error) {
+        const dbError = error as { code?: string }
+        if (dbError.code === '23505') {
+          return reply
+            .status(409)
+            .send({ message: 'A flag with this key already exists' })
+        }
+
         request.log.error(
           {
             err: error,
@@ -616,9 +768,8 @@ export default async function flagsRoutes(app: FastifyInstance) {
       const { projectId, flagId } = request.params
 
       try {
-        const env = await resolveEnvironmentWithLog(
-          projectId,
-          request.query.environmentSlug,
+        const environments = await flagsDb.listFlagEnvironmentsForFlag(
+          flagId,
           request.log
         )
 
@@ -627,23 +778,28 @@ export default async function flagsRoutes(app: FastifyInstance) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
 
-        await historyDb.insertHistory(
-          {
-            projectId,
-            environmentId: env?.id ?? null,
-            environmentSlug: env?.slug ?? null,
-            flagId: null,
-            flagKey: flag.key,
-            flagName: flag.name,
-            action: 'deleted',
-            actorEmail: request.userEmail
-          },
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
           request.log
         )
-        if (env) {
+
+        for (const environment of environments) {
+          await historyDb.insertHistory(
+            {
+              projectId,
+              environmentId: environment.environmentId,
+              environmentSlug: environment.environmentSlug,
+              flagId: null,
+              flagKey: flag.key,
+              flagName: flag.name,
+              action: 'deleted',
+              actorEmail: request.userEmail
+            },
+            request.log
+          )
           await publishFlagEvent(
             projectId,
-            env.id,
+            environment.environmentId,
             'flag-deleted',
             {
               key: flag.key,
@@ -651,7 +807,34 @@ export default async function flagsRoutes(app: FastifyInstance) {
             },
             request.log
           )
+
+          await deliverFlagWebhook(
+            'flag.deleted',
+            webhookProject,
+            {
+              key: flag.key,
+              name: flag.name,
+              type: flag.type,
+              enabled: false,
+              rolloutPercent: null,
+              updatedAt: flag.updatedAt
+            },
+            { slug: environment.environmentSlug },
+            request.log,
+            request.userEmail
+          )
         }
+
+        request.log.info(
+          {
+            scope: 'route.flags.delete',
+            projectId,
+            flagId: flag.id,
+            flagKey: flag.key,
+            environmentCount: environments.length
+          },
+          'Flag deleted'
+        )
         reply.status(204)
       } catch (error) {
         request.log.error(
@@ -701,6 +884,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
 
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
+          request.log
+        )
+
         await historyDb.insertHistory(
           {
             projectId,
@@ -730,6 +918,21 @@ export default async function flagsRoutes(app: FastifyInstance) {
             updatedAt: flag.updatedAt.toISOString()
           },
           request.log
+        )
+        await deliverFlagWebhook(
+          'flag.toggled',
+          webhookProject,
+          {
+            key: flag.key,
+            name: flag.name,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt
+          },
+          { slug: env.slug },
+          request.log,
+          request.userEmail
         )
         return flag
       } catch (error) {
@@ -799,6 +1002,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
 
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
+          request.log
+        )
+
         await historyDb.insertHistory(
           {
             projectId,
@@ -828,6 +1036,21 @@ export default async function flagsRoutes(app: FastifyInstance) {
             updatedAt: flag.updatedAt.toISOString()
           },
           request.log
+        )
+        await deliverFlagWebhook(
+          'flag.rollout_updated',
+          webhookProject,
+          {
+            key: flag.key,
+            name: flag.name,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt
+          },
+          { slug: env.slug },
+          request.log,
+          request.userEmail
         )
         return flag
       } catch (error) {
@@ -870,6 +1093,7 @@ export default async function flagsRoutes(app: FastifyInstance) {
 
         const flag = await flagsDb.addFlagToEnvironment(
           flagId,
+          projectId,
           env.id,
           0,
           request.log
@@ -877,6 +1101,11 @@ export default async function flagsRoutes(app: FastifyInstance) {
         if (!flag) {
           return reply.status(404).send({ message: 'Flag not found' })
         }
+
+        const webhookProject = await getProjectWebhookConfig(
+          projectId,
+          request.log
+        )
 
         await historyDb.insertHistory(
           {
@@ -903,6 +1132,21 @@ export default async function flagsRoutes(app: FastifyInstance) {
             updatedAt: flag.updatedAt.toISOString()
           },
           request.log
+        )
+        await deliverFlagWebhook(
+          'flag.created',
+          webhookProject,
+          {
+            key: flag.key,
+            name: flag.name,
+            type: flag.type,
+            enabled: flag.enabled,
+            rolloutPercent: flag.rolloutPercent,
+            updatedAt: flag.updatedAt
+          },
+          { slug: env.slug },
+          request.log,
+          request.userEmail
         )
         reply.status(201)
         return flag

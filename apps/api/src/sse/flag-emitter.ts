@@ -1,20 +1,24 @@
 import type { ServerResponse } from 'node:http'
+import { createLogger } from '@canarygate/logger'
 
 type Subscriber = {
   response: ServerResponse
   ip: string
   apiKey: string
+  channelKey: string
+  queue: string[]
+  onDrain: (() => void) | null
 }
 
 const DEFAULT_MAX_CONNECTIONS_PER_IP = 10
 const DEFAULT_MAX_CONNECTIONS_PER_API_KEY = 25
+const MAX_QUEUED_EVENTS = 64
+
+const log = createLogger({ service: 'canarygate-api' })
 
 const subscribers = new Map<string, Set<Subscriber>>()
 const connectionCountsByIp = new Map<string, number>()
 const connectionCountsByApiKey = new Map<string, number>()
-
-// Rastreia o nome do ambiente (slug) de cada canal de forma segura em memória
-export const channelSlugs = new Map<string, string>()
 
 const parsedMaxConnectionsPerIp = Number.parseInt(
   process.env.SSE_MAX_CONNECTIONS_PER_IP ?? '',
@@ -55,9 +59,9 @@ function decrementCount(counts: Map<string, number>, key: string) {
 }
 
 export function subscribe(
-  projectId: string, // Representa o channelKey (projectId:environmentId)
+  projectId: string,
   response: ServerResponse,
-  metadata: { ip: string; apiKey: string; environmentSlug?: string }
+  metadata: { ip: string; apiKey: string }
 ): { ok: true } | { ok: false; message: string } {
   if ((connectionCountsByIp.get(metadata.ip) ?? 0) >= maxConnectionsPerIp) {
     return {
@@ -80,12 +84,14 @@ export function subscribe(
     subscribers.set(projectId, new Set())
   }
 
-  subscribers
-    .get(projectId)!
-    .add({ response, ip: metadata.ip, apiKey: metadata.apiKey })
-
-  // Salva o slug do ambiente associado a este canal
-  channelSlugs.set(projectId, metadata.environmentSlug || 'unknown')
+  subscribers.get(projectId)!.add({
+    response,
+    ip: metadata.ip,
+    apiKey: metadata.apiKey,
+    channelKey: projectId,
+    queue: [],
+    onDrain: null
+  })
 
   incrementCount(connectionCountsByIp, metadata.ip)
   incrementCount(connectionCountsByApiKey, metadata.apiKey)
@@ -104,6 +110,12 @@ export function unsubscribe(projectId: string, response: ServerResponse): void {
       continue
     }
 
+    if (subscriber.onDrain) {
+      subscriber.response.removeListener('drain', subscriber.onDrain)
+      subscriber.onDrain = null
+    }
+    subscriber.queue = []
+
     projectSubscribers.delete(subscriber)
     decrementCount(connectionCountsByIp, subscriber.ip)
     decrementCount(connectionCountsByApiKey, subscriber.apiKey)
@@ -112,7 +124,25 @@ export function unsubscribe(projectId: string, response: ServerResponse): void {
 
   if (projectSubscribers.size === 0) {
     subscribers.delete(projectId)
-    channelSlugs.delete(projectId) // Limpa o mapa de slugs para evitar vazamento de memória
+  }
+}
+
+function flushQueuedEvents(subscriber: Subscriber) {
+  while (subscriber.queue.length > 0) {
+    try {
+      if (subscriber.response.write(subscriber.queue[0]) === false) {
+        return
+      }
+    } catch {
+      unsubscribe(subscriber.channelKey, subscriber.response)
+      return
+    }
+    subscriber.queue.shift()
+  }
+
+  if (subscriber.onDrain) {
+    subscriber.response.removeListener('drain', subscriber.onDrain)
+    subscriber.onDrain = null
   }
 }
 
@@ -128,64 +158,51 @@ export function emitFlagEvent(
 
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
   for (const subscriber of subs) {
+    if (subscriber.onDrain !== null) {
+      if (subscriber.queue.length >= MAX_QUEUED_EVENTS) {
+        log.info(
+          { scope: 'sse.flagEmitter.backpressure', ip: subscriber.ip },
+          'Closing SSE subscriber: queued events exceeded the cap'
+        )
+        unsubscribe(projectId, subscriber.response)
+        continue
+      }
+
+      subscriber.queue.push(payload)
+      continue
+    }
+
     try {
-      subscriber.response.write(payload)
+      if (subscriber.response.write(payload) === false) {
+        subscriber.queue.push(payload)
+        subscriber.onDrain = () => {
+          flushQueuedEvents(subscriber)
+        }
+        subscriber.response.on('drain', subscriber.onDrain)
+      }
     } catch {
       unsubscribe(projectId, subscriber.response)
     }
   }
 }
 
-export function getDetailedSseMetrics() {
-  let totalConnections = 0
-
-  // Agrupa os ambientes por projeto usando uma chave interna temporária em memória
-  const projectGroupMap = new Map<
-    string,
-    Array<{ name: string; connections: number }>
-  >()
+export function disconnectByApiKey(apiKey: string): number {
+  const matches: Array<{ channelKey: string; response: ServerResponse }> = []
 
   for (const [channelKey, projectSubscribers] of subscribers.entries()) {
-    const connectionCount = projectSubscribers.size
-
-    if (connectionCount > 0) {
-      totalConnections += connectionCount
-
-      const [projectId] = channelKey.split(':')
-      if (!projectId) continue
-
-      // Resgata o nome amigável do ambiente (dev, stg, prod) salvo no registro do canal
-      const envName = channelSlugs.get(channelKey) || 'unknown'
-
-      if (!projectGroupMap.has(projectId)) {
-        projectGroupMap.set(projectId, [])
+    for (const subscriber of projectSubscribers) {
+      if (subscriber.apiKey === apiKey) {
+        matches.push({ channelKey, response: subscriber.response })
       }
-
-      projectGroupMap.get(projectId)!.push({
-        name: envName,
-        connections: connectionCount
-      })
     }
   }
 
-  // Mapeia os dados para o formato final, omitindo totalmente os IDs dos projetos
-  const projectsList = Array.from(projectGroupMap.values())
-    .map((envs) => {
-      // Ordena os ambientes internos colocando os que possuem mais tráfego no topo
-      envs.sort((a, b) => b.connections - a.connections)
-      const projectTotal = envs.reduce((sum, e) => sum + e.connections, 0)
-
-      return {
-        totalConnections: projectTotal,
-        environments: envs
-      }
-    })
-    // Ordena os blocos de projetos anônimos do mais pesado para o mais leve
-    .sort((a, b) => b.totalConnections - a.totalConnections)
-
-  return {
-    totalConnections,
-    totalActiveProjects: projectsList.length,
-    projects: projectsList
+  for (const { channelKey, response } of matches) {
+    unsubscribe(channelKey, response)
+    if (!response.destroyed && !response.writableEnded) {
+      response.end()
+    }
   }
+
+  return matches.length
 }

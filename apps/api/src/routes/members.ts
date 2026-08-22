@@ -62,6 +62,18 @@ export default async function membersRoutes(app: FastifyInstance) {
             return reply.status(404).send({ message: 'Member not found' })
           }
 
+          if (member.role === 'OWNER') {
+            const ownerCount = await membersDb.countOwners(
+              orgId,
+              request.log
+            )
+            if (ownerCount <= 1) {
+              return reply
+                .status(400)
+                .send({ message: 'Cannot remove the last owner of the org' })
+            }
+          }
+
           const ok = await membersDb.removeMember(orgId, userId, request.log)
           if (!ok) {
             return reply.status(404).send({ message: 'Member not found' })
@@ -118,6 +130,13 @@ export default async function membersRoutes(app: FastifyInstance) {
           )
           if (!memberBeforeUpdate) {
             return reply.status(404).send({ message: 'Member not found' })
+          }
+
+          const ownerCount = await membersDb.countOwners(orgId, request.log)
+          if (ownerCount <= 0) {
+            return reply
+              .status(400)
+              .send({ message: 'Org must keep at least one owner' })
           }
 
           const member = await membersDb.makeOwner(orgId, userId, request.log)

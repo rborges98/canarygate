@@ -125,9 +125,17 @@ export async function listHistory(
     limit?: number
     offset?: number
     action?: FlagAction
+    includeChanges?: boolean
   }
 ) {
-  const { flagId, environmentId, limit = 20, offset = 0, action } = options
+  const {
+    flagId,
+    environmentId,
+    limit = 20,
+    offset = 0,
+    action,
+    includeChanges = false
+  } = options
 
   const conditions: ReturnType<typeof eq>[] = [eq(history.projectId, projectId)]
   if (flagId) {
@@ -148,10 +156,20 @@ export async function listHistory(
   const [totalResult, data] = await Promise.all([
     db.select({ total: count() }).from(history).where(where),
     db
-      .select()
+      .select({
+        id: history.id,
+        flagId: history.flagId,
+        flagKey: history.flagKey,
+        flagName: history.flagName,
+        environmentSlug: history.environmentSlug,
+        action: history.action,
+        actorEmail: history.actorEmail,
+        createdAt: history.createdAt,
+        ...(includeChanges ? { changes: history.changes } : {})
+      })
       .from(history)
       .where(where)
-      .orderBy(desc(history.createdAt))
+      .orderBy(desc(history.createdAt), desc(history.id))
       .limit(limit)
       .offset(offset)
   ])

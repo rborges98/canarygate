@@ -17,11 +17,13 @@ type FlagEventData = FlagUpsertEventData | FlagDeletedEventData
 
 const publisher = createRedisConnection('api flag event publisher', {
   connectionName: 'api-flag-event-publisher',
-  enableOfflineQueue: false
+  enableOfflineQueue: false,
+  lazyConnect: true
 })
 const subscriber = createRedisConnection('api flag event subscriber', {
   connectionName: 'api-flag-event-subscriber',
-  enableReadyCheck: false
+  enableReadyCheck: false,
+  lazyConnect: true
 })
 
 let listenersAttached = false
@@ -67,13 +69,6 @@ function attachListeners(log: AppLogger) {
 
   listenersAttached = true
 
-  publisher.on('ready', () => {
-    log.info(
-      { scope: 'api.flagEvents.publisher' },
-      'Flag event publisher connected to Redis'
-    )
-  })
-
   publisher.on('error', (err) => {
     log.error(
       { err, scope: 'api.flagEvents.publisher' },
@@ -83,16 +78,21 @@ function attachListeners(log: AppLogger) {
 
   subscriber.on('ready', () => {
     subscriberStarted = true
-    log.info(
-      { scope: 'api.flagEvents.subscriber' },
-      'Flag event subscriber connected to Redis'
-    )
   })
 
   subscriber.on('error', (err) => {
+    subscriberStarted = false
     log.error(
       { err, scope: 'api.flagEvents.subscriber' },
       'Flag event subscriber Redis connection failed'
+    )
+  })
+
+  subscriber.on('close', () => {
+    subscriberStarted = false
+    log.warn(
+      { scope: 'api.flagEvents.subscriber' },
+      'Flag event subscriber Redis connection closed'
     )
   })
 

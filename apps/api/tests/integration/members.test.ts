@@ -35,6 +35,7 @@ vi.mock('../../src/db/members.ts', () => ({
   getMemberSummary: vi.fn(),
   removeMember: vi.fn(),
   makeOwner: vi.fn(),
+  countOwners: vi.fn(),
 }))
 
 vi.mock('../../src/db/history.ts', () => ({
@@ -129,6 +130,24 @@ describe('Members routes', () => {
         TEST_USER_ID,
         expect.anything()
       )
+    })
+
+    it('returns 400 when removing the last owner of the org', async () => {
+      vi.mocked(membersDb.getMemberSummary).mockResolvedValue({
+        userId: TEST_USER_ID,
+        email: TEST_USER_EMAIL,
+        role: 'OWNER',
+      } as any)
+      vi.mocked(membersDb.countOwners).mockResolvedValue(1)
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `${MEMBERS_BASE}/${TEST_USER_ID}`,
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body).message).toContain('last owner')
+      expect(vi.mocked(membersDb.removeMember)).not.toHaveBeenCalled()
     })
 
     it('returns 404 when member does not exist', async () => {

@@ -81,13 +81,21 @@ describe('Orgs routes', () => {
   })
 
   describe('GET /orgs', () => {
-    it('returns empty array when user has no orgs', async () => {
-      vi.mocked(orgsDb.listOrgsForUser).mockResolvedValue([])
+    it('returns empty page when user has no orgs', async () => {
+      vi.mocked(orgsDb.listOrgsForUser).mockResolvedValue({
+        items: [],
+        total: 0,
+      } as any)
 
       const response = await app.inject({ method: 'GET', url: '/orgs' })
 
       expect(response.statusCode).toBe(200)
-      expect(JSON.parse(response.body)).toEqual([])
+      expect(JSON.parse(response.body)).toEqual({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 50,
+      })
     })
 
     it('returns list of orgs for authenticated user', async () => {
@@ -99,18 +107,71 @@ describe('Orgs routes', () => {
           projectCount: 1,
         },
       ]
-      vi.mocked(orgsDb.listOrgsForUser).mockResolvedValue(orgs as any)
+      vi.mocked(orgsDb.listOrgsForUser).mockResolvedValue({
+        items: orgs,
+        total: orgs.length,
+      } as any)
 
       const response = await app.inject({ method: 'GET', url: '/orgs' })
 
       expect(response.statusCode).toBe(200)
       const body = JSON.parse(response.body)
-      expect(body).toHaveLength(1)
-      expect(body[0]).toMatchObject({ id: TEST_ORG_ID, name: 'Test Org', slug: 'test-org' })
+      expect(body).toEqual(
+        expect.objectContaining({ total: 1, page: 1, pageSize: 50 })
+      )
+      expect(body.items).toHaveLength(1)
+      expect(body.items[0]).toMatchObject({
+        id: TEST_ORG_ID,
+        name: 'Test Org',
+        slug: 'test-org',
+      })
       expect(vi.mocked(orgsDb.listOrgsForUser)).toHaveBeenCalledWith(
         TEST_USER_ID,
+        { page: 1, pageSize: 50 },
         expect.anything()
       )
+    })
+
+    it('passes page and pageSize query params to the db', async () => {
+      vi.mocked(orgsDb.listOrgsForUser).mockResolvedValue({
+        items: [{ ...mockOrg, role: 'OWNER' as const }],
+        total: 23,
+      } as any)
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/orgs?page=3&pageSize=10',
+      })
+
+      expect(response.statusCode).toBe(200)
+      const body = JSON.parse(response.body)
+      expect(body).toEqual(
+        expect.objectContaining({ total: 23, page: 3, pageSize: 10 })
+      )
+      expect(body.items).toHaveLength(1)
+      expect(vi.mocked(orgsDb.listOrgsForUser)).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        { page: 3, pageSize: 10 },
+        expect.anything()
+      )
+    })
+
+    it('returns 400 for page below the minimum', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/orgs?page=0',
+      })
+
+      expect(response.statusCode).toBe(400)
+    })
+
+    it('returns 400 for pageSize above the maximum', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/orgs?pageSize=101',
+      })
+
+      expect(response.statusCode).toBe(400)
     })
   })
 
@@ -132,6 +193,22 @@ describe('Orgs routes', () => {
         TEST_USER_ID,
         expect.anything()
       )
+    })
+
+    it('returns 409 when slug already exists (unique violation)', async () => {
+      vi.mocked(orgsDb.createOrg).mockRejectedValue({
+        code: '23505',
+        message: 'duplicate key value violates unique constraint',
+      })
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/orgs',
+        payload: { name: 'Test Org', slug: 'test-org' },
+      })
+
+      expect(response.statusCode).toBe(409)
+      expect(JSON.parse(response.body).message).toContain('already exists')
     })
 
     it('returns 400 when name is missing', async () => {

@@ -87,3 +87,31 @@ export const environmentSlugQuerySchema = {
     environmentSlug: slugSchema
   }
 } as const
+
+export const pageQuerySchema = {
+  type: 'integer',
+  minimum: 1
+} as const
+
+export const pageSizeQuerySchema = {
+  type: 'integer',
+  minimum: 1,
+  maximum: 100
+} as const
+
+export const paginationQuerySchema = {
+  type: 'object',
+  properties: {
+    page: pageQuerySchema,
+    pageSize: pageSizeQuerySchema
+  }
+} as const
+
+export const flagsListQuerySchema = {
+  type: 'object',
+  properties: {
+    environmentSlug: slugSchema,
+    page: pageQuerySchema,
+    pageSize: pageSizeQuerySchema
+  }
+} as const

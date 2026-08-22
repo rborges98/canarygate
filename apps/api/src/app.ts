@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import compress from '@fastify/compress'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import './types.ts'
@@ -20,8 +21,28 @@ import { webhookRoutes } from './routes/webhook'
 
 const AUTH_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 
+const FORWARDED_AUTH_HEADERS = new Set([
+  'host',
+  'origin',
+  'cookie',
+  'content-type',
+  'accept',
+  'authorization',
+  'user-agent'
+])
+
+function extractHostname(hostHeader: string) {
+  const value = hostHeader.includes('://') ? hostHeader : `http://${hostHeader}`
+  try {
+    return new URL(value).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
 export function buildApp() {
   const webUrl = getRequiredUrl('WEB_URL', 'http://localhost:3000', 'api app')
+  const apiUrl = getRequiredUrl('API_URL', 'http://localhost:3001', 'api app')
   const allowedCorsOrigins = [
     webUrl,
     ...(process.env.CORS_ALLOWED_ORIGINS ?? '')
@@ -30,8 +51,18 @@ export function buildApp() {
       .filter(Boolean)
   ]
 
+  const allowedAuthHosts = new Set<string>()
+  for (const origin of [webUrl, apiUrl]) {
+    const hostname = extractHostname(origin)
+    if (hostname) {
+      allowedAuthHosts.add(hostname)
+    }
+  }
+
   const app = Fastify({
-    logger: fastifyLogger
+    logger: fastifyLogger,
+    disableRequestLogging: true,
+    trustProxy: true
   })
 
   app.register(cors, {
@@ -58,6 +89,10 @@ export function buildApp() {
   app.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute'
+  })
+
+  app.register(compress, {
+    threshold: 1024
   })
 
   app.register(swagger, {
@@ -125,13 +160,53 @@ export function buildApp() {
     config: { rateLimit: AUTH_RATE_LIMIT },
     handler: async (request, reply) => {
       const { auth } = await import('./auth.ts')
-      const url = `${request.protocol}://${request.hostname}:${request.port ?? 3001}${request.url}`
-      const webRequest = new Request(url, {
-        method: request.method,
-        headers: request.headers as HeadersInit,
-        body: ['GET', 'HEAD'].includes(request.method)
+
+      const hostHeader = request.headers.host
+      const hostname =
+        typeof hostHeader === 'string' ? extractHostname(hostHeader) : null
+      if (!hostname || !allowedAuthHosts.has(hostname)) {
+        request.log.error(
+          {
+            scope: 'route.auth.proxy',
+            host: hostHeader ?? null,
+            url: request.url,
+            ip: request.ip
+          },
+          'Rejected auth request from unauthorized host'
+        )
+        return reply.status(403).send({ message: 'Forbidden' })
+      }
+
+      const body =
+        request.method === 'GET' || request.method === 'HEAD'
           ? undefined
           : JSON.stringify(request.body)
+
+      const forwardedHeaders: Record<string, string> = {}
+      for (const [name, value] of Object.entries(request.headers)) {
+        if (value === undefined) {
+          continue
+        }
+
+        const lowerName = name.toLowerCase()
+        if (!FORWARDED_AUTH_HEADERS.has(lowerName)) {
+          continue
+        }
+
+        forwardedHeaders[name] = Array.isArray(value)
+          ? value.join(', ')
+          : value
+      }
+
+      if (body !== undefined) {
+        forwardedHeaders['content-length'] = String(Buffer.byteLength(body))
+      }
+
+      const url = `${request.protocol}://${hostHeader}${request.url}`
+      const webRequest = new Request(url, {
+        method: request.method,
+        headers: forwardedHeaders,
+        body
       })
 
       const response = await auth.handler(webRequest)
