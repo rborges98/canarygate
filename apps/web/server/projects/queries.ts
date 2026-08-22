@@ -6,7 +6,7 @@ import { getCached } from '../cache/two-tier'
 
 const API_BASE = process.env.API_URL ?? 'http://localhost:3001'
 
-const projectsCache = createTtlCache<ProjectItem[]>({
+const projectsCache = createTtlCache<ProjectList>({
   ttlMs: 60_000,
   maxEntries: 200
 })
@@ -41,36 +41,76 @@ export type ProjectDetail = {
   projectRole: 'ADMIN' | 'MEMBER'
 }
 
-export const getProjects = cache(
-  async function getProjects(orgId: string): Promise<ProjectItem[]> {
-    const session = await getSessionOrRedirect()
-    const key = `projects:${session.user.id}:${orgId}`
+export type ProjectList = {
+  items: ProjectItem[]
+  total: number
+  page: number
+  pageSize: number
+}
 
-    const result = await getCached<ProjectItem[]>({
+export const getProjects = cache(
+  async function getProjects(
+    orgId: string,
+    page = 1,
+    pageSize = 50
+  ): Promise<ProjectList> {
+    const session = await getSessionOrRedirect()
+    const key = `projects:${session.user.id}:${orgId}:${page}:${pageSize}`
+
+    const result = await getCached<ProjectList>({
       key,
       ttlMs: 60_000,
       memory: projectsCache,
       redisTtlSeconds: 60,
       fetcher: async () => {
-        const res = await apiFetch(`${API_BASE}/orgs/${orgId}/projects`)
+        const res = await apiFetch(
+          `${API_BASE}/orgs/${orgId}/projects?page=${page}&pageSize=${pageSize}`
+        )
         if (!res.ok) {
-          return []
+          return { items: [], total: 0, page, pageSize }
         }
 
-        const data: ApiProject[] = await res.json()
-        return data.map((p) => ({
-          projectId: p.id,
-          name: p.name,
-          slug: p.slug,
-          flags: p.flagCount,
-          active: p.active
-        }))
+        const data: {
+          items: ApiProject[]
+          total: number
+          page: number
+          pageSize: number
+        } = await res.json()
+        return {
+          items: data.items.map((p) => ({
+            projectId: p.id,
+            name: p.name,
+            slug: p.slug,
+            flags: p.flagCount,
+            active: p.active
+          })),
+          total: data.total,
+          page: data.page,
+          pageSize: data.pageSize
+        }
       }
     })
 
     return result.value
   }
 )
+
+export async function getAllProjects(orgId: string): Promise<ProjectItem[]> {
+  const all: ProjectItem[] = []
+  const pageSize = 100
+  let page = 1
+
+  while (true) {
+    const result = await getProjects(orgId, page, pageSize)
+    all.push(...result.items)
+    if (page * pageSize >= result.total) {
+      break
+    }
+    page++
+  }
+
+  return all
+}
 
 export const getProjectBySlug = cache(
   async function getProjectBySlug(
