@@ -1,37 +1,19 @@
 # @canarygate/sdk/js
 
-CanaryGate feature flags SDK for JavaScript/TypeScript. Real-time SSE streaming on server, cached polling on client.
+Feature flag client for [CanaryGate](https://github.com/rborges98/canarygate).
 
-## Installation
+- **Server (Node.js)** — snapshot on `init()` + live updates via SSE, with auto-reconnect and heartbeat detection
+- **Browser** — flags fetched once and cached; SSE stays off to protect your infrastructure
 
-```
+## Install
+
+```sh
 npm install @canarygate/sdk/js
 ```
 
-## Client mode (browser)
+## Quick start
 
-Flags are fetched once and cached. SSE streams are disabled in the browser to protect the network architecture.
-
-```ts
-import { CanaryGate } from '@canarygate/sdk/js/client'
-
-const gate = new CanaryGate('your-api-key', {
-  environment: 'production'
-})
-
-await gate.init()
-
-const flag = gate.getFlag('feature-rollout-a', { userId: 'user-123' })
-if (flag && flag.enabled) {
-  console.log(`flag ativo (${flag.type})`)
-}
-
-const flags = gate.getFlags()
-```
-
-## Server mode (Node.js)
-
-Real-time updates via SSE are enabled by default.
+### Server — real-time
 
 ```ts
 import { CanaryGate } from '@canarygate/sdk/js/server'
@@ -42,35 +24,74 @@ const gate = new CanaryGate('your-api-key', {
 })
 
 await gate.init()
-// flags are updated in the background via SSE
+// flags keep updating in the background via SSE
 
-gate.disconnect()
+gate.disconnect() // when shutting down
 ```
 
-## API
+### Browser — cached
 
-### `new CanaryGate(apiKey, options?)`
+```ts
+import { CanaryGate } from '@canarygate/sdk/js/client'
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `baseUrl` | `string` | `http://localhost:3001` | CanaryGate API base URL |
-| `environment` | `string` | — | Environment to evaluate flags against |
-| `stream` | `boolean` | `false` | Enable real-time SSE updates (server mode only) |
-| `reconnectDelay` | `number` | `5000` | Initial SSE reconnect delay (ms) |
-| `maxReconnectDelay` | `number` | `30000` | Maximum SSE reconnect delay (ms) |
-| `heartbeatTimeoutMs` | `number` | `65000` | Heartbeat timeout before reconnecting (ms) |
+const gate = new CanaryGate('your-api-key', {
+  environment: 'production'
+})
 
-### Methods
+await gate.init()
+```
 
-| Method | Description |
-| --- | --- |
-| `init()` | Fetch flags and start stream when enabled |
-| `getFlag(key, context?)` | Evaluate a single flag (`boolean` or `rollout`) |
-| `getFlags(context?)` | Evaluate all cached flags |
-| `isStale()` | Whether the last sync failed |
-| `getLastSyncAt()` | Timestamp of the last successful sync |
-| `disconnect()` | Stop the stream and clear timers |
+## Evaluating flags
+
+```ts
+const flag = gate.getFlag('new-checkout', { userId: 'user-123' })
+
+if (flag?.enabled) {
+  // boolean flag is on,
+  // or user-123 falls inside the rollout percentage
+}
+
+const allFlags = gate.getFlags({ userId: 'user-123' })
+```
+
+Evaluations return a `FlagData`:
+
+```ts
+type FlagData =
+  | { key: string; type: 'boolean'; enabled: boolean }
+  | { key: string; type: 'rollout'; enabled: boolean; percent: number }
+```
+
+Rollout evaluation hashes `userId` deterministically — the same user always gets the same result for the same percentage.
+
+## Options
+
+| Option               | Type      | Default                 | Description                                      |
+| -------------------- | --------- | ----------------------- | ------------------------------------------------ |
+| `baseUrl`            | `string`  | `http://localhost:3001` | CanaryGate API base URL                          |
+| `environment`        | `string`  | —                       | Environment to evaluate flags against            |
+| `stream`             | `boolean` | `false`                 | Real-time SSE updates (server mode only)         |
+| `reconnectDelay`     | `number`  | `5000`                  | Initial SSE reconnect delay (ms)                 |
+| `maxReconnectDelay`  | `number`  | `30000`                 | Reconnect delay cap, exponential backoff (ms)    |
+| `heartbeatTimeoutMs` | `number`  | `65000`                 | Silence window before treating the stream as dead |
+
+## Methods
+
+| Method                | Description                                        |
+| --------------------- | -------------------------------------------------- |
+| `init()`              | Fetches flags and starts the stream when enabled   |
+| `getFlag(key, ctx?)`  | Evaluates one flag (`boolean` or `rollout`)        |
+| `getFlags(ctx?)`      | Evaluates all cached flags                         |
+| `isStale()`           | Whether the last sync attempt failed               |
+| `getLastSyncAt()`     | Timestamp of the last successful sync              |
+| `disconnect()`        | Stops the stream and clears timers                 |
+
+## How sync works
+
+1. `init()` fetches a full snapshot from `/sdk/flags`.
+2. With `stream: true`, an SSE connection receives granular updates per change.
+3. On disconnect, the SDK reconnects with exponential backoff and does a full resync over the snapshot endpoint.
 
 ## License
 
-MIT
+[MIT](./LICENSE)
