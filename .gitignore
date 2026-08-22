@@ -39,3 +39,6 @@ yarn-error.log*
 
 AGENTS.md
 brainstorm/
+opencode.json
+# local shadcn registry config (for the shadcn MCP)
+/components.json

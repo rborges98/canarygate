@@ -17,20 +17,88 @@ CanaryGate é um monorepo com:
 - PostgreSQL
 - Redis
 
-## Variáveis principais
+## Variáveis de ambiente
+
+Referência canônica de todas as variáveis lidas pelo projeto. As obrigatórias em produção são marcadas com **(required)**; as demais são opcionais ou de desenvolvimento.
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/canarygate
+# ============================================================
+# DATABASE (Postgres — Neon em produção)
+# ============================================================
+# (required) Connection string do Postgres usada pela API e pelo web (better-auth).
+DATABASE_URL=postgresql://user:password@localhost:5432/canarygate
+
+# ============================================================
+# REDIS (Upstash em produção)
+# ============================================================
+# (required em produção) URL do Redis. Em dev o fallback é redis://localhost:6379.
 REDIS_URL=redis://localhost:6379
+
+# ============================================================
+# URLs públicas
+# ============================================================
+# (required) URL do dashboard (web). Origem principal do CORS e do trustedOrigins do auth.
 WEB_URL=http://localhost:3000
+# (required) URL da API. Base dos webhooks QStash em produção (/webhook).
 API_URL=http://localhost:3001
+# (required em produção) URL pública do web, inline no client (next-auth/better-auth client).
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+# (optional) Origens extras liberadas no CORS, separadas por vírgula.
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3005
+# (dev) URL do túnel ngrok usada como base dos webhooks QStash fora de produção.
+# Quando ausente em dev, o código usa API_URL como fallback.
+NGROK_URL=
+
+# ============================================================
+# AUTH (better-auth)
+# ============================================================
+# (required em produção) Secret do better-auth (mínimo 32 chars).
 BETTER_AUTH_SECRET=
+# (dev) true desativa o login. Nunca use em produção.
+BYPASS_AUTH=
+
+# ============================================================
+# EMAIL (Resend)
+# ============================================================
+# (required em produção) API key do Resend.
+RESEND_API_KEY=re_xxxx
+# (optional) Remetente dos e-mails (OTP de login e convites).
+# Fallback: CanaryGate <onboarding@resend.dev>
+RESEND_SENDER=
+
+# ============================================================
+# QSTASH (jobs de schedule e auto-rollout)
+# ============================================================
+# (required em produção) Token de publish do QStash.
+QSTASH_TOKEN=
+# (required em produção) Chaves de verificação de assinatura do webhook /webhook.
+QSTASH_CURRENT_SIGNING_KEY=
+QSTASH_NEXT_SIGNING_KEY=
+
+# ============================================================
+# SERVIDORES
+# ============================================================
+# (optional) Porta da API. Default: 3001.
+PORT=3001
+# (optional) Nível de log do @canarygate/logger (info, warn, error, debug).
+LOG_LEVEL=info
+
+# ============================================================
+# CACHE / SSE (opcional)
+# ============================================================
+# (optional) Tier de cache Redis do web (memory | redis | both). Default: memory.
+CACHE_REDIS_TIER=memory
+# (optional) Limite de conexões SSE por IP na API. Default: 10.
+SSE_MAX_CONNECTIONS_PER_IP=10
+# (optional) Limite de conexões SSE por API key na API. Default: 25.
+SSE_MAX_CONNECTIONS_PER_API_KEY=25
 ```
 
 `REDIS_URL` é obrigatória para a API em produção. Em desenvolvimento, o fallback padrão é `redis://localhost:6379`.
 
 `CORS_ALLOWED_ORIGINS` é opcional e aceita uma lista separada por vírgulas com origens extras liberadas no CORS da API. `WEB_URL` continua sendo a origem principal do dashboard e do auth.
+
+A API falha no boot se faltarem `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` ou `QSTASH_NEXT_SIGNING_KEY` (necessários para despachar e validar os jobs via webhook QStash).
 
 ## Desenvolvimento
 

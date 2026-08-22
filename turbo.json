@@ -7,14 +7,19 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": [
         "API_URL",
+        "WEB_URL",
         "DATABASE_URL",
+        "REDIS_URL",
+        "PORT",
+        "NEXT_PUBLIC_APP_URL",
         "RESEND_API_KEY",
+        "RESEND_SENDER",
         "BETTER_AUTH_SECRET",
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
-        "MICROSOFT_CLIENT_ID",
-        "MICROSOFT_CLIENT_SECRET",
-        "CORS_ALLOWED_ORIGINS"
+        "QSTASH_TOKEN",
+        "QSTASH_CURRENT_SIGNING_KEY",
+        "QSTASH_NEXT_SIGNING_KEY",
+        "CORS_ALLOWED_ORIGINS",
+        "LOG_LEVEL"
       ]
     },
     "lint": {
