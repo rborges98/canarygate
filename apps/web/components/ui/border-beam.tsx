@@ -1,123 +1,72 @@
 'use client'
 
-import { motion, MotionStyle, Transition, useReducedMotion } from 'motion/react'
-
+import { motion } from 'motion/react'
 import { cn } from '@/shared/utils'
 
 type BorderBeamProps = {
-  /**
-   * The size of the border beam.
-   */
   size?: number
-  /**
-   * The duration of the border beam.
-   */
   duration?: number
-  /**
-   * The delay of the border beam.
-   */
   delay?: number
-  /**
-   * The color of the border beam from.
-   */
-  colorFrom?: string
-  /**
-   * The color of the border beam to.
-   */
-  colorTo?: string
-  /**
-   * The motion transition of the border beam.
-   */
-  transition?: Transition
-  /**
-   * The class name of the border beam.
-   */
-  className?: string
-  /**
-   * The style of the border beam.
-   */
-  style?: React.CSSProperties
-  /**
-   * Whether to reverse the animation direction.
-   */
-  reverse?: boolean
-  /**
-   * The initial offset position (0-100).
-   */
-  initialOffset?: number
-  /**
-   * The border width of the beam.
-   */
   borderWidth?: number
-  /**
-   * Whether to disable the beam animation.
-   */
-  disabled?: boolean
+  colorFrom?: string
+  colorTo?: string
+  reverse?: boolean
+  className?: string
 }
 
 export const BorderBeam = ({
-  className,
   size = 50,
-  delay = 0,
   duration = 6,
-  colorFrom = '#ffaa40',
-  colorTo = '#9c40ff',
-  transition,
-  style,
-  reverse = false,
-  initialOffset = 0,
+  delay = 0,
   borderWidth = 1,
-  disabled = false
+  colorFrom = '#ffaa40',
+  colorTo = '#56c8ff',
+  reverse = false,
+  className
 }: BorderBeamProps) => {
-  const prefersReducedMotion = useReducedMotion()
-  const beamDisabled = disabled || prefersReducedMotion === true
+  const offsetPath = `rect(0 auto auto 0 round ${size}px)`
 
   return (
     <div
+      style={{ '--border-beam-width': `${borderWidth}px` } as React.CSSProperties}
       className="border-(length:--border-beam-width) mask-[linear-gradient(transparent,transparent),linear-gradient(#000,#000)] mask-intersect pointer-events-none absolute inset-0 rounded-[inherit] border-transparent [mask-clip:padding-box,border-box]"
-      style={
-        {
-          '--border-beam-width': `${borderWidth}px`
-        } as React.CSSProperties
-      }
     >
       <motion.div
-        className={cn(
-          'absolute aspect-square',
-          'bg-linear-to-l from-(--color-from) via-(--color-to) to-transparent',
-          className
-        )}
-        style={
-          {
-            width: size,
-            offsetPath: `rect(0 auto auto 0 round ${size}px)`,
-            '--color-from': colorFrom,
-            '--color-to': colorTo,
-            ...style
-          } as MotionStyle
-        }
-        initial={beamDisabled ? false : { offsetDistance: `${initialOffset}%` }}
-        animate={
-          beamDisabled
-            ? undefined
-            : {
-                offsetDistance: reverse
-                  ? [`${100 - initialOffset}%`, `${-initialOffset}%`]
-                  : [`${initialOffset}%`, `${100 + initialOffset}%`]
-              }
-        }
-        transition={
-          beamDisabled
-            ? undefined
-            : {
-                repeat: Infinity,
-                ease: 'linear',
-                duration,
-                delay: -delay,
-                ...transition
-              }
-        }
+        className={cn('absolute aspect-square', className)}
+        style={{
+          width: size,
+          offsetPath,
+          rotate: reverse ? '180deg' : undefined,
+          background: `linear-gradient(to left, transparent, ${colorFrom}, transparent)`
+        }}
+        initial={{ offsetDistance: '0%' }}
+        animate={{ offsetDistance: ['0%', '100%'] }}
+        transition={{
+          repeat: Infinity,
+          ease: 'linear',
+          duration,
+          delay: -delay
+        }}
+      />
+      <motion.div
+        className="absolute aspect-square"
+        style={{
+          width: size,
+          offsetPath,
+          rotate: '180deg',
+          background: `linear-gradient(to left, transparent, ${colorTo}, transparent)`
+        }}
+        initial={{ offsetDistance: '100%' }}
+        animate={{ offsetDistance: ['100%', '0%'] }}
+        transition={{
+          repeat: Infinity,
+          ease: 'linear',
+          duration,
+          delay: -delay
+        }}
       />
     </div>
   )
 }
+
+export default BorderBeam

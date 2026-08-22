@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect } from 'react'
-import { BorderBeam } from '@/components/ui/border-beam'
 
 type Props = {
   error: Error & { digest?: string }
@@ -21,13 +20,6 @@ export default function OrgsError({ error, reset }: Props) {
       <main className="relative z-10 flex flex-1 items-center justify-center px-6 py-10 md:px-12 md:py-14">
         <div className="w-full max-w-2xl">
           <div className="relative rounded-3xl border p-8 text-center md:p-10">
-            <BorderBeam
-              borderWidth={2}
-              colorFrom="var(--color-cg-indigo-400)"
-              colorTo="var(--color-cg-indigo-100)"
-              size={220}
-            />
-
             <span className="bg-cg-indigo-950 text-cg-indigo-100 border-cg-indigo-600 mb-5 inline-flex rounded-full border px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.18em] uppercase">
               Route error
             </span>

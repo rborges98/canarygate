@@ -48,7 +48,7 @@ export function Modal({
       ref={dialogRef}
       aria-label={title}
       aria-describedby={description ? descriptionId : undefined}
-      className="bg-transparent p-4 backdrop:bg-black/55"
+      className="m-auto bg-transparent p-4 backdrop:bg-black/55"
       onCancel={(e) => {
         e.preventDefault()
         handleClose()
