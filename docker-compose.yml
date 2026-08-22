@@ -1,6 +1,22 @@
 name: canarygate-local
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: canarygate
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d canarygate']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
   redis:
     image: redis:7-alpine
     ports:
@@ -13,6 +29,24 @@ services:
       timeout: 3s
       retries: 10
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+      target: api
+      provenance: false
+      sbom: false
+    image: canarygate-api-local
+    init: true
+    restart: 'no'
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/canarygate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ['pnpm', '--filter', '@canarygate/database', 'db:migrate']
+
   api:
     build:
       context: .
@@ -22,20 +56,69 @@ services:
       sbom: false
     image: canarygate-api-local
     init: true
-    env_file:
-      - ./apps/web/.env.local
     environment:
       NODE_ENV: development
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:5432/canarygate}
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/canarygate
       REDIS_URL: redis://redis:6379
       API_URL: http://localhost:3001
-      WEB_URL: http://localhost:3000
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-local-dev-secret-change-me-32chars-min!}
+      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_local}
+      RESEND_SENDER: ${RESEND_SENDER:-}
+      QSTASH_TOKEN: ${QSTASH_TOKEN:-qstash_placeholder_local}
+      QSTASH_CURRENT_SIGNING_KEY: ${QSTASH_CURRENT_SIGNING_KEY:-qstash_current_signing_placeholder}
+      QSTASH_NEXT_SIGNING_KEY: ${QSTASH_NEXT_SIGNING_KEY:-qstash_next_signing_placeholder}
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3001/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     ports:
       - '3001:3001'
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+      target: web
+      provenance: false
+      sbom: false
+    image: canarygate-web-local
+    init: true
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      API_URL: http://api:3001
+      WEB_URL: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/canarygate
+      REDIS_URL: redis://redis:6379
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-local-dev-secret-change-me-32chars-min!}
+      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_local}
+      RESEND_SENDER: ${RESEND_SENDER:-}
+    depends_on:
+      api:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - '3000:3000'
+
 volumes:
+  pg_data:
   redis_data:
