@@ -20,7 +20,6 @@ function getRequiredEnv(name: string) {
   const value = process.env[name]
 
   if (!value) {
-    console.log('is build time', IS_BUILD_TIME, value, name)
     if (IS_BUILD_TIME) {
       return ''
     }
@@ -55,14 +54,10 @@ const APP_BASE_URL = getRequiredUrl(
 )
 const BETTER_AUTH_SECRET = getRequiredEnv('BETTER_AUTH_SECRET')
 const RESEND_API_KEY = getRequiredEnv('RESEND_API_KEY')
-const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID')
-const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET')
-const GITHUB_CLIENT_ID = getRequiredEnv('GITHUB_CLIENT_ID')
-const GITHUB_CLIENT_SECRET = getRequiredEnv('GITHUB_CLIENT_SECRET')
-const MICROSOFT_CLIENT_ID = getRequiredEnv('MICROSOFT_CLIENT_ID')
-const MICROSOFT_CLIENT_SECRET = getRequiredEnv('MICROSOFT_CLIENT_SECRET')
 
 const resend = new Resend(RESEND_API_KEY)
+const RESEND_SENDER =
+  process.env.RESEND_SENDER ?? 'CanaryGate <onboarding@resend.dev>'
 
 export const auth = betterAuth({
   baseURL: APP_BASE_URL,
@@ -90,7 +85,7 @@ export const auth = betterAuth({
       expiresIn: 300,
       async sendVerificationOTP({ email, otp }) {
         await resend.emails.send({
-          from: 'CanaryGate <onboarding@resend.dev>',
+          from: RESEND_SENDER,
           to: email,
           subject: 'Your CanaryGate sign-in code',
           text: `Your verification code is: ${otp}\n\nThis code expires in 5 minutes.`
@@ -98,21 +93,7 @@ export const auth = betterAuth({
       }
     }),
     nextCookies()
-  ],
-  socialProviders: {
-    google: {
-      clientId: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET
-    },
-    github: {
-      clientId: GITHUB_CLIENT_ID,
-      clientSecret: GITHUB_CLIENT_SECRET
-    },
-    microsoft: {
-      clientId: MICROSOFT_CLIENT_ID,
-      clientSecret: MICROSOFT_CLIENT_SECRET
-    }
-  }
+  ]
 })
 
 export type Auth = typeof auth
