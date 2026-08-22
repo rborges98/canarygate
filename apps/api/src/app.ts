@@ -124,7 +124,7 @@ export function buildApp() {
   })
 
   app.register(swaggerUi, {
-    routePrefix: '/docs',
+    routePrefix: '/swagger',
     uiConfig: {
       docExpansion: 'list',
       deepLinking: true
