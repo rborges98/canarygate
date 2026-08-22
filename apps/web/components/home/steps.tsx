@@ -6,7 +6,6 @@ type Step = {
   number: string
   title: string
   description: string
-  code?: string
 }
 
 const STEPS: Step[] = [
@@ -14,9 +13,7 @@ const STEPS: Step[] = [
     number: '01',
     title: 'Install the SDK',
     description:
-      'Works with any JavaScript or TypeScript project. One package, no peer dependencies.',
-    code:
-      'npm install @canarygate/sdk/js\nimport { CanaryGate } from \'@canarygate/sdk/js/client\'',
+      'Frameworkless by design. Official SDKs for JavaScript, Go, Python, C#, and Java — works with any stack.'
   },
   {
     number: '02',
@@ -32,33 +29,6 @@ const STEPS: Step[] = [
   },
 ]
 
-function CodeBlock({ code }: { code: string }) {
-  return (
-    <div className="border-cg-bg-100 bg-cg-bg-100 mt-4 overflow-hidden rounded-lg border">
-      <div className="border-cg-bg-100 bg-cg-bg-200 flex items-center gap-1.5 border-b px-3 py-2">
-        <div className="h-2 w-2 rounded-full bg-red-500/60" />
-        <div className="h-2 w-2 rounded-full bg-yellow-500/60" />
-        <div className="h-2 w-2 rounded-full bg-green-500/60" />
-        <span className="text-cg-neutral-600 ml-2 font-mono text-[10px]">
-          terminal
-        </span>
-      </div>
-      <div className="px-4 py-3">
-        {code.split('\n').map((line, i) => (
-          <div key={i} className="flex items-center gap-2">
-            {i === 0 && (
-              <span className="text-cg-neutral-600 font-mono text-xs">$</span>
-            )}
-            <span className="text-cg-neutral-200 font-mono text-xs">
-              {line}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 type StepCardProps = {
   step: Step
   index: number
@@ -68,10 +38,10 @@ type StepCardProps = {
 function StepCard({ step, index, isLast }: StepCardProps) {
   return (
     <motion.div
-      initial={false}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.15, ease: 'easeOut' }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ type: 'spring', stiffness: 75, damping: 17, delay: index * 0.12 }}
       className="relative flex flex-col gap-4"
     >
       {!isLast && (
@@ -92,7 +62,6 @@ function StepCard({ step, index, isLast }: StepCardProps) {
         <p className="text-cg-neutral-300 text-sm leading-relaxed">
           {step.description}
         </p>
-        {step.code && <CodeBlock code={step.code} />}
       </div>
     </motion.div>
   )
@@ -106,10 +75,10 @@ export function V2Steps() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <motion.div
-          initial={false}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ type: 'spring', stiffness: 70, damping: 18 }}
           className="mb-12 flex flex-col gap-3"
         >
           <h2 className="text-cg-neutral-100 text-3xl font-semibold sm:text-4xl">

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Logo } from '@/components/logo'
+import { Logo } from '@/components/branding/logo'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
@@ -12,11 +12,7 @@ type LandingNavProps = {
 export function LandingNav({ transparent = false }: LandingNavProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const navLinks = [
-    { href: '/docs', label: 'Docs' },
-    { href: '/#pricing', label: 'Pricing' },
-    { href: '/login', label: 'Log in' },
-  ]
+  const navLinks = [{ href: '/docs', label: 'Docs' }]
 
   return (
     <header

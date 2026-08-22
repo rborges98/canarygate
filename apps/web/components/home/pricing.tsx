@@ -11,10 +11,10 @@ export function V2Pricing() {
     <section className="border-cg-bg-100 border-t py-16 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <motion.div
-          initial={false}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
+          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ type: 'spring', stiffness: 70, damping: 18 }}
           className="mb-12 flex flex-col gap-3"
         >
           <h2 className="text-cg-neutral-100 text-3xl font-semibold sm:text-4xl">
@@ -39,10 +39,10 @@ export function V2Pricing() {
 
         <motion.div
           className="border-cg-bg-100 mt-12 flex flex-col gap-4 border-t pt-8"
-          initial={false}
+          initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ type: 'spring', stiffness: 80, damping: 17 }}
         >
           <h3 className="text-cg-neutral-100 text-2xl font-bold sm:text-3xl">
             Try everything. Tell us what you&apos;d pay for.

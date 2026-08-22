@@ -4,6 +4,7 @@ import { V2Hero } from '@/components/home/hero'
 import { V2InteractiveTabs } from '@/components/home/interactive-tabs'
 import { V2Steps } from '@/components/home/steps'
 import { V2Pricing } from '@/components/home/pricing'
+import { Reveal } from '@/components/home/reveal'
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 const siteDescription =
@@ -33,7 +34,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How much does CanaryGate cost?',
     answer:
-      'CanaryGate has a Free plan for $0, a Starter plan for $45/month, and a Pro plan for $99/month, with no per-seat fees.'
+      'CanaryGate has a Free plan for $0, a Starter plan for $45/month, and a Pro plan for $99/month, with no per-seat fees. Billing is not active yet — during beta, all features are available free of charge.'
   }
 ]
 
@@ -106,7 +107,9 @@ export default function HomePage() {
     <main className="bg-background text-cg-neutral-100">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c')
+        }}
       />
       <LandingNav />
 
@@ -124,18 +127,17 @@ export default function HomePage() {
                 { value: '0 deploys', label: 'to change flags' },
                 { value: '100%', label: 'open source' }
               ] as const
-            ).map((stat) => (
-              <div
-                key={stat.label}
-                className="flex flex-col items-center gap-0.5 text-center"
-              >
-                <span className="text-cg-neutral-100 font-mono text-xl font-bold sm:text-2xl">
-                  {stat.value}
-                </span>
-                <span className="text-cg-neutral-500 text-xs">
-                  {stat.label}
-                </span>
-              </div>
+            ).map((stat, i) => (
+              <Reveal key={stat.label} delay={i * 0.08} y={20} blur={4}>
+                <div className="flex flex-col items-center gap-0.5 text-center">
+                  <span className="text-cg-neutral-100 font-mono text-xl font-bold sm:text-2xl">
+                    {stat.value}
+                  </span>
+                  <span className="text-cg-neutral-500 text-xs">
+                    {stat.label}
+                  </span>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -149,30 +151,31 @@ export default function HomePage() {
 
       <section className="border-cg-bg-100 border-t py-20 sm:py-28">
         <div className="mx-auto max-w-3xl px-4 sm:px-8">
-          <h2 className="text-cg-neutral-100 mb-10 text-center text-3xl font-semibold sm:text-4xl">
-            Frequently asked questions
-          </h2>
+          <Reveal y={32} blur={8}>
+            <h2 className="text-cg-neutral-100 mb-10 text-center text-3xl font-semibold sm:text-4xl">
+              Frequently asked questions
+            </h2>
+          </Reveal>
           <div className="space-y-3">
-            {FAQ_ITEMS.map((item) => (
-              <details
-                key={item.question}
-                className="border-cg-bg-100 bg-cg-bg-100/40 group rounded-lg border"
-              >
-                <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
-                  <h3 className="text-cg-neutral-100 text-base font-semibold">
-                    {item.question}
-                  </h3>
-                  <span
-                    aria-hidden
-                    className="text-cg-indigo-300 shrink-0 font-mono text-lg font-semibold transition-transform group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="text-cg-neutral-300 px-5 pb-5 text-sm leading-relaxed">
-                  {item.answer}
-                </p>
-              </details>
+            {FAQ_ITEMS.map((item, i) => (
+              <Reveal key={item.question} delay={i * 0.06} y={18} blur={4}>
+                <details className="border-cg-bg-100 bg-cg-bg-100/40 group rounded-lg border">
+                  <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4">
+                    <h3 className="text-cg-neutral-100 text-base font-semibold">
+                      {item.question}
+                    </h3>
+                    <span
+                      aria-hidden
+                      className="text-cg-indigo-300 shrink-0 font-mono text-lg font-semibold transition-transform group-open:rotate-45"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="text-cg-neutral-300 px-5 pb-5 text-sm leading-relaxed">
+                    {item.answer}
+                  </p>
+                </details>
+              </Reveal>
             ))}
           </div>
         </div>

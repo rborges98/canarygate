@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useInView } from 'motion/react'
+import { Calendar } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/shared/utils'
 
 type MockupProps = {
@@ -31,14 +33,22 @@ const CONTROL_FLAGS: MockFlag[] = [
 ]
 
 const DOT_COLOR: Record<MockFlag['status'], string> = {
-  enabled: 'bg-cg-green-100',
-  disabled: 'bg-cg-red-100',
-  rollout: 'bg-cg-yellow-200'
+  enabled: 'bg-cg-green-100 shadow-[0_0_6px_rgba(34,197,94,0.5)]',
+  disabled: 'bg-cg-red-100 shadow-[0_0_5px_rgba(239,68,68,0.4)]',
+  rollout: 'bg-cg-yellow-200 shadow-[0_0_6px_rgba(234,179,8,0.5)]'
+}
+
+const STATUS_BADGE_COLOR: Record<
+  Exclude<MockFlag['status'], 'rollout'>,
+  'green' | 'red'
+> = {
+  enabled: 'green',
+  disabled: 'red'
 }
 
 function ControlFlag({ flag }: { flag: MockFlag }) {
   return (
-    <div className="border-cg-bg-100 bg-cg-bg-200 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-4 py-3">
+    <div className="border-cg-bg-100 bg-cg-white-300 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg border px-4 py-3">
       <div
         className={cn(
           'h-2 w-2 shrink-0 rounded-full',
@@ -47,7 +57,7 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
         )}
       />
       <div>
-        <div className="text-cg-neutral-100 font-mono text-[13px] font-semibold">
+        <div className="text-white truncate font-mono text-[13px] font-semibold">
           {flag.key}
         </div>
         <div className="text-cg-neutral-300 mt-0.5 text-[11px]">
@@ -55,10 +65,10 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
         </div>
       </div>
       {flag.status === 'rollout' && flag.rollout !== undefined ? (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="bg-cg-yellow-400/30 h-1 w-14 overflow-hidden rounded-full">
             <motion.div
-              className="from-cg-yellow-300 to-cg-yellow-100 h-full rounded-full bg-linear-to-r"
+              className="from-cg-yellow-300 to-cg-yellow-100 h-full bg-linear-to-r"
               animate={{ width: `${flag.rollout}%` }}
               transition={{ duration: 0.8, ease: 'easeInOut' }}
             />
@@ -67,22 +77,9 @@ function ControlFlag({ flag }: { flag: MockFlag }) {
             {flag.rollout}%
           </span>
         </div>
-      ) : (
-        <button
-          type="button"
-          className={cn(
-            'focus-visible:ring-cg-indigo-300 relative h-5 w-10 rounded-full transition-colors duration-300 focus-visible:ring-2',
-            flag.status === 'enabled' ? 'bg-cg-green-100/30' : 'bg-cg-bg-100'
-          )}
-          aria-label={`${flag.key} toggle`}
-        >
-          <motion.span
-            className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm"
-            animate={{ x: flag.status === 'enabled' ? 20 : 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          />
-        </button>
-      )}
+      ) : flag.status !== 'rollout' ? (
+        <Badge color={STATUS_BADGE_COLOR[flag.status]}>{flag.status}</Badge>
+      ) : null}
     </div>
   )
 }
@@ -198,25 +195,43 @@ function RolloutMockup({ isInView }: MockupProps) {
             transition={{ duration: 0.7, ease: 'easeInOut' }}
           />
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          {ROLLOUT_STEPS.map((step, i) => (
-            <span
-              key={step}
-              className={cn(
-                'font-mono text-[10px] transition-colors duration-500',
-                i <= stepIndex ? 'text-cg-indigo-300' : 'text-cg-neutral-300'
-              )}
-            >
-              {step}%
-            </span>
-          ))}
+        <div className="relative mt-3 h-4">
+          {ROLLOUT_STEPS.map((step, i) => {
+            const isFirst = i === 0
+            const isLast = i === ROLLOUT_STEPS.length - 1
+            return (
+              <span
+                key={step}
+                style={
+                  isFirst || isLast
+                    ? undefined
+                    : { left: `${step}%`, transform: 'translateX(-50%)' }
+                }
+                className={cn(
+                  'absolute top-0 font-mono text-[10px] transition-colors duration-500',
+                  i <= stepIndex ? 'text-cg-indigo-300' : 'text-cg-neutral-300',
+                  isFirst && 'left-0',
+                  isLast && 'right-0'
+                )}
+              >
+                {step}%
+              </span>
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
 
-const SCHEDULED_TARGET = new Date('2026-06-13T09:00:00Z')
+const SCHEDULE_OFFSET_DAYS = 3
+
+function getScheduledTarget() {
+  const target = new Date()
+  target.setUTCDate(target.getUTCDate() + SCHEDULE_OFFSET_DAYS)
+  target.setUTCHours(9, 0, 0, 0)
+  return target
+}
 
 const COUNTDOWN_UNITS = [
   { key: 'd', label: 'days' },
@@ -227,6 +242,7 @@ const COUNTDOWN_UNITS = [
 
 function ScheduledMockup({ isInView }: MockupProps) {
   const [now, setNow] = useState(() => Date.now())
+  const [target] = useState(getScheduledTarget)
 
   useEffect(() => {
     if (!isInView) return
@@ -234,13 +250,19 @@ function ScheduledMockup({ isInView }: MockupProps) {
     return () => clearInterval(id)
   }, [isInView])
 
-  const diff = Math.max(0, SCHEDULED_TARGET.getTime() - now)
+  const diff = Math.max(0, target.getTime() - now)
   const remaining: Record<(typeof COUNTDOWN_UNITS)[number]['key'], number> = {
     d: Math.floor(diff / 86_400_000),
     h: Math.floor((diff % 86_400_000) / 3_600_000),
     m: Math.floor((diff % 3_600_000) / 60_000),
     s: Math.floor((diff % 60_000) / 1_000)
   }
+
+  const targetLabel = `${target.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })} · 09:00 UTC`
 
   return (
     <div className="border-cg-bg-100 bg-cg-bg-100 overflow-hidden rounded-xl border shadow-xl">
@@ -260,10 +282,10 @@ function ScheduledMockup({ isInView }: MockupProps) {
 
       <div className="px-5 py-6">
         <div className="mb-4 flex items-center gap-2">
-          <div className="bg-cg-yellow-200 h-2 w-2 rounded-full" />
+          <Calendar size={13} className="text-cg-yellow-200" strokeWidth={2} />
           <span className="text-cg-neutral-300 text-[11px]">Goes live on</span>
           <span className="text-cg-neutral-200 font-mono text-[11px] font-semibold">
-            Jun 13, 2026 · 09:00 UTC
+            {targetLabel}
           </span>
         </div>
 
@@ -456,61 +478,109 @@ function RealtimeMockup({ isInView }: MockupProps) {
 
 type AuditEntry = {
   id: number
-  actor: string
-  action: string
+  actorEmail: string
+  actionDescription: string
   flag: string
   env: string
   time: string
+  dotColor: string
+  changes?: {
+    kind: 'toggle' | 'rollout'
+    beforeLabel: string
+    afterLabel: string
+  }
+}
+
+const ACTION_DOT_COLOR = {
+  created: 'bg-cg-indigo-300',
+  deleted: 'bg-cg-red-100',
+  toggled: 'bg-cg-green-100',
+  rollout_updated: 'bg-cg-yellow-200'
 }
 
 const AUDIT_ENTRIES: AuditEntry[] = [
   {
     id: 1,
-    actor: 'João S.',
-    action: 'toggled ON',
-    flag: 'dark-mode-v2',
+    actorEmail: 'ana@team.dev',
+    actionDescription: 'changed rollout of',
+    flag: 'payment-v2',
     env: 'production',
-    time: '2 min ago'
+    time: '2 minutes ago',
+    dotColor: ACTION_DOT_COLOR.rollout_updated,
+    changes: { kind: 'rollout', beforeLabel: '25%', afterLabel: '50%' }
   },
   {
     id: 2,
-    actor: 'Ana R.',
-    action: 'set rollout: 50%',
-    flag: 'payment-v2',
-    env: 'production',
-    time: '18 min ago'
+    actorEmail: 'carlos@team.dev',
+    actionDescription: 'toggled',
+    flag: 'ai-search-beta',
+    env: 'staging',
+    time: '18 minutes ago',
+    dotColor: ACTION_DOT_COLOR.toggled,
+    changes: { kind: 'toggle', beforeLabel: 'disabled', afterLabel: 'enabled' }
   },
   {
     id: 3,
-    actor: 'Carlos M.',
-    action: 'disabled',
-    flag: 'ai-search-beta',
-    env: 'staging',
-    time: '1h ago'
+    actorEmail: 'maria@team.dev',
+    actionDescription: 'created',
+    flag: 'beta-pricing',
+    env: 'production',
+    time: '1 hour ago',
+    dotColor: ACTION_DOT_COLOR.created
   },
   {
     id: 4,
-    actor: 'Maria L.',
-    action: 'created',
-    flag: 'new-checkout',
-    env: 'production',
-    time: '3h ago'
+    actorEmail: 'joao@team.dev',
+    actionDescription: 'deleted',
+    flag: 'legacy-auth',
+    env: 'development',
+    time: 'yesterday',
+    dotColor: ACTION_DOT_COLOR.deleted
   }
 ]
+
+function ChangesWord({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-cg-neutral-500 font-mono text-[10px]">
+      {children}
+    </span>
+  )
+}
+
+function TogglePill({ isEnabled }: { isEnabled: boolean }) {
+  return (
+    <span
+      className={cn(
+        'px-1.5 py-0.5 font-mono text-[10px]',
+        isEnabled ? 'text-cg-green-100' : 'text-cg-red-100'
+      )}
+    >
+      {isEnabled ? 'enabled' : 'disabled'}
+    </span>
+  )
+}
+
+function RolloutPill({ value }: { value: string }) {
+  return (
+    <span className="text-cg-indigo-200 px-1.5 py-0.5 font-mono text-[10px]">
+      {value}
+    </span>
+  )
+}
 
 function AuditMockup() {
   return (
     <div className="border-cg-bg-100 bg-cg-bg-100 overflow-hidden rounded-xl border shadow-xl">
       <div className="border-cg-bg-100 flex items-center justify-between border-b px-5 py-3">
         <span className="text-cg-neutral-300 text-sm font-semibold">
-          Audit log
+          History
         </span>
-        <span className="text-cg-neutral-300 hover:text-cg-neutral-200 cursor-default font-mono text-[10px]">
-          export ↓
+        <span className="text-cg-neutral-500 font-mono text-[10px]">
+          128 entries
         </span>
       </div>
 
-      <div className="flex flex-col gap-0 px-5 py-2">
+      <div className="flex flex-col px-5 py-2">
         {AUDIT_ENTRIES.map((entry, i) => (
           <motion.div
             key={entry.id}
@@ -520,32 +590,55 @@ function AuditMockup() {
             transition={{ duration: 0.3, delay: i * 0.07 }}
           >
             <div className="mt-1.5 flex flex-col items-center">
-              <div className="bg-cg-indigo-300 h-2 w-2 rounded-full" />
+              <span className={cn('h-2 w-2 rounded-full', entry.dotColor)} />
               {i < AUDIT_ENTRIES.length - 1 && (
                 <div
-                  className="bg-cg-bg-100 mt-1 w-px flex-1"
+                  className="bg-cg-bg-100 mt-1 w-px"
                   style={{ height: '28px' }}
                 />
               )}
             </div>
+
             <div className="min-w-0 flex-1 pb-1">
-              <div className="flex flex-wrap items-baseline gap-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="text-cg-neutral-200 text-[12px] font-semibold">
-                  {entry.actor}
+                  {entry.actorEmail}
                 </span>
-                <span className="text-cg-neutral-300 text-[11px]">
-                  {entry.action}
+                <span className="text-cg-neutral-400 text-[11px]">
+                  {entry.actionDescription}
                 </span>
                 <span className="text-cg-indigo-200 font-mono text-[11px] font-semibold">
                   {entry.flag}
                 </span>
               </div>
+
+              {entry.changes && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                  <ChangesWord>changed from</ChangesWord>
+                  {entry.changes.kind === 'rollout' ? (
+                    <RolloutPill value={entry.changes.beforeLabel} />
+                  ) : (
+                    <TogglePill
+                      isEnabled={entry.changes.beforeLabel === 'enabled'}
+                    />
+                  )}
+                  <ChangesWord>to</ChangesWord>
+                  {entry.changes.kind === 'rollout' ? (
+                    <RolloutPill value={entry.changes.afterLabel} />
+                  ) : (
+                    <TogglePill
+                      isEnabled={entry.changes.afterLabel === 'enabled'}
+                    />
+                  )}
+                </div>
+              )}
+
               <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="text-cg-neutral-300 text-[10px]">
+                <span className="text-cg-neutral-500 font-mono text-[10px]">
                   {entry.time}
                 </span>
-                <span className="text-cg-neutral-300 text-[10px]">·</span>
-                <span className="text-cg-neutral-300 text-[10px]">
+                <span className="text-cg-neutral-600 text-[10px]">·</span>
+                <span className="text-cg-neutral-500 font-mono text-[10px]">
                   {entry.env}
                 </span>
               </div>
@@ -626,7 +719,7 @@ export function V2InteractiveTabs() {
   return (
     <div
       ref={containerRef}
-      style={{ height: '250vh' }}
+      style={{ height: '350vh' }}
       className="relative hidden md:block"
     >
       <section className="border-cg-bg-100 bg-cg-bg-600 sticky top-0 h-screen overflow-hidden border-t">

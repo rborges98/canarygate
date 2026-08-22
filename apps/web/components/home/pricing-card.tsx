@@ -26,10 +26,10 @@ export function PricingCard({
         plan.highlighted && 'ring-cg-indigo-300/50 ring-1',
         className
       )}
-      initial={false}
+      initial={{ opacity: 0, y: 36 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: 0.1 * index }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ type: 'spring', stiffness: 75, damping: 17, delay: 0.1 * index }}
     >
       <div className={cn('flex flex-col gap-4', contentClassName)}>
         <div className="flex flex-col gap-1">

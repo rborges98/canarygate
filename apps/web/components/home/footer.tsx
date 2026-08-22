@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Logo } from '@/components/logo'
+import { Logo } from '@/components/branding/logo'
 
 export function LandingFooter() {
   return (
@@ -41,12 +41,6 @@ export function LandingFooter() {
               <span className="text-cg-neutral-500 text-xs font-semibold tracking-wider uppercase">
                 Company
               </span>
-              <Link
-                href="/login"
-                className="text-cg-neutral-400 hover:text-cg-neutral-100 text-sm transition-colors"
-              >
-                Log in
-              </Link>
               <Link
                 href="/login"
                 className="text-cg-neutral-400 hover:text-cg-neutral-100 text-sm transition-colors"
