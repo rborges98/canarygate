@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
-import { isLocalAuthBypassEnabled } from './shared/auth/bypass'
 
 const PUBLIC_PATHS = [
   '/',
@@ -30,10 +29,6 @@ function isPublicPath(pathname: string) {
 }
 
 export function proxy(request: NextRequest) {
-  if (isLocalAuthBypassEnabled()) {
-    return NextResponse.next()
-  }
-
   const { pathname } = request.nextUrl
 
   if (isPublicAssetPath(pathname) || isPublicPath(pathname)) {

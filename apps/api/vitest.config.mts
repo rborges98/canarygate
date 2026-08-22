@@ -20,7 +20,6 @@ export default defineConfig({
     },
     env: {
       NODE_ENV: 'test',
-      BYPASS_AUTH: 'true',
     },
   },
   resolve: {

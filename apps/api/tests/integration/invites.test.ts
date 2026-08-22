@@ -6,7 +6,6 @@ vi.mock('../../src/plugins/require-session.ts', () => ({
     request.userId = 'test-user-id'
     request.userEmail = 'test@example.com'
   }),
-  isLocalAuthBypassEnabled: vi.fn(() => false),
 }))
 
 vi.mock('../../src/plugins/require-org-access.ts', () => ({
