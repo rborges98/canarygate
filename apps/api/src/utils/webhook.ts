@@ -8,7 +8,32 @@ import {
   history
 } from '@canarygate/database/schema'
 import type { FastifyBaseLogger } from 'fastify'
-import { AutoRolloutJobData } from '@canarygate/messaging-utils'
+import { Client } from '@upstash/qstash'
+import type { AutoRolloutJobData } from '@canarygate/messaging-utils'
+import { getRequiredEnv, IS_PRODUCTION } from './env.ts'
+
+export const DUE_AT_TOLERANCE_MS = 5000
+export const MAX_QSTASH_DELAY_SECONDS = 30 * 24 * 60 * 60
+
+let qstashClient: Client | null = null
+
+export function getQStashClient() {
+  if (!qstashClient) {
+    qstashClient = new Client({
+      token: getRequiredEnv('QSTASH_TOKEN', 'api qstash')
+    })
+  }
+
+  return qstashClient
+}
+
+export function getQStashWebhookUrl(path = '') {
+  const baseUrl = IS_PRODUCTION
+    ? process.env.API_URL
+    : (process.env.NGROK_URL ?? process.env.API_URL)
+
+  return `${baseUrl?.replace(/\/$/, '') ?? ''}${path}`
+}
 
 type JobIdentifiers = {
   flagEnvironmentId: string
@@ -82,7 +107,16 @@ export async function getWorkerFlagState(
 }
 
 export function matchesDueAt(value: Date | null, dueAt: string) {
-  return value?.toISOString() === dueAt
+  if (!value) {
+    return false
+  }
+
+  const target = new Date(dueAt)
+  if (Number.isNaN(target.getTime())) {
+    return false
+  }
+
+  return Math.abs(value.getTime() - target.getTime()) <= DUE_AT_TOLERANCE_MS
 }
 
 export async function insertWorkerHistory(
@@ -126,23 +160,20 @@ export async function scheduleNextAutoRollout(
   const delayInSeconds = Math.floor((targetDate.getTime() - Date.now()) / 1000)
   if (delayInSeconds <= 0) return
 
-  const qstashUrl = `https://qstash.upstash.io/v2/publish/https://${process.env.APP_DOMAIN}/api/webhooks/qstash`
+  const dueAt = targetDate.toISOString()
 
   try {
-    await fetch(qstashUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.QSTASH_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Upstash-Delay': `${delayInSeconds}s`
-      },
-      body: JSON.stringify({
+    await getQStashClient().publishJSON({
+      url: `${getQStashWebhookUrl()}/webhook`,
+      body: {
         type: 'auto-rollout',
         jobData: {
           ...jobData,
-          dueAt: targetDate.toISOString() // Atualiza o dueAt esperado para o próximo step
+          dueAt // Atualiza o dueAt esperado para o próximo step
         }
-      })
+      },
+      delay: delayInSeconds,
+      deduplicationId: `auto-rollout:${jobData.flagId}:${jobData.environmentId}:${dueAt}`
     })
   } catch (error) {
     log.error(

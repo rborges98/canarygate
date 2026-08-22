@@ -1,37 +1,78 @@
 import type { FastifyInstance } from 'fastify'
 import { Receiver } from '@upstash/qstash'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray, lt } from 'drizzle-orm'
 import { db } from '@canarygate/database/client'
-import { flagEnvironments } from '@canarygate/database/schema'
+import { flagEnvironments, history } from '@canarygate/database/schema'
 import {
   calcIntervalMs,
   type AutoRolloutJobData,
   type ScheduleJobData
 } from '@canarygate/messaging-utils'
 import { publishFlagEvent } from '../pubsub/flag-events.ts'
+import { getProjectWebhookConfig } from '../db/projects.ts'
+import { deliverFlagWebhook } from '../services/webhook-delivery.ts'
+import { getRequiredEnv } from '../utils/env.ts'
 import {
+  getQStashClient,
+  getQStashWebhookUrl,
   getWorkerFlagState,
   insertWorkerHistory,
   matchesDueAt,
   scheduleNextAutoRollout
 } from '../utils/webhook' // Ajuste o caminho dos seus helpers compartidos
 
-const receiver = new Receiver({
-  currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY!,
-  nextSigningKey: process.env.QSTASH_NEXT_SIGNING_KEY!
-})
-
 type QStashWebhookBody =
   | { type: 'schedule'; jobData: ScheduleJobData }
   | { type: 'auto-rollout'; jobData: AutoRolloutJobData }
+  | { type: 'history-retention' }
 
 export async function webhookRoutes(app: FastifyInstance) {
-  app.post<{ Body: QStashWebhookBody }>('/webhook', async (request, reply) => {
+  const receiver = new Receiver({
+    currentSigningKey: getRequiredEnv(
+      'QSTASH_CURRENT_SIGNING_KEY',
+      'api webhook'
+    ),
+    nextSigningKey: getRequiredEnv('QSTASH_NEXT_SIGNING_KEY', 'api webhook')
+  })
+
+  try {
+    await getQStashClient().schedules.create({
+      scheduleId: 'flag-history-retention',
+      cron: '0 3 * * *',
+      destination: getQStashWebhookUrl('/webhook'),
+      body: JSON.stringify({ type: 'history-retention' }),
+      headers: { 'content-type': 'application/json' }
+    })
+  } catch (error) {
+    app.log.warn(
+      { err: error, scope: 'webhook.cron.historyRetention' },
+      'Failed to upsert history retention cron in QStash'
+    )
+  }
+
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (_request, body, done) => {
+      done(null, body)
+    }
+  )
+
+  app.post<{ Body: string }>('/webhook', async (request, reply) => {
     const signature = request.headers['upstash-signature'] as string
+
+    if (!signature) {
+      request.log.error(
+        { scope: 'webhook.qstash.auth' },
+        'Missing QStash signature'
+      )
+      return reply.status(401).send({ error: 'Unauthorized' })
+    }
+
     const isValid = await receiver
       .verify({
         signature,
-        body: JSON.stringify(request.body)
+        body: request.body
       })
       .catch(() => false)
 
@@ -43,10 +84,22 @@ export async function webhookRoutes(app: FastifyInstance) {
       return reply.status(401).send({ error: 'Unauthorized' })
     }
 
-    const { type, jobData } = request.body
+    let payload: QStashWebhookBody
+    try {
+      payload = JSON.parse(request.body) as QStashWebhookBody
+    } catch (error) {
+      request.log.error(
+        { err: error, scope: 'webhook.qstash.parse' },
+        'Invalid JSON body in QStash webhook'
+      )
+      return reply.status(400).send({ error: 'Invalid JSON body' })
+    }
+
+    const { type } = payload
     const log = request.log
 
     if (type === 'schedule') {
+      const { jobData } = payload
       const state = await getWorkerFlagState(jobData, log)
 
       if (!state) {
@@ -169,6 +222,25 @@ export async function webhookRoutes(app: FastifyInstance) {
         log
       )
 
+      const webhookProject = await getProjectWebhookConfig(
+        flag.projectId,
+        log
+      )
+      await deliverFlagWebhook(
+        'flag.updated',
+        webhookProject,
+        {
+          key: flag.key,
+          name: flag.name,
+          type: flag.type,
+          enabled: nextEnabled,
+          rolloutPercent: nextRolloutPercent,
+          updatedAt: updatedFlagEnvironment.updatedAt
+        },
+        { slug: environment.slug },
+        log
+      )
+
       log.info(
         {
           scope: 'webhook.jobs.processScheduleJob',
@@ -184,6 +256,7 @@ export async function webhookRoutes(app: FastifyInstance) {
     }
 
     if (type === 'auto-rollout') {
+      const { jobData } = payload
       const state = await getWorkerFlagState(jobData, log)
 
       if (!state) {
@@ -306,6 +379,25 @@ export async function webhookRoutes(app: FastifyInstance) {
         log
       )
 
+      const autoRolloutWebhookProject = await getProjectWebhookConfig(
+        flag.projectId,
+        log
+      )
+      await deliverFlagWebhook(
+        'flag.rollout_updated',
+        autoRolloutWebhookProject,
+        {
+          key: flag.key,
+          name: flag.name,
+          type: flag.type,
+          enabled: flagEnvironment.enabled,
+          rolloutPercent: nextRolloutPercent,
+          updatedAt: updatedFlagEnvironment.updatedAt
+        },
+        { slug: environment.slug },
+        log
+      )
+
       log.info(
         {
           scope: 'webhook.jobs.processAutoRolloutJob',
@@ -322,6 +414,68 @@ export async function webhookRoutes(app: FastifyInstance) {
       }
 
       return reply.status(200).send({ success: true })
+    }
+
+    if (type === 'history-retention') {
+      const retentionDaysValue = Number(
+        process.env.HISTORY_RETENTION_DAYS ?? 90
+      )
+      const retentionDays =
+        Number.isFinite(retentionDaysValue) && retentionDaysValue > 0
+          ? retentionDaysValue
+          : 90
+      const cutoff = new Date(Date.now() - retentionDays * 86400000)
+      const batchSize = 5000
+      const maxBatches = 20
+      let deleted = 0
+
+      try {
+        for (let batch = 0; batch < maxBatches; batch++) {
+          const rows = await db
+            .select({ id: history.id })
+            .from(history)
+            .where(lt(history.createdAt, cutoff))
+            .limit(batchSize)
+
+          if (rows.length === 0) {
+            break
+          }
+
+          const deletedRows = await db
+            .delete(history)
+            .where(inArray(history.id, rows.map((row) => row.id)))
+            .returning()
+
+          deleted += deletedRows.length
+
+          if (rows.length < batchSize) {
+            break
+          }
+        }
+
+        log.info(
+          {
+            scope: 'webhook.jobs.processHistoryRetentionJob',
+            deleted,
+            retentionDays,
+            cutoff: cutoff.toISOString()
+          },
+          'Processed history retention job'
+        )
+
+        return reply.status(200).send({ success: true, deleted })
+      } catch (error) {
+        log.error(
+          {
+            err: error,
+            scope: 'webhook.jobs.processHistoryRetentionJob',
+            retentionDays,
+            cutoff: cutoff.toISOString()
+          },
+          'Failed to process history retention job'
+        )
+        throw error
+      }
     }
 
     return reply.status(400).send({ error: 'Unknown job type' })
