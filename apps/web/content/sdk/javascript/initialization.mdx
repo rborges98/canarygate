@@ -9,9 +9,9 @@ aliases: ['sdk setup', 'client setup', 'init']
 ## Constructor
 
 ```ts
-import { CanaryGate } from '@canarygate/sdk/js/client' // browser
+import { CanaryGate } from '@canarygate/sdk/client' // browser
 // or
-import { CanaryGate } from '@canarygate/sdk/js/server' // server runtimes
+import { CanaryGate } from '@canarygate/sdk/server' // server runtimes
 
 new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 ```
@@ -54,7 +54,7 @@ Always `await` `init()` before reading flags — otherwise, `getFlag()` may retu
 In browsers the SDK always uses the snapshot request — `stream` is ignored and real-time updates are not available.
 
 ```tsx
-import { CanaryGate } from '@canarygate/sdk/js/client'
+import { CanaryGate } from '@canarygate/sdk/client'
 import { useEffect, useRef } from 'react'
 
 export function useCanaryGate() {
@@ -79,7 +79,7 @@ export function useCanaryGate() {
 ### Node.js (singleton)
 
 ```ts
-import { CanaryGate } from '@canarygate/sdk/js/server'
+import { CanaryGate } from '@canarygate/sdk/server'
 
 let client: CanaryGate | null = null
 
@@ -95,7 +95,7 @@ export async function getCanaryGate() {
 ### One-shot script (no SSE)
 
 ```ts
-import { CanaryGate } from '@canarygate/sdk/js/server'
+import { CanaryGate } from '@canarygate/sdk/server'
 
 const client = new CanaryGate('cg_api_key')
 await client.init()

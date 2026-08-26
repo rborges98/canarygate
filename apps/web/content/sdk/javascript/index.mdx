@@ -8,12 +8,12 @@ searchBoost: 8
 asIndexPage: true
 ---
 
-The `@canarygate/sdk/js` package is the official client for integrating CanaryGate into JavaScript and TypeScript applications. It is split into two entry points:
+The `@canarygate/sdk` package is the official client for integrating CanaryGate into JavaScript and TypeScript applications. It is split into two entry points:
 
-- `@canarygate/sdk/js/client` — for browsers. Always uses the snapshot request and never opens SSE.
-- `@canarygate/sdk/js/server` — for server runtimes (Node.js, Deno, Bun, Edge). Supports real-time SSE streaming with `stream: true`.
+- `@canarygate/sdk/client` — for browsers. Always uses the snapshot request and never opens SSE.
+- `@canarygate/sdk/server` — for server runtimes (Node.js, Deno, Bun, Edge). Supports real-time SSE streaming with `stream: true`.
 
-There is no root entry point (`@canarygate/sdk` or `@canarygate/sdk/js`); always import one of the two paths above.
+There is no root entry point (`@canarygate/sdk` or `@canarygate/sdk`); always import one of the two paths above.
 
 ## Compatibility
 
@@ -25,12 +25,12 @@ There is no root entry point (`@canarygate/sdk` or `@canarygate/sdk/js`); always
 | Bun                                            | ✓            |
 | Edge Runtime (Cloudflare Workers, Vercel Edge) | Partial\*    |
 
-\*The client entry (`@canarygate/sdk/js/client`) always uses the snapshot request and never opens SSE. On server runtimes (Node.js, Deno, Bun, Edge) import `@canarygate/sdk/js/server` and set `stream: true` to enable streaming via fetch-based SSE.
+\*The client entry (`@canarygate/sdk/client`) always uses the snapshot request and never opens SSE. On server runtimes (Node.js, Deno, Bun, Edge) import `@canarygate/sdk/server` and set `stream: true` to enable streaming via fetch-based SSE.
 
 ## Installation
 
 ```bash
-npm install @canarygate/sdk/js
+npm install @canarygate/sdk
 ```
 
 ## Full API

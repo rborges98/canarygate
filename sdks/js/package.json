@@ -1,5 +1,5 @@
 {
-  "name": "@canarygate/sdk/js",
+  "name": "@canarygate/sdk",
   "version": "0.1.0",
   "description": "CanaryGate SDK — feature flags with real-time SSE streaming",
   "exports": {
@@ -26,6 +26,16 @@
   },
   "sideEffects": false,
   "license": "MIT",
+  "keywords": ["feature-flags", "feature-toggles", "sse", "real-time", "rollout"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rborges98/canarygate.git",
+    "directory": "sdks/js"
+  },
+  "homepage": "https://github.com/rborges98/canarygate/tree/main/sdks/js#readme",
+  "bugs": {
+    "url": "https://github.com/rborges98/canarygate/issues"
+  },
   "publishConfig": {
     "access": "public"
   },

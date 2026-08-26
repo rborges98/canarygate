@@ -1,4 +1,4 @@
-# @canarygate/sdk/js
+# @canarygate/sdk
 
 Feature flag client for [CanaryGate](https://github.com/rborges98/canarygate).
 
@@ -8,7 +8,7 @@ Feature flag client for [CanaryGate](https://github.com/rborges98/canarygate).
 ## Install
 
 ```sh
-npm install @canarygate/sdk/js
+npm install @canarygate/sdk
 ```
 
 ## Quick start
@@ -16,7 +16,7 @@ npm install @canarygate/sdk/js
 ### Server — real-time
 
 ```ts
-import { CanaryGate } from '@canarygate/sdk/js/server'
+import { CanaryGate } from '@canarygate/sdk/server'
 
 const gate = new CanaryGate('your-api-key', {
   environment: 'production',
@@ -32,7 +32,7 @@ gate.disconnect() // when shutting down
 ### Browser — cached
 
 ```ts
-import { CanaryGate } from '@canarygate/sdk/js/client'
+import { CanaryGate } from '@canarygate/sdk/client'
 
 const gate = new CanaryGate('your-api-key', {
   environment: 'production'

@@ -7,16 +7,16 @@ aliases: ['server-sent events', 'realtime', 'real-time']
 
 ## Automatic connection
 
-SSE streaming is exclusive to the server entry point — it is never available from the browser entry. Import `CanaryGate` from `@canarygate/sdk/js/server` to enable it; `@canarygate/sdk/js/client` always uses the snapshot request only.
+SSE streaming is exclusive to the server entry point — it is never available from the browser entry. Import `CanaryGate` from `@canarygate/sdk/server` to enable it; `@canarygate/sdk/client` always uses the snapshot request only.
 
 `init()` always starts with a snapshot request that loads the current flags. Real-time updates depend on the entry point:
 
-- **Browser (`@canarygate/sdk/js/client`):** streaming is disabled by design. Flags are loaded via a single HTTP snapshot request (`/sdk/flags`), and `stream: true` is ignored (a warning is logged). This prevents thousands of open SSE connections coming from browsers.
-- **Server (`@canarygate/sdk/js/server`, for Node.js, Deno, Bun, Edge):** pass `stream: true` to open an SSE connection after the snapshot. Flags are then updated in the background without polling.
+- **Browser (`@canarygate/sdk/client`):** streaming is disabled by design. Flags are loaded via a single HTTP snapshot request (`/sdk/flags`), and `stream: true` is ignored (a warning is logged). This prevents thousands of open SSE connections coming from browsers.
+- **Server (`@canarygate/sdk/server`, for Node.js, Deno, Bun, Edge):** pass `stream: true` to open an SSE connection after the snapshot. Flags are then updated in the background without polling.
 
 ```ts
 // Server, real-time: snapshot + SSE stream
-import { CanaryGate } from '@canarygate/sdk/js/server'
+import { CanaryGate } from '@canarygate/sdk/server'
 
 const realtimeClient = new CanaryGate('cg_key', { stream: true })
 await realtimeClient.init()
@@ -30,7 +30,7 @@ await realtimeClient.init()
 For React components to reflect real-time flag changes, you need a reactivity mechanism. The SDK does not include native React bindings, but it is straightforward to implement:
 
 ```tsx
-import { CanaryGate } from '@canarygate/sdk/js/client'
+import { CanaryGate } from '@canarygate/sdk/client'
 import { useState, useEffect, useRef } from 'react'
 
 function useFlagEnabled(client: CanaryGate, key: string): boolean {
