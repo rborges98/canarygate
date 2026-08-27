@@ -101,7 +101,9 @@ describe('SDK routes', () => {
         }),
       })
       app = await buildTestApp(async (fastify) => {
-        await fastify.register(sdkRoutes)
+        await fastify.register(async (sdk) => {
+          await sdk.register(sdkRoutes)
+        }, { prefix: '/sdk' })
       })
     })
 

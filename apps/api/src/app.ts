@@ -222,7 +222,13 @@ export function buildApp() {
   app.register(flagsRoutes)
   app.register(historyRoutes)
   app.register(invitesRoutes)
-  app.register(sdkRoutes)
+  app.register(
+    async function sdkScope(sdk) {
+      await sdk.register(cors, { origin: true, credentials: false })
+      await sdk.register(sdkRoutes)
+    },
+    { prefix: '/sdk' }
+  )
   app.register(healthRoutes)
   app.register(webhookRoutes)
 
