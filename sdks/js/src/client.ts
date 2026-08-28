@@ -3,6 +3,12 @@ import { CanaryGateOptions } from './types'
 
 const ANON_ID_KEY = '__cg_anon_id__'
 
+const SERVER_ONLY_OPTIONS = [
+  'reconnectDelay',
+  'maxReconnectDelay',
+  'heartbeatTimeoutMs'
+] as const
+
 function getOrCreateAnonId(): string {
   if (typeof localStorage !== 'undefined') {
     const stored = localStorage.getItem(ANON_ID_KEY)
@@ -20,6 +26,13 @@ export class CanaryGate extends CanaryGateBase {
       throw new Error(
         '@canarygate/sdk/client is browser-only. On server runtimes (Node.js, Deno, Bun, Edge) import from "@canarygate/sdk/server" instead.'
       )
+    }
+    for (const key of SERVER_ONLY_OPTIONS) {
+      if (options[key] !== undefined) {
+        throw new Error(
+          `"${key}" is a server-only option and has no effect on @canarygate/sdk/client. Remove it, or use @canarygate/sdk/server.`
+        )
+      }
     }
     super(apiKey, options, false, getOrCreateAnonId)
   }

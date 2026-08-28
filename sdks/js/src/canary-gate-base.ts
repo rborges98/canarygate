@@ -12,6 +12,22 @@ const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 65_000
 const DEFAULT_POLL_INTERVAL_MS = 30_000
 const MIN_POLL_INTERVAL_MS = 3_000
+const DEFAULT_BASE_URL = 'http://localhost:3001'
+
+function resolveBaseUrl(): string {
+  if (
+    typeof process !== 'undefined' &&
+    typeof process.env === 'object' &&
+    process.env !== null
+  ) {
+    return (
+      process.env.CANARYGATE_BASE_URL ??
+      process.env.NEXT_PUBLIC_CANARYGATE_BASE_URL ??
+      DEFAULT_BASE_URL
+    ).replace(/\/$/, '')
+  }
+  return DEFAULT_BASE_URL
+}
 
 function isAbortError(error: unknown) {
   return (
@@ -52,10 +68,7 @@ export class CanaryGateBase {
     protected readonly streamEnabled: boolean,
     protected readonly anonIdFactory: () => string
   ) {
-    this.baseUrl = (options.baseUrl ?? 'http://localhost:3001').replace(
-      /\/$/,
-      ''
-    )
+    this.baseUrl = resolveBaseUrl()
     this.environment = options.environment
     this.reconnectDelay = options.reconnectDelay ?? 5_000
     this.maxReconnectDelay = Math.max(

@@ -18,12 +18,14 @@ export type FlagEvaluationContext = {
 }
 
 export type CanaryGateOptions = {
-  baseUrl?: string
   environment?: string
-  /** Browser polling interval in ms. Default: 30000; minimum enforced: 3000. Set 0 to disable. Server always uses SSE instead. */
+  /** Browser polling interval in ms. Default: 30000; minimum enforced: 3000. Set 0 to disable. Throws if set on the server entry. */
   pollIntervalMs?: number
+  /** Initial stream reconnect delay in ms. Default: 5000. Server-only. */
   reconnectDelay?: number
+  /** Maximum stream reconnect delay in ms. Default: 30000. Server-only. */
   maxReconnectDelay?: number
+  /** Time in ms without a server heartbeat before reconnecting the stream. Default: 65000. Server-only. */
   heartbeatTimeoutMs?: number
 }
 

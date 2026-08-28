@@ -102,9 +102,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.getFlag('my-flag')).toEqual({
@@ -129,9 +127,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.getFlag('my-flag')).toEqual({
@@ -160,9 +156,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       const flag = gate.getFlag('rollout-flag')
@@ -186,9 +180,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       const flag = gate.getFlag('rollout-flag')
@@ -212,9 +204,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       const flag = gate.getFlag('rollout-flag')
@@ -226,7 +216,7 @@ describe('CanaryGate (client)', () => {
   // -------------------------------------------------------------------------
   describe('localStorage / anonId', () => {
     it('generates and persists an anonId when none exists', () => {
-      new CanaryGate('test-key', { baseUrl: 'http://localhost:3001' })
+      new CanaryGate('test-key', {})
 
       const stored = localStorage.getItem('__cg_anon_id__')
       expect(stored).not.toBeNull()
@@ -238,8 +228,8 @@ describe('CanaryGate (client)', () => {
     it('reuses an existing anonId across multiple instances', () => {
       localStorage.setItem('__cg_anon_id__', 'existing-id')
 
-      new CanaryGate('test-key', { baseUrl: 'http://localhost:3001' })
-      new CanaryGate('test-key', { baseUrl: 'http://localhost:3001' })
+      new CanaryGate('test-key', {})
+      new CanaryGate('test-key', {})
 
       expect(localStorage.getItem('__cg_anon_id__')).toBe('existing-id')
     })
@@ -256,7 +246,6 @@ describe('CanaryGate (client)', () => {
       vi.stubGlobal('fetch', fetchMock)
 
       const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         environment: 'staging'
       })
       await gate.init()
@@ -282,9 +271,7 @@ describe('CanaryGate (client)', () => {
         })
       )
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.isStale()).toBe(true)
@@ -296,9 +283,7 @@ describe('CanaryGate (client)', () => {
         vi.fn().mockRejectedValueOnce(new Error('Network error'))
       )
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.isStale()).toBe(true)
@@ -310,9 +295,7 @@ describe('CanaryGate (client)', () => {
     it('returns undefined for a flag that does not exist', async () => {
       mockFetch({ projectId: 'p1', environment: 'prod', flags: [] })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.getFlag('nao-existe')).toBeUndefined()
@@ -340,9 +323,7 @@ describe('CanaryGate (client)', () => {
         ]
       })
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.getFlags()).toHaveLength(2)
@@ -352,9 +333,7 @@ describe('CanaryGate (client)', () => {
   // -------------------------------------------------------------------------
   describe('getLastSyncAt', () => {
     it('returns null before init is called', () => {
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
 
       expect(gate.getLastSyncAt()).toBeNull()
     })
@@ -362,9 +341,7 @@ describe('CanaryGate (client)', () => {
     it('returns a valid ISO string after a successful init', async () => {
       mockFetch()
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       const syncAt = gate.getLastSyncAt()
@@ -378,9 +355,7 @@ describe('CanaryGate (client)', () => {
         vi.fn().mockRejectedValueOnce(new Error('Network error'))
       )
 
-      const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new CanaryGate('test-key', {})
       await gate.init()
 
       expect(gate.getLastSyncAt()).toBeNull()
@@ -394,11 +369,21 @@ describe('CanaryGate (client)', () => {
 
       expect(
         () =>
-          new CanaryGate('test-key', {
-            baseUrl: 'http://localhost:3001'
-          })
+          new CanaryGate('test-key', {})
       ).toThrow('@canarygate/sdk/client is browser-only')
     })
+
+    it.each(['reconnectDelay', 'maxReconnectDelay', 'heartbeatTimeoutMs'])(
+      'throws when the server-only option "%s" is passed to the client',
+      (key) => {
+        expect(
+          () =>
+            new CanaryGate('test-key', {
+              [key]: 1000
+            })
+        ).toThrow(`"${key}" is a server-only option`)
+      }
+    )
   })
 
   // -------------------------------------------------------------------------
@@ -417,7 +402,6 @@ describe('CanaryGate (client)', () => {
       vi.stubGlobal('fetch', fetchMock)
 
       const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         pollIntervalMs: 3000
       })
       await gate.init()
@@ -438,7 +422,6 @@ describe('CanaryGate (client)', () => {
       vi.stubGlobal('fetch', fetchMock)
 
       const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         pollIntervalMs: 0
       })
       await gate.init()
@@ -460,7 +443,6 @@ describe('CanaryGate (client)', () => {
 
       try {
         const gate = new CanaryGate('test-key', {
-          baseUrl: 'http://localhost:3001',
           pollIntervalMs: 1
         })
         await gate.init()
@@ -486,7 +468,6 @@ describe('CanaryGate (client)', () => {
       vi.stubGlobal('fetch', fetchMock)
 
       const gate = new CanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         pollIntervalMs: 3000
       })
       await gate.init()
@@ -522,7 +503,6 @@ describe('CanaryGate (server)', () => {
       mockFetch(undefined, stream)
 
       const gate = new ServerCanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         reconnectDelay: 300_000,
         maxReconnectDelay: 300_000,
         heartbeatTimeoutMs: 300_000
@@ -545,9 +525,7 @@ describe('CanaryGate (server)', () => {
       const stream = createSseStream('event: connected\ndata: {}\n\n')
       mockFetch(undefined, stream)
 
-      const gate = new ServerCanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001'
-      })
+      const gate = new ServerCanaryGate('test-key', {})
       await gate.init()
 
       expect(() => gate.disconnect()).not.toThrow()
@@ -559,7 +537,6 @@ describe('CanaryGate (server)', () => {
       mockFetch(undefined, stream)
 
       const gate = new ServerCanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         reconnectDelay: 300_000,
         maxReconnectDelay: 300_000
       })
@@ -596,7 +573,6 @@ describe('CanaryGate (server)', () => {
       vi.stubGlobal('fetch', fetchMock)
 
       const gate = new ServerCanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
         reconnectDelay: 300_000,
         maxReconnectDelay: 300_000,
         heartbeatTimeoutMs: 300_000
@@ -611,49 +587,25 @@ describe('CanaryGate (server)', () => {
       )
       gate.disconnect()
     })
-
-    it('does not use polling on the server even with pollIntervalMs set', async () => {
-      vi.useFakeTimers()
-      const fetchMock = vi.fn()
-      fetchMock.mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
-        })
-      )
-      fetchMock.mockImplementationOnce(() =>
-        Promise.resolve({
-          ok: true,
-          body: createSseStream('event: connected\ndata: {}\n\n')
-        })
-      )
-      vi.stubGlobal('fetch', fetchMock)
-
-      const gate = new ServerCanaryGate('test-key', {
-        baseUrl: 'http://localhost:3001',
-        pollIntervalMs: 1000,
-        reconnectDelay: 300_000,
-        maxReconnectDelay: 300_000,
-        heartbeatTimeoutMs: 300_000
-      })
-      await gate.init()
-      await vi.advanceTimersByTimeAsync(3000)
-
-      expect(fetchMock).toHaveBeenCalledTimes(2)
-      gate.disconnect()
-      vi.useRealTimers()
-    })
   })
 
   describe('Entry point guards', () => {
     it('throws when the server entry is used in a browser', () => {
       expect(
         () =>
-          new ServerCanaryGate('test-key', {
-            baseUrl: 'http://localhost:3001'
-          })
+          new ServerCanaryGate('test-key', {})
       ).toThrow('@canarygate/sdk/server is server-only')
+    })
+
+    it('throws when the browser-only option "pollIntervalMs" is passed to the server', () => {
+      simulateServerEnvironment()
+
+      expect(
+        () =>
+          new ServerCanaryGate('test-key', {
+            pollIntervalMs: 1000
+          })
+      ).toThrow('"pollIntervalMs" is a browser-only option')
     })
   })
 })

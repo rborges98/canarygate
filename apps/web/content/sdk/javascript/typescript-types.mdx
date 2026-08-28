@@ -25,20 +25,20 @@ class CanaryGate {
 
 ```ts
 type CanaryGateOptions = {
-  /** API base URL. Default: 'http://localhost:3001' */
-  baseUrl?: string
   /** Environment slug. Defaults to the project default environment. */
   environment?: string
-  /** Browser polling interval in ms. Default: 30000, clamped to a 3000ms minimum (0 disables). Server always uses SSE instead. */
+  /** Browser polling interval in ms. Default: 30000, clamped to a 3000ms minimum (0 disables). Throws if set on the server entry. */
   pollIntervalMs?: number
-  /** Initial stream reconnect delay in ms. Default: 5000 */
+  /** Initial stream reconnect delay in ms. Default: 5000. Server-only; throws if set on the browser entry. */
   reconnectDelay?: number
-  /** Maximum stream reconnect delay in ms. Default: 30000 */
+  /** Maximum stream reconnect delay in ms. Default: 30000. Server-only. */
   maxReconnectDelay?: number
-  /** Time in ms without a server heartbeat before reconnecting the stream. Default: 65000 */
+  /** Time in ms without a server heartbeat before reconnecting the stream. Default: 65000. Server-only. */
   heartbeatTimeoutMs?: number
 }
 ```
+
+The API base URL is not an option — it is resolved from the `CANARYGATE_BASE_URL` (or `NEXT_PUBLIC_CANARYGATE_BASE_URL` in browsers) environment variable, defaulting to `http://localhost:3001`.
 
 ## `FlagData`
 
