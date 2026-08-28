@@ -65,7 +65,7 @@ Rollout evaluation hashes `userId` deterministically — the same user always ge
 
 ## Options
 
-The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` environment variable (in browsers, `NEXT_PUBLIC_CANARYGATE_BASE_URL`), falling back to `http://localhost:3001`.
+The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` environment variable (in browsers, `NEXT_PUBLIC_CANARYGATE_BASE_URL`), falling back to `https://api.canarygate.dev`. Set the variable when self-hosting or during local development.
 
 | Option               | Type      | Default                 | Description                                      |
 | -------------------- | --------- | ----------------------- | ------------------------------------------------ |

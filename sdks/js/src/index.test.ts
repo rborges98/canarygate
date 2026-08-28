@@ -2,9 +2,8 @@ import { CanaryGate } from './client'
 import { CanaryGate as ServerCanaryGate } from './server'
 import { hashString } from './hash'
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const TEST_BASE_URL = 'http://localhost:3001'
+process.env.CANARYGATE_BASE_URL = TEST_BASE_URL
 
 function createSseStream(events: string): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -15,7 +14,10 @@ function createSseStream(events: string): ReadableStream<Uint8Array> {
   })
 }
 
-function mockFetch(flagsResponse?: object, streamBody?: ReadableStream<Uint8Array>) {
+function mockFetch(
+  flagsResponse?: object,
+  streamBody?: ReadableStream<Uint8Array>
+) {
   const fetchMock = vi.fn()
 
   fetchMock.mockImplementationOnce(() =>
@@ -52,10 +54,6 @@ async function flushMicrotasks(cycles = 20) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Test suite
-// ---------------------------------------------------------------------------
-
 describe('hashString', () => {
   it('hash of "feature-rollout-a:user-42" matches the contract', () => {
     expect(hashString('feature-rollout-a:user-42')).toBe(59)
@@ -74,6 +72,35 @@ describe('hashString', () => {
   })
 })
 
+describe('Base URL default', () => {
+  it('defaults to the production API base URL when no env var is set', async () => {
+    const previous = process.env.CANARYGATE_BASE_URL
+    delete process.env.CANARYGATE_BASE_URL
+
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    try {
+      const gate = new CanaryGate('test-key')
+      await gate.init()
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.canarygate.dev/sdk/flags',
+        expect.anything()
+      )
+      gate.disconnect()
+    } finally {
+      if (previous !== undefined) {
+        process.env.CANARYGATE_BASE_URL = previous
+      }
+    }
+  })
+})
+
 describe('CanaryGate (client)', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -85,7 +112,6 @@ describe('CanaryGate (client)', () => {
     vi.useRealTimers()
   })
 
-  // -------------------------------------------------------------------------
   describe('Boolean flags', () => {
     it('returns an enabled boolean flag after init', async () => {
       mockFetch({
@@ -138,7 +164,6 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('Rollout flags', () => {
     it('includes the user in a 100% rollout when the flag is enabled', async () => {
       localStorage.setItem('__cg_anon_id__', 'known-id')
@@ -213,7 +238,6 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('localStorage / anonId', () => {
     it('generates and persists an anonId when none exists', () => {
       new CanaryGate('test-key', {})
@@ -235,13 +259,16 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('fetch behavior', () => {
     it('sends X-Api-Key and X-Environment headers', async () => {
       const fetchMock = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () =>
-          Promise.resolve({ projectId: 'p1', environment: 'staging', flags: [] })
+          Promise.resolve({
+            projectId: 'p1',
+            environment: 'staging',
+            flags: []
+          })
       })
       vi.stubGlobal('fetch', fetchMock)
 
@@ -290,7 +317,6 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('getFlag / getFlags', () => {
     it('returns undefined for a flag that does not exist', async () => {
       mockFetch({ projectId: 'p1', environment: 'prod', flags: [] })
@@ -330,7 +356,6 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('getLastSyncAt', () => {
     it('returns null before init is called', () => {
       const gate = new CanaryGate('test-key', {})
@@ -362,15 +387,13 @@ describe('CanaryGate (client)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('Entry point guards', () => {
     it('throws when the client entry is used outside a browser', () => {
       simulateServerEnvironment()
 
-      expect(
-        () =>
-          new CanaryGate('test-key', {})
-      ).toThrow('@canarygate/sdk/client is browser-only')
+      expect(() => new CanaryGate('test-key', {})).toThrow(
+        '@canarygate/sdk/client is browser-only'
+      )
     })
 
     it.each(['reconnectDelay', 'maxReconnectDelay', 'heartbeatTimeoutMs'])(
@@ -386,7 +409,6 @@ describe('CanaryGate (client)', () => {
     )
   })
 
-  // -------------------------------------------------------------------------
   describe('Polling', () => {
     afterEach(() => {
       vi.useRealTimers()
@@ -490,7 +512,6 @@ describe('CanaryGate (server)', () => {
     vi.useRealTimers()
   })
 
-  // -------------------------------------------------------------------------
   describe('Stream (SSE)', () => {
     beforeEach(() => {
       simulateServerEnvironment()
@@ -549,7 +570,6 @@ describe('CanaryGate (server)', () => {
     })
   })
 
-  // -------------------------------------------------------------------------
   describe('Server stream behavior', () => {
     beforeEach(() => {
       simulateServerEnvironment()
@@ -591,10 +611,9 @@ describe('CanaryGate (server)', () => {
 
   describe('Entry point guards', () => {
     it('throws when the server entry is used in a browser', () => {
-      expect(
-        () =>
-          new ServerCanaryGate('test-key', {})
-      ).toThrow('@canarygate/sdk/server is server-only')
+      expect(() => new ServerCanaryGate('test-key', {})).toThrow(
+        '@canarygate/sdk/server is server-only'
+      )
     })
 
     it('throws when the browser-only option "pollIntervalMs" is passed to the server', () => {

@@ -12,7 +12,7 @@ const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 65_000
 const DEFAULT_POLL_INTERVAL_MS = 30_000
 const MIN_POLL_INTERVAL_MS = 3_000
-const DEFAULT_BASE_URL = 'http://localhost:3001'
+const DEFAULT_BASE_URL = 'https://api.canarygate.dev'
 
 function resolveBaseUrl(): string {
   if (

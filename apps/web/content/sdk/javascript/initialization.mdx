@@ -25,7 +25,7 @@ new CanaryGate(apiKey: string, options?: CanaryGateOptions)
 
 ### `CanaryGateOptions`
 
-The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` environment variable (or `NEXT_PUBLIC_CANARYGATE_BASE_URL` in browser builds), defaulting to `http://localhost:3001`. Options that belong to the other entry point throw at construction.
+The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` environment variable (or `NEXT_PUBLIC_CANARYGATE_BASE_URL` in browser builds), defaulting to `https://api.canarygate.dev`. Set the variable when self-hosting or during local development. Options that belong to the other entry point throw at construction.
 
 | Option               | Type      | Default                  | Description                                                                 |
 | -------------------- | --------- | ------------------------ | --------------------------------------------------------------------------- |
