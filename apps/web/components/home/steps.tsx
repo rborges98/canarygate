@@ -13,7 +13,7 @@ const STEPS: Step[] = [
     number: '01',
     title: 'Install the SDK',
     description:
-      'Frameworkless by design. Official SDKs for JavaScript, Go, Python, C#, and Java — works with any stack.'
+      'Frameworkless by design. Official SDKs for JavaScript and Go — more on the way. Works with any stack.'
   },
   {
     number: '02',

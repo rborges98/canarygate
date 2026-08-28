@@ -10,10 +10,12 @@ asIndexPage: true
 
 The `@canarygate/sdk` package is the official client for integrating CanaryGate into JavaScript and TypeScript applications. It is split into two entry points:
 
-- `@canarygate/sdk/client` — for browsers. Always uses the snapshot request and never opens SSE.
-- `@canarygate/sdk/server` — for server runtimes (Node.js, Deno, Bun, Edge). Supports real-time SSE streaming with `stream: true`.
+- `@canarygate/sdk/client` — for browsers. Always uses the snapshot request and never opens SSE; it polls the snapshot every `pollIntervalMs`.
+- `@canarygate/sdk/server` — for server runtimes (Node.js, Deno, Bun, Edge). Real-time SSE streaming for server runtimes (always-on after init).
 
-There is no root entry point (`@canarygate/sdk` or `@canarygate/sdk`); always import one of the two paths above.
+There is no root entry point (`@canarygate/sdk`); always import one of the two paths above.
+
+> **More SDKs coming soon** — Python, C#, and Java are in the works.
 
 ## Compatibility
 
@@ -25,7 +27,7 @@ There is no root entry point (`@canarygate/sdk` or `@canarygate/sdk`); always im
 | Bun                                            | ✓            |
 | Edge Runtime (Cloudflare Workers, Vercel Edge) | Partial\*    |
 
-\*The client entry (`@canarygate/sdk/client`) always uses the snapshot request and never opens SSE. On server runtimes (Node.js, Deno, Bun, Edge) import `@canarygate/sdk/server` and set `stream: true` to enable streaming via fetch-based SSE.
+\*The client entry (`@canarygate/sdk/client`) always uses the snapshot request and never opens SSE — it refreshes via polling. The server entry (`@canarygate/sdk/server`) always streams over SSE after `init()`. Each entry throws an error if used in the wrong environment.
 
 ## Installation
 
@@ -38,7 +40,7 @@ npm install @canarygate/sdk
 | Method                             | Description                                    |
 | ---------------------------------- | ---------------------------------------------- |
 | `new CanaryGate(apiKey, options?)` | Creates the client                             |
-| `init()`                           | Loads flags via snapshot; starts SSE in server environments with `stream: true` |
+| `init()`                           | Loads flags via snapshot; the server entry opens SSE, the browser entry starts polling |
 | `getFlag(key)`                     | Returns `FlagData \| undefined`                |
 | `getFlags()`                       | Returns `FlagData[]` (all flags)               |
 | `isStale()`                        | `true` if the connection is degraded           |

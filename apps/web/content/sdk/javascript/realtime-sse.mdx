@@ -7,23 +7,25 @@ aliases: ['server-sent events', 'realtime', 'real-time']
 
 ## Automatic connection
 
-SSE streaming is exclusive to the server entry point — it is never available from the browser entry. Import `CanaryGate` from `@canarygate/sdk/server` to enable it; `@canarygate/sdk/client` always uses the snapshot request only.
+SSE is exclusive to the server entry point and is always on — there is no option to enable or disable it. The browser entry never uses SSE; it receives updates via native polling (`pollIntervalMs`).
 
 `init()` always starts with a snapshot request that loads the current flags. Real-time updates depend on the entry point:
 
-- **Browser (`@canarygate/sdk/client`):** streaming is disabled by design. Flags are loaded via a single HTTP snapshot request (`/sdk/flags`), and `stream: true` is ignored (a warning is logged). This prevents thousands of open SSE connections coming from browsers.
-- **Server (`@canarygate/sdk/server`, for Node.js, Deno, Bun, Edge):** pass `stream: true` to open an SSE connection after the snapshot. Flags are then updated in the background without polling.
+- **Browser (`@canarygate/sdk/client`):** never uses SSE. Flags are loaded via a snapshot request (`/sdk/flags`) and refreshed automatically by polling every `pollIntervalMs` (default `30000`, `0` disables). This prevents thousands of open SSE connections coming from browsers.
+- **Server (`@canarygate/sdk/server`, for Node.js, Deno, Bun, Edge):** always opens an SSE connection after the snapshot. Flags are then updated in the background without polling.
 
 ```ts
-// Server, real-time: snapshot + SSE stream
+// Server, real-time: snapshot + SSE stream (always on)
 import { CanaryGate } from '@canarygate/sdk/server'
 
-const realtimeClient = new CanaryGate('cg_key', { stream: true })
+const realtimeClient = new CanaryGate('cg_key')
 await realtimeClient.init()
 
 // From this point on, realtimeClient.getFlag() always returns
 // the latest value without needing a manual refetch
 ```
+
+If the server entry is used where a `window` exists (browser), the constructor throws; import from `@canarygate/sdk/client` instead. Likewise, the client entry throws if used in an environment without `window`.
 
 ## Reacting to changes (React)
 
@@ -52,8 +54,10 @@ function useFlagEnabled(client: CanaryGate, key: string): boolean {
 ```
 
 <Callout type="info">
-  In browsers real-time SSE is disabled, so the polling approach above is the
-  recommended way to pick up flag changes. On the server, prefer `stream: true`.
+  On the server the SSE stream is always on; in browsers prefer the SDK's
+  built-in polling (`pollIntervalMs`). Since the SDK already polls internally,
+  the `setInterval` in the example above is not strictly necessary — but it is
+  safe to keep.
 </Callout>
 
 ## `isStale()`

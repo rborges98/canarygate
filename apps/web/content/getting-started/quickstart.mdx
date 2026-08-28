@@ -33,7 +33,7 @@ try {
 }
 ```
 
-`init()` performs the initial flag fetch and caches the snapshot. For real-time updates, use the server entry (`@canarygate/sdk/server`) with `stream: true`. If `init()` fails, your application should decide whether to continue with a local fallback, temporarily disable the feature, or show an operational message.
+`init()` performs the initial flag fetch and caches the snapshot. For real-time updates, use the server entry (`@canarygate/sdk/server`) — it opens an SSE stream automatically. The browser entry (`@canarygate/sdk/client`) refreshes via polling (`pollIntervalMs`). If `init()` fails, your application should decide whether to continue with a local fallback, temporarily disable the feature, or show an operational message.
 
 ## 2. Evaluate a flag with a safe fallback
 
@@ -61,8 +61,9 @@ canary.disconnect()
 ```
 
 <Callout type="info">
-  The SSE connection is persistent. In Node.js environments that do not need
-  real-time updates, call `disconnect()` after `init()` to release the resource.
+  The SSE connection is persistent on the server entry. In short-lived
+  processes call `disconnect()`. The browser entry stops its polling with
+  `disconnect()` as well.
 </Callout>
 
 In traditional client applications, you will usually keep the connection open for the lifetime of the session. In scripts, jobs, and short-lived processes, close it explicitly when you no longer need updates.
