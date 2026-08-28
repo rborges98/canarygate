@@ -74,6 +74,7 @@ The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` enviro
 | `reconnectDelay`     | `number`  | `5000`                  | Initial SSE reconnect delay (ms). Server-only; throws on the browser entry |
 | `maxReconnectDelay`  | `number`  | `30000`                 | Reconnect delay cap, exponential backoff (ms). Server-only |
 | `heartbeatTimeoutMs` | `number`  | `65000`                 | Silence window before treating the stream as dead. Server-only |
+| `onUpdate`           | `function`| —                       | Called with the updated evaluated flags whenever the flag set changes (polling refresh or SSE event). Never called on initial load |
 
 ## Methods
 
@@ -89,7 +90,7 @@ The API base URL is resolved automatically from the `CANARYGATE_BASE_URL` enviro
 ## How sync works
 
 1. `init()` fetches a full snapshot from `/sdk/flags`.
-2. The server entry always opens an SSE connection that receives granular updates per change; the browser entry polls the snapshot every `pollIntervalMs`.
+2. The server entry always opens an SSE connection that receives granular updates per change; the browser entry polls the snapshot every `pollIntervalMs`. In both cases, whenever the evaluated flag set changes, the `onUpdate` callback fires with the updated flags.
 3. On disconnect, the SDK reconnects with exponential backoff and does a full resync over the snapshot endpoint.
 
 ## Entry-point guards

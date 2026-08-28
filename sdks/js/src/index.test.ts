@@ -498,6 +498,69 @@ describe('CanaryGate (client)', () => {
       await vi.advanceTimersByTimeAsync(9000)
       expect(fetchMock).toHaveBeenCalledTimes(1)
     })
+
+    it('calls onUpdate when a polling refresh changes a flag', async () => {
+      vi.useFakeTimers()
+      const flagsResponse = (enabled: boolean) => ({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            projectId: 'p1',
+            environment: 'prod',
+            flags: [
+              {
+                key: 'feature-x',
+                type: 'boolean',
+                enabled,
+                rolloutPercent: 0,
+                updatedAt: '2025-01-01T00:00:00.000Z'
+              }
+            ]
+          })
+      })
+      const fetchMock = vi.fn()
+      fetchMock.mockImplementationOnce(() => flagsResponse(false))
+      fetchMock.mockImplementationOnce(() => flagsResponse(true))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const onUpdate = vi.fn()
+      const gate = new CanaryGate('test-key', {
+        pollIntervalMs: 3000,
+        onUpdate
+      })
+      await gate.init()
+
+      expect(onUpdate).not.toHaveBeenCalled()
+
+      await vi.advanceTimersByTimeAsync(3100)
+
+      expect(onUpdate).toHaveBeenCalledTimes(1)
+      expect(onUpdate).toHaveBeenCalledWith([
+        { key: 'feature-x', type: 'boolean', enabled: true }
+      ])
+      gate.disconnect()
+    })
+
+    it('does not call onUpdate on initial load or when nothing changes', async () => {
+      vi.useFakeTimers()
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const onUpdate = vi.fn()
+      const gate = new CanaryGate('test-key', {
+        pollIntervalMs: 3000,
+        onUpdate
+      })
+      await gate.init()
+      await vi.advanceTimersByTimeAsync(9000)
+
+      expect(onUpdate).not.toHaveBeenCalled()
+      gate.disconnect()
+    })
   })
 })
 
@@ -551,6 +614,73 @@ describe('CanaryGate (server)', () => {
 
       expect(() => gate.disconnect()).not.toThrow()
       expect(gate.isStale()).toBe(false)
+    })
+
+    it('calls onUpdate when a flag-updated event changes a flag', async () => {
+      const stream = createSseStream(
+        'event: flag-updated\ndata: {"key":"feature-x","type":"boolean","enabled":true,"rolloutPercent":0,"updatedAt":"2025-01-01T00:00:00.000Z"}\n\n'
+      )
+      mockFetch(undefined, stream)
+
+      const onUpdate = vi.fn()
+      const gate = new ServerCanaryGate('test-key', {
+        reconnectDelay: 300_000,
+        maxReconnectDelay: 300_000,
+        heartbeatTimeoutMs: 300_000,
+        onUpdate
+      })
+
+      await gate.init()
+      await flushMicrotasks(30)
+
+      try {
+        expect(onUpdate).toHaveBeenCalledTimes(1)
+        expect(onUpdate).toHaveBeenCalledWith([
+          { key: 'feature-x', type: 'boolean', enabled: true }
+        ])
+      } finally {
+        gate.disconnect()
+      }
+    })
+
+    it('calls onUpdate when a flag-deleted event removes a flag', async () => {
+      const stream = createSseStream(
+        'event: flag-deleted\ndata: {"key":"feature-x","deletedAt":"2025-01-01T00:00:00.000Z"}\n\n'
+      )
+      mockFetch(
+        {
+          projectId: 'p1',
+          environment: 'prod',
+          flags: [
+            {
+              key: 'feature-x',
+              type: 'boolean',
+              enabled: true,
+              rolloutPercent: 0,
+              updatedAt: '2025-01-01T00:00:00.000Z'
+            }
+          ]
+        },
+        stream
+      )
+
+      const onUpdate = vi.fn()
+      const gate = new ServerCanaryGate('test-key', {
+        reconnectDelay: 300_000,
+        maxReconnectDelay: 300_000,
+        heartbeatTimeoutMs: 300_000,
+        onUpdate
+      })
+
+      await gate.init()
+      await flushMicrotasks(30)
+
+      try {
+        expect(onUpdate).toHaveBeenCalledTimes(1)
+        expect(onUpdate).toHaveBeenCalledWith([])
+      } finally {
+        gate.disconnect()
+      }
     })
 
     it('processes a retry field in an SSE block without throwing', async () => {

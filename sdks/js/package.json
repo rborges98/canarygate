@@ -1,6 +1,6 @@
 {
   "name": "@canarygate/sdk",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "CanaryGate SDK — feature flags with real-time SSE streaming",
   "exports": {
     "./client": {

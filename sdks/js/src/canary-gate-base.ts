@@ -48,6 +48,7 @@ export class CanaryGateBase {
   private readonly maxReconnectDelay: number
   private readonly heartbeatTimeoutMs: number
   private readonly pollIntervalMs: number
+  private readonly onUpdate: ((flags: FlagData[]) => void) | undefined
 
   private cache = new Map<string, ApiFlagRaw>()
   private cacheVersions = new Map<string, number>()
@@ -61,6 +62,8 @@ export class CanaryGateBase {
   private stale = false
   private lastSyncAt: string | null = null
   private destroyed = false
+  private hasSynced = false
+  private cacheSignature: string | null = null
 
   constructor(
     protected readonly apiKey: string,
@@ -90,6 +93,7 @@ export class CanaryGateBase {
     }
     this.streamRetryDelay = this.reconnectDelay
     this.anonId = anonIdFactory()
+    this.onUpdate = options.onUpdate
   }
 
   async init(): Promise<void> {
@@ -134,6 +138,30 @@ export class CanaryGateBase {
     this.cacheVersions = nextVersions
     this.stale = false
     this.lastSyncAt = new Date().toISOString()
+    this.notifyIfChanged()
+    this.hasSynced = true
+  }
+
+  private computeCacheSignature(): string {
+    return Array.from(this.cache.entries())
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(
+        ([key, flag]) =>
+          `${key}:${flag.type}:${flag.enabled}:${flag.rolloutPercent}`
+      )
+      .join('|')
+  }
+
+  private notifyIfChanged(): void {
+    if (!this.onUpdate) return
+
+    const signature = this.computeCacheSignature()
+    if (signature === this.cacheSignature) return
+
+    this.cacheSignature = signature
+    if (!this.hasSynced) return
+
+    this.onUpdate(this.getFlags())
   }
 
   private async fetchFlags(): Promise<boolean> {
@@ -169,6 +197,7 @@ export class CanaryGateBase {
 
     this.cacheVersions.set(raw.key, nextVersion)
     this.cache.set(raw.key, raw)
+    this.notifyIfChanged()
   }
 
   private applyFlagDeletion(payload: { key: string; deletedAt: string }) {
@@ -179,6 +208,7 @@ export class CanaryGateBase {
 
     this.cacheVersions.set(payload.key, nextVersion)
     this.cache.delete(payload.key)
+    this.notifyIfChanged()
   }
 
   private handleStreamMessage(event: string, data: string) {

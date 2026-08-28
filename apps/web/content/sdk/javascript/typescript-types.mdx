@@ -35,6 +35,8 @@ type CanaryGateOptions = {
   maxReconnectDelay?: number
   /** Time in ms without a server heartbeat before reconnecting the stream. Default: 65000. Server-only. */
   heartbeatTimeoutMs?: number
+  /** Called whenever the evaluated flag set changes (polling refresh or SSE event), with the updated flags. Never called on initial load. */
+  onUpdate?: (flags: FlagData[]) => void
 }
 ```
 
