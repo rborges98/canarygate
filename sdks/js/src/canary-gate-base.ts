@@ -10,6 +10,7 @@ import { parseSseEventBlock } from './sse'
 
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 65_000
+const DEFAULT_POLL_INTERVAL_MS = 30_000
 
 function isAbortError(error: unknown) {
   return (
@@ -29,6 +30,7 @@ export class CanaryGateBase {
   private readonly reconnectDelay: number
   private readonly maxReconnectDelay: number
   private readonly heartbeatTimeoutMs: number
+  private readonly pollIntervalMs: number
 
   private cache = new Map<string, ApiFlagRaw>()
   private cacheVersions = new Map<string, number>()
@@ -36,6 +38,7 @@ export class CanaryGateBase {
   private streamAbortController: AbortController | null = null
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null
   private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null
+  private pollTimeout: ReturnType<typeof setInterval> | null = null
   private streamRetryDelay: number
   private reconnectAttempts = 0
   private stale = false
@@ -60,19 +63,18 @@ export class CanaryGateBase {
     )
     this.heartbeatTimeoutMs =
       options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS
+    this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS
     this.streamRetryDelay = this.reconnectDelay
     this.anonId = anonIdFactory()
   }
 
-  protected warnStreamDisabled(): void {
-    console.warn(
-      '[canarygate] Real-time streams (SSE) are disabled in browser environments to protect network architecture.'
-    )
-  }
-
   async init(): Promise<void> {
     await this.fetchFlags()
-    if (this.streamEnabled) this.connectStream()
+    if (this.streamEnabled) {
+      this.connectStream()
+    } else {
+      this.startPolling()
+    }
   }
 
   private replaceCacheFromSnapshot(flags: ApiFlagRaw[], requestedAt: number) {
@@ -301,6 +303,28 @@ export class CanaryGateBase {
     void this.consumeStream(abortController)
   }
 
+  private startPolling(): void {
+    if (
+      this.destroyed ||
+      this.streamEnabled ||
+      this.pollIntervalMs <= 0 ||
+      this.pollTimeout
+    ) {
+      return
+    }
+
+    this.pollTimeout = setInterval(() => {
+      void this.fetchFlags()
+    }, this.pollIntervalMs)
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimeout) {
+      clearInterval(this.pollTimeout)
+      this.pollTimeout = null
+    }
+  }
+
   getFlag(key: string, context?: FlagEvaluationContext): FlagData | undefined {
     const raw = this.cache.get(key)
     if (!raw) return undefined
@@ -338,6 +362,7 @@ export class CanaryGateBase {
 
   disconnect(): void {
     this.destroyed = true
+    this.stopPolling()
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout)
       this.reconnectTimeout = null

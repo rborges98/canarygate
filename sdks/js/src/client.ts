@@ -16,9 +16,11 @@ function getOrCreateAnonId(): string {
 
 export class CanaryGate extends CanaryGateBase {
   constructor(apiKey: string, options: CanaryGateOptions = {}) {
-    super(apiKey, options, false, getOrCreateAnonId)
-    if (options.stream === true) {
-      this.warnStreamDisabled()
+    if (typeof window === 'undefined') {
+      throw new Error(
+        '@canarygate/sdk/client is browser-only. On server runtimes (Node.js, Deno, Bun, Edge) import from "@canarygate/sdk/server" instead.'
+      )
     }
+    super(apiKey, options, false, getOrCreateAnonId)
   }
 }

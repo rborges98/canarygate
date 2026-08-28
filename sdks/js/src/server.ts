@@ -3,6 +3,11 @@ import { CanaryGateOptions } from './types'
 
 export class CanaryGate extends CanaryGateBase {
   constructor(apiKey: string, options: CanaryGateOptions = {}) {
-    super(apiKey, options, options.stream ?? false, () => crypto.randomUUID())
+    if (typeof window !== 'undefined') {
+      throw new Error(
+        '@canarygate/sdk/server is server-only. In browsers import from "@canarygate/sdk/client" instead.'
+      )
+    }
+    super(apiKey, options, true, () => crypto.randomUUID())
   }
 }

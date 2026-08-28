@@ -2,8 +2,8 @@
 
 Feature flag client for [CanaryGate](https://github.com/rborges98/canarygate).
 
-- **Server (Node.js)** — snapshot on `init()` + live updates via SSE, with auto-reconnect and heartbeat detection
-- **Browser** — flags fetched once and cached; SSE stays off to protect your infrastructure
+- **Server (Node.js)** — snapshot on `init()` + live updates via SSE, auto-reconnect and heartbeat
+- **Browser** — snapshot + polling via `pollIntervalMs`
 
 ## Install
 
@@ -19,12 +19,11 @@ npm install @canarygate/sdk
 import { CanaryGate } from '@canarygate/sdk/server'
 
 const gate = new CanaryGate('your-api-key', {
-  environment: 'production',
-  stream: true
+  environment: 'production'
 })
 
 await gate.init()
-// flags keep updating in the background via SSE
+// the snapshot is fetched and SSE opens automatically
 
 gate.disconnect() // when shutting down
 ```
@@ -70,7 +69,7 @@ Rollout evaluation hashes `userId` deterministically — the same user always ge
 | -------------------- | --------- | ----------------------- | ------------------------------------------------ |
 | `baseUrl`            | `string`  | `http://localhost:3001` | CanaryGate API base URL                          |
 | `environment`        | `string`  | —                       | Environment to evaluate flags against            |
-| `stream`             | `boolean` | `false`                 | Real-time SSE updates (server mode only)         |
+| `pollIntervalMs`     | `number`  | `30000`                 | Browser polling interval in ms. Set `0` to disable |
 | `reconnectDelay`     | `number`  | `5000`                  | Initial SSE reconnect delay (ms)                 |
 | `maxReconnectDelay`  | `number`  | `30000`                 | Reconnect delay cap, exponential backoff (ms)    |
 | `heartbeatTimeoutMs` | `number`  | `65000`                 | Silence window before treating the stream as dead |
@@ -79,7 +78,7 @@ Rollout evaluation hashes `userId` deterministically — the same user always ge
 
 | Method                | Description                                        |
 | --------------------- | -------------------------------------------------- |
-| `init()`              | Fetches flags and starts the stream when enabled   |
+| `init()`              | Fetches the snapshot; the server entry opens SSE, the browser entry starts polling |
 | `getFlag(key, ctx?)`  | Evaluates one flag (`boolean` or `rollout`)        |
 | `getFlags(ctx?)`      | Evaluates all cached flags                         |
 | `isStale()`           | Whether the last sync attempt failed               |
@@ -89,8 +88,12 @@ Rollout evaluation hashes `userId` deterministically — the same user always ge
 ## How sync works
 
 1. `init()` fetches a full snapshot from `/sdk/flags`.
-2. With `stream: true`, an SSE connection receives granular updates per change.
+2. The server entry always opens an SSE connection that receives granular updates per change; the browser entry polls the snapshot every `pollIntervalMs`.
 3. On disconnect, the SDK reconnects with exponential backoff and does a full resync over the snapshot endpoint.
+
+## Entry-point guards
+
+Each entry point is bound to its environment: the server entry throws `Error('@canarygate/sdk/server is server-only. In browsers import from "@canarygate/sdk/client" instead.')` if used where `window` exists, and the client entry throws a browser-only error if used where there is no `window`.
 
 ## License
 

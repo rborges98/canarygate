@@ -20,7 +20,7 @@ export type FlagEvaluationContext = {
 export type CanaryGateOptions = {
   baseUrl?: string
   environment?: string
-  stream?: boolean
+  pollIntervalMs?: number
   reconnectDelay?: number
   maxReconnectDelay?: number
   heartbeatTimeoutMs?: number
