@@ -173,7 +173,10 @@ export async function scheduleNextAutoRollout(
         }
       },
       delay: delayInSeconds,
-      deduplicationId: `auto-rollout:${jobData.flagId}:${jobData.environmentId}:${dueAt}`
+      deduplicationId: `auto-rollout:${jobData.flagId}:${jobData.environmentId}:${dueAt}`.replace(
+        /[^a-zA-Z0-9._-]/g,
+        '-'
+      )
     })
   } catch (error) {
     log.error(

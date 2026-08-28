@@ -151,6 +151,10 @@ async function dispatchQStashJob(
   const dueAt = date.toISOString()
 
   try {
+    const deduplicationId = `${type}:${jobData.flagId}:${jobData.environmentId}:${dueAt}`.replace(
+      /[^a-zA-Z0-9._-]/g,
+      '-'
+    )
     await getQStashClient().publishJSON({
       url: `${getQStashWebhookUrl()}/webhook`,
       body: {
@@ -161,7 +165,7 @@ async function dispatchQStashJob(
         }
       },
       delay: delayInSeconds,
-      deduplicationId: `${type}:${jobData.flagId}:${jobData.environmentId}:${dueAt}`
+      deduplicationId
     })
   } catch (err) {
     log.error(

@@ -665,8 +665,10 @@ describe('Flags routes', () => {
       expect(publishCall.body.jobData.flagEnvironmentId).toBe('fe-1')
       expect(publishCall.body.jobData.flagKey).toBe('test-flag')
       expect(publishCall.body.jobData.dueAt).toBe(scheduleDate.toISOString())
-      expect(publishCall.deduplicationId).toContain(
-        `schedule:${TEST_FLAG_ID}:${TEST_ENV_ID}:`
+      expect(publishCall.deduplicationId).toBe(
+        `schedule-${TEST_FLAG_ID}-${TEST_ENV_ID}-${scheduleDate
+          .toISOString()
+          .replace(/[^a-zA-Z0-9._-]/g, '-')}`
       )
     })
 
