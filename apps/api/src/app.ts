@@ -66,8 +66,13 @@ export function buildApp() {
   })
 
   app.register(cors, {
-    origin: IS_PRODUCTION ? allowedCorsOrigins : true,
-    credentials: true
+    delegator: (request, callback) => {
+      const isSdkRoute = request.url.split('?')[0].startsWith('/sdk')
+      callback(null, {
+        origin: isSdkRoute ? true : IS_PRODUCTION ? allowedCorsOrigins : true,
+        credentials: !isSdkRoute
+      })
+    }
   })
 
   app.register(helmet, {
