@@ -29,6 +29,9 @@ const subscriber = createRedisConnection('api flag event subscriber', {
 let listenersAttached = false
 let subscriberStarted = false
 let subscriberStartRequested = false
+let publisherReadyConfirmed = false
+
+const PUBLISHER_READY_TIMEOUT_MS = 5_000
 
 function emitLocalFlagEvent(
   projectId: string,
@@ -130,6 +133,11 @@ export function startFlagEventsSubscriber(log: AppLogger) {
   }
 
   subscriberStartRequested = true
+
+  publisher.connect().catch(() => {
+    // Connection errors are handled by the 'error' listener attached above.
+  })
+
   void subscriber.psubscribe(FLAG_EVENTS_CHANNEL_PATTERN).catch((error) => {
     subscriberStartRequested = false
     subscriberStarted = false
@@ -137,6 +145,35 @@ export function startFlagEventsSubscriber(log: AppLogger) {
       { err: error, scope: 'api.flagEvents.subscriber' },
       'Failed to subscribe to Redis flag event channels'
     )
+  })
+}
+
+async function ensurePublisherReady(): Promise<boolean> {
+  if (publisher.status === 'ready') return true
+  if (publisherReadyConfirmed) return false
+
+  publisherReadyConfirmed = true
+
+  return new Promise((resolve) => {
+    let settled = false
+    const timeout = setTimeout(() => settle(false), PUBLISHER_READY_TIMEOUT_MS)
+
+    const settle = (ready: boolean) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      publisher.off('ready', onReady)
+      publisher.off('error', onError)
+      publisher.off('end', onEnd)
+      resolve(ready)
+    }
+    const onReady = () => settle(true)
+    const onError = () => settle(false)
+    const onEnd = () => settle(false)
+
+    publisher.once('ready', onReady)
+    publisher.once('error', onError)
+    publisher.once('end', onEnd)
   })
 }
 
@@ -148,6 +185,7 @@ export async function publishFlagEvent(
   log?: AppLogger
 ) {
   try {
+    await ensurePublisherReady()
     await publisher.publish(
       buildFlagEventsChannel(projectId, environmentId),
       serializePublishedFlagEvent(projectId, environmentId, event, data)
