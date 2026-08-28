@@ -85,6 +85,7 @@ export function VerifyForm({ email }: Props) {
               onChange={field.onChange}
               disabled={isSubmitting}
               autoFocus
+              containerClassName="w-full justify-center"
               aria-label="Verification code"
               aria-describedby="verify-instruction verify-email"
             >

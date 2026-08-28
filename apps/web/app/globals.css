@@ -172,7 +172,8 @@ body {
   scrollbar-gutter: stable;
 }
 
-button, a {
+button:not(:disabled),
+a:not([disabled]):not([aria-disabled='true']) {
   cursor: pointer;
 }
 
