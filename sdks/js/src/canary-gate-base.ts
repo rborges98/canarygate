@@ -11,6 +11,7 @@ import { parseSseEventBlock } from './sse'
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 65_000
 const DEFAULT_POLL_INTERVAL_MS = 30_000
+const MIN_POLL_INTERVAL_MS = 3_000
 
 function isAbortError(error: unknown) {
   return (
@@ -64,6 +65,16 @@ export class CanaryGateBase {
     this.heartbeatTimeoutMs =
       options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS
     this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS
+    if (
+      options.pollIntervalMs !== undefined &&
+      options.pollIntervalMs > 0 &&
+      options.pollIntervalMs < MIN_POLL_INTERVAL_MS
+    ) {
+      console.warn(
+        `[canarygate] pollIntervalMs must be at least ${MIN_POLL_INTERVAL_MS}ms; clamped to ${MIN_POLL_INTERVAL_MS}.`
+      )
+      this.pollIntervalMs = MIN_POLL_INTERVAL_MS
+    }
     this.streamRetryDelay = this.reconnectDelay
     this.anonId = anonIdFactory()
   }

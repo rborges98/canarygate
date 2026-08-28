@@ -418,12 +418,12 @@ describe('CanaryGate (client)', () => {
 
       const gate = new CanaryGate('test-key', {
         baseUrl: 'http://localhost:3001',
-        pollIntervalMs: 1000
+        pollIntervalMs: 3000
       })
       await gate.init()
 
       expect(fetchMock).toHaveBeenCalledTimes(1)
-      await vi.advanceTimersByTimeAsync(2500)
+      await vi.advanceTimersByTimeAsync(7500)
       expect(fetchMock).toHaveBeenCalledTimes(3)
       gate.disconnect()
     })
@@ -448,6 +448,34 @@ describe('CanaryGate (client)', () => {
       gate.disconnect()
     })
 
+    it('clamps pollIntervalMs values below the minimum floor', async () => {
+      vi.useFakeTimers()
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({ projectId: 'p1', environment: 'prod', flags: [] })
+      })
+      vi.stubGlobal('fetch', fetchMock)
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      try {
+        const gate = new CanaryGate('test-key', {
+          baseUrl: 'http://localhost:3001',
+          pollIntervalMs: 1
+        })
+        await gate.init()
+        await vi.advanceTimersByTimeAsync(3500)
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          '[canarygate] pollIntervalMs must be at least 3000ms; clamped to 3000.'
+        )
+        expect(fetchMock).toHaveBeenCalledTimes(2)
+        gate.disconnect()
+      } finally {
+        warnSpy.mockRestore()
+      }
+    })
+
     it('disconnect() stops polling', async () => {
       vi.useFakeTimers()
       const fetchMock = vi.fn().mockResolvedValue({
@@ -459,12 +487,12 @@ describe('CanaryGate (client)', () => {
 
       const gate = new CanaryGate('test-key', {
         baseUrl: 'http://localhost:3001',
-        pollIntervalMs: 1000
+        pollIntervalMs: 3000
       })
       await gate.init()
       gate.disconnect()
 
-      await vi.advanceTimersByTimeAsync(5000)
+      await vi.advanceTimersByTimeAsync(9000)
       expect(fetchMock).toHaveBeenCalledTimes(1)
     })
   })

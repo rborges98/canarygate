@@ -69,7 +69,7 @@ Rollout evaluation hashes `userId` deterministically — the same user always ge
 | -------------------- | --------- | ----------------------- | ------------------------------------------------ |
 | `baseUrl`            | `string`  | `http://localhost:3001` | CanaryGate API base URL                          |
 | `environment`        | `string`  | —                       | Environment to evaluate flags against            |
-| `pollIntervalMs`     | `number`  | `30000`                 | Browser polling interval in ms. Set `0` to disable |
+| `pollIntervalMs`     | `number`  | `30000`                 | Browser polling interval in ms (clamped to a 3000ms minimum). Set `0` to disable |
 | `reconnectDelay`     | `number`  | `5000`                  | Initial SSE reconnect delay (ms)                 |
 | `maxReconnectDelay`  | `number`  | `30000`                 | Reconnect delay cap, exponential backoff (ms)    |
 | `heartbeatTimeoutMs` | `number`  | `65000`                 | Silence window before treating the stream as dead |

@@ -20,6 +20,7 @@ export type FlagEvaluationContext = {
 export type CanaryGateOptions = {
   baseUrl?: string
   environment?: string
+  /** Browser polling interval in ms. Default: 30000; minimum enforced: 3000. Set 0 to disable. Server always uses SSE instead. */
   pollIntervalMs?: number
   reconnectDelay?: number
   maxReconnectDelay?: number

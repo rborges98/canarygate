@@ -11,7 +11,7 @@ SSE is exclusive to the server entry point and is always on — there is no opti
 
 `init()` always starts with a snapshot request that loads the current flags. Real-time updates depend on the entry point:
 
-- **Browser (`@canarygate/sdk/client`):** never uses SSE. Flags are loaded via a snapshot request (`/sdk/flags`) and refreshed automatically by polling every `pollIntervalMs` (default `30000`, `0` disables). This prevents thousands of open SSE connections coming from browsers.
+- **Browser (`@canarygate/sdk/client`):** never uses SSE. Flags are loaded via a snapshot request (`/sdk/flags`) and refreshed automatically by polling every `pollIntervalMs` (default `30000`, clamped to a `3000`ms minimum, `0` disables). This prevents thousands of open SSE connections coming from browsers.
 - **Server (`@canarygate/sdk/server`, for Node.js, Deno, Bun, Edge):** always opens an SSE connection after the snapshot. Flags are then updated in the background without polling.
 
 ```ts

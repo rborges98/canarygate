@@ -29,7 +29,7 @@ type CanaryGateOptions = {
   baseUrl?: string
   /** Environment slug. Defaults to the project default environment. */
   environment?: string
-  /** Browser polling interval in ms. Default: 30000 (0 disables). Server always uses SSE instead. */
+  /** Browser polling interval in ms. Default: 30000, clamped to a 3000ms minimum (0 disables). Server always uses SSE instead. */
   pollIntervalMs?: number
   /** Initial stream reconnect delay in ms. Default: 5000 */
   reconnectDelay?: number
