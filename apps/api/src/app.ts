@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { LogController } from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
@@ -61,7 +61,7 @@ export function buildApp() {
 
   const app = Fastify({
     logger: fastifyLogger,
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     trustProxy: true
   })
 
@@ -224,7 +224,6 @@ export function buildApp() {
   app.register(invitesRoutes)
   app.register(
     async function sdkScope(sdk) {
-      await sdk.register(cors, { origin: true, credentials: false })
       await sdk.register(sdkRoutes)
     },
     { prefix: '/sdk' }
