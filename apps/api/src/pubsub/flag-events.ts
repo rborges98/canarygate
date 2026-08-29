@@ -11,6 +11,7 @@ import {
   type FlagUpsertEventData
 } from '@canarygate/messaging-utils'
 import { emitFlagEvent } from '../sse/flag-emitter.ts'
+import { invalidateFlagSnapshot } from '../cache/sdk-flags-cache.ts'
 
 type AppLogger = Pick<FastifyBaseLogger, 'info' | 'warn' | 'error'>
 type FlagEventData = FlagUpsertEventData | FlagDeletedEventData
@@ -185,6 +186,7 @@ export async function publishFlagEvent(
   log?: AppLogger
 ) {
   try {
+    void invalidateFlagSnapshot(projectId, environmentId)
     await ensurePublisherReady()
     await publisher.publish(
       buildFlagEventsChannel(projectId, environmentId),

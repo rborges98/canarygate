@@ -8,6 +8,7 @@ import {
 } from '@canarygate/database/schema'
 import { hashApiKey, findProjectByApiKey } from '../db/projects.ts'
 import { subscribe, unsubscribe } from '../sse/flag-emitter.ts'
+import { getFlagSnapshot, setFlagSnapshot } from '../cache/sdk-flags-cache.ts'
 
 const SDK_FLAGS_RATE_LIMIT = { max: 60, timeWindow: '1 minute' }
 const SDK_STREAM_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
@@ -55,10 +56,7 @@ type ResolvedSdkProject =
   | { status: 'not-found' }
   | { status: 'disabled' }
 
-async function resolveEnvironment(
-  projectId: string,
-  environmentSlug?: string
-) {
+async function resolveEnvironment(projectId: string, environmentSlug?: string) {
   if (environmentSlug) {
     return db.query.environments.findFirst({
       where: and(
@@ -144,6 +142,11 @@ export default async function sdkRoutes(app: FastifyInstance) {
 
       const { project, env } = resolved
 
+      const cached = await getFlagSnapshot(project.id, env.id)
+      if (cached !== null) {
+        return JSON.parse(cached)
+      }
+
       const rows = await db
         .select({
           key: flags.key,
@@ -162,7 +165,7 @@ export default async function sdkRoutes(app: FastifyInstance) {
         )
         .where(eq(flags.projectId, project.id))
 
-      return {
+      const body = {
         projectId: project.id,
         environment: env.slug,
         flags: rows.map((row) => ({
@@ -173,6 +176,9 @@ export default async function sdkRoutes(app: FastifyInstance) {
           updatedAt: row.updatedAt.toISOString()
         }))
       }
+
+      await setFlagSnapshot(project.id, env.id, JSON.stringify(body))
+      return body
     }
   })
 

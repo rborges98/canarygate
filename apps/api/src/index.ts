@@ -3,6 +3,7 @@ import {
   startFlagEventsSubscriber,
   stopFlagEventsPubSub
 } from './pubsub/flag-events.js'
+import { stopFlagSnapshotCache } from './cache/sdk-flags-cache.js'
 
 const PORT = Number(process.env.PORT) || 3001
 
@@ -17,7 +18,11 @@ async function shutdown(signal: NodeJS.Signals) {
   shuttingDown = true
   app.log.info({ signal }, 'Shutting down API')
 
-  await Promise.allSettled([stopFlagEventsPubSub(), app.close()])
+  await Promise.allSettled([
+    stopFlagEventsPubSub(),
+    stopFlagSnapshotCache(),
+    app.close()
+  ])
 
   process.exit(0)
 }
